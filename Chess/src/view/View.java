@@ -24,6 +24,7 @@ import model.Piece;
  * @author Matthew
  *
  */
+// Test commit
 public class View {
 
 	JFrame frame;

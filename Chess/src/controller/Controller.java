@@ -46,7 +46,7 @@ public class Controller {
 	}
 	
 	/**
-	 * Puts a blue highlight on any square the the currently selected piece can legally move to.
+	 * Puts a blue highlight on any square the currently selected piece can legally move to.
 	 */
 	private void highlightLegalMoves() {
 		// TODO Auto-generated method stub

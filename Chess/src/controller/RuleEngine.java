@@ -31,7 +31,7 @@ public class RuleEngine {
 			BoardController boardController) {
 
 		boolean result = true;
-		boolean debugPrint = false;
+		boolean debugPrint = true;
 
 		if (!isNotSameSquare(move)) {
 			result = false;
@@ -166,8 +166,9 @@ public class RuleEngine {
 	}
 
 	/**
-	 * Returns true if piece moved along a column or row, or if the change in row
-	 * number is equal to the change in column number
+	 * Returns true if piece moved along a column or row, or if the change in
+	 * row number is equal to the change in column number
+	 * 
 	 * @param move
 	 * @param boardController
 	 * @return
@@ -183,14 +184,16 @@ public class RuleEngine {
 
 		// If moving like a bishop
 		else if (calculateDeltaRow(move) == calculateDeltaCol(move)) {
-				result = true;
+			result = true;
 		}
 
 		return result;
 	}
 
 	/**
-	 * Returns true if piece moved one or two squares forward, captured one square diagonally, or captured via en passent
+	 * Returns true if piece moved one or two squares forward, captured one
+	 * square diagonally, or captured via en passent
+	 * 
 	 * @param move
 	 * @param boardController
 	 * @return
@@ -198,18 +201,22 @@ public class RuleEngine {
 	public static boolean isLegalPawnMove(Move move,
 			BoardController boardController) {
 		boolean result = false;
-		
+
 		// TODO En passant
-		
 		// If it's a capture move
-		if (boardController.getPieceByCoords(move.getEndRow(), move.getEndCol())!= null)
-			System.out.println("RuleEngine.isLegalPawnMove: Pawn capture logic not yet coded." + boardController.getPieceByCoords(move.getEndRow(), move.getEndCol()));
-	
+		if (boardController
+				.getPieceByCoords(move.getEndRow(), move.getEndCol()) != null)
+			System.out
+					.println("RuleEngine.isLegalPawnMove: Pawn capture logic not yet coded."
+							+ boardController.getPieceByCoords(
+									move.getEndRow(), move.getEndCol()));
+
 		// If it's not a capture move
-		else{
-			int deltaRow =  move.getEndRow() - move.getStartRow() ;
-			
-			if (move.getEndCol() == move.getStartCol() && (deltaRow == 1 || deltaRow == 2)){
+		else {
+			int deltaRow = move.getEndRow() - move.getStartRow();
+
+			if (move.getEndCol() == move.getStartCol()
+					&& (deltaRow == 1 || deltaRow == 2)) {
 				result = true;
 			}
 		}
@@ -300,41 +307,98 @@ public class RuleEngine {
 
 		return result;
 	}
-	
-	
-	public static boolean isUnblockedKnightPath(Move move, BoardController boardController){
+
+	/**
+	 * Returns true. Knight paths are never blocked
+	 * 
+	 * @param move
+	 * @param boardController
+	 * @return
+	 */
+	public static boolean isUnblockedKnightPath(Move move,
+			BoardController boardController) {
 		return true;
 	}
-	
-	public static boolean isUnblockedBishopPath(Move move, BoardController boardController){
+
+	public static boolean isUnblockedBishopPath(Move move,
+			BoardController boardController) {
 		boolean result = false;
-		
-		return result;
-	}
-	
-	public static boolean isUnblockedRookPath(Move move, BoardController boardController){
-		boolean result = false;
-		
-		return result;
-	}
-	
-	public static boolean isUnblockedPawnPath(Move move, BoardController boardController){
-		boolean result = false;
-		
+
 		return result;
 	}
 
-	
-	public static boolean isUnblockedQueenPath(Move move, BoardController boardController){
-		boolean result = false;
-		
+	public static boolean isUnblockedRookPath(Move move,
+			BoardController boardController) {
+		boolean result = true;
+		int distance = 0;
+		int direction = 0;
+
+		// If moving across columns
+		if (move.getStartCol() != move.getEndCol()) {
+			distance = Math.abs(move.getStartCol() - move.getEndCol());
+
+			if (move.getStartCol() > move.getEndCol())
+				direction = -1;
+			else
+				direction = 1;
+
+			for (int i = 1; i < distance; i++) {
+
+				int newCol = move.getStartCol() + (direction * i);
+
+				if (boardController
+						.getPieceByCoords(move.getStartRow(), newCol) != null){
+					result = false;
+					System.out.println("RuleEngine.isUnblockedRookPath: Path blocked. " + boardController
+							.getPieceByCoords(move.getStartRow(), newCol).getType() + " found on row " + move.getStartRow() + ", col " + newCol);
+				}
+			}
+		}
+		// If moving across rows
+		else {
+			distance = Math.abs(move.getStartRow() - move.getEndRow());
+
+			if (move.getStartRow() > move.getEndRow())
+				direction = -1;
+			else
+				direction = 1;
+
+			for (int i = 1; i < distance; i++) {
+
+				int newRow = move.getStartRow() + (direction * i);
+
+				if (boardController
+						.getPieceByCoords(newRow, move.getStartCol()) != null){
+					result = false;
+//					System.out.println("RuleEngine.isUnblockedRookPath: Path blocked. " + boardController
+//							.getPieceByCoords(move.getStartRow(), newCol).getType() + " found on row " + move.getStartRow() + ", col " + newCol);
+				}
+			}
+
+		}
+
 		return result;
 	}
-	
-	public static boolean isUnblockedKingPath(Move move, BoardController boardController){
+
+	public static boolean isUnblockedPawnPath(Move move,
+			BoardController boardController) {
+		boolean result = true;
+
+		return result;
+	}
+
+	public static boolean isUnblockedQueenPath(Move move,
+			BoardController boardController) {
+		boolean result = false;
+
+		return result;
+	}
+
+	public static boolean isUnblockedKingPath(Move move,
+			BoardController boardController) {
 		return true;
 	}
-	
+
 	public static boolean isNotSelfCheck(Move move,
 			BoardController boardController) {
 		boolean result = true;

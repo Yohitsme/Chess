@@ -109,6 +109,7 @@ public class Controller {
 	    
 		if (RuleEngine.validateMove(move, boardController)){
 			if (boardController.setPieceByCoords(y, x, masterListener.getPiecePanelPressed().getPieceRepresented())){
+				boardController.getPieceByCoords(move.getStartRow(), move.getStartCol()).setHasMoved(true);
 				boardController.clearSquare(((PiecePanel) e.getSource()).getRow(), ((PiecePanel) e.getSource()).getCol());
 				System.out.println("Controller.handleMouseRelease: Valid Move. Setting "+ masterListener.getPiecePanelPressed().getPieceRepresented()+ " to row "+  Utils.getRowFromMouseEvent(e)+ " and col " + Utils.getColFromMouseEvent(e));
 			}else

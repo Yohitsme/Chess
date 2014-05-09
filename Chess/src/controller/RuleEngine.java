@@ -31,7 +31,7 @@ public class RuleEngine {
 			BoardController boardController) {
 
 		boolean result = true;
-		boolean debugPrint = true;
+		boolean debugPrint = false;
 
 		if (!isNotSameSquare(move)) {
 			result = false;
@@ -215,9 +215,17 @@ public class RuleEngine {
 		else {
 			int deltaRow = move.getEndRow() - move.getStartRow();
 
-			if (move.getEndCol() == move.getStartCol()
-					&& (deltaRow == 1 || deltaRow == 2)) {
-				result = true;
+			if (move.getEndCol() == move.getStartCol()) {
+				// White pawns
+				if (deltaRow == 1 && move.getPiece().isWhite())
+					result = true;
+				else if (deltaRow == 2 && !move.getPiece().isHasMoved() && move.getPiece().isWhite())
+					result = true;
+				// Black pawns
+				else if (deltaRow == -1 && !move.getPiece().isWhite())
+					result = true;
+				else if (deltaRow == -2 && !move.getPiece().isHasMoved() && !move.getPiece().isWhite())
+					result = true;
 			}
 		}
 		return result;
@@ -327,6 +335,14 @@ public class RuleEngine {
 		return result;
 	}
 
+	/**
+	 * Returns true if there are no pieces on squares between the start and end
+	 * squares of the move parameter, assuming movement along a column or row.
+	 * 
+	 * @param move
+	 * @param boardController
+	 * @return
+	 */
 	public static boolean isUnblockedRookPath(Move move,
 			BoardController boardController) {
 		boolean result = true;
@@ -347,10 +363,8 @@ public class RuleEngine {
 				int newCol = move.getStartCol() + (direction * i);
 
 				if (boardController
-						.getPieceByCoords(move.getStartRow(), newCol) != null){
+						.getPieceByCoords(move.getStartRow(), newCol) != null) {
 					result = false;
-					System.out.println("RuleEngine.isUnblockedRookPath: Path blocked. " + boardController
-							.getPieceByCoords(move.getStartRow(), newCol).getType() + " found on row " + move.getStartRow() + ", col " + newCol);
 				}
 			}
 		}
@@ -368,10 +382,8 @@ public class RuleEngine {
 				int newRow = move.getStartRow() + (direction * i);
 
 				if (boardController
-						.getPieceByCoords(newRow, move.getStartCol()) != null){
+						.getPieceByCoords(newRow, move.getStartCol()) != null) {
 					result = false;
-//					System.out.println("RuleEngine.isUnblockedRookPath: Path blocked. " + boardController
-//							.getPieceByCoords(move.getStartRow(), newCol).getType() + " found on row " + move.getStartRow() + ", col " + newCol);
 				}
 			}
 
@@ -383,7 +395,19 @@ public class RuleEngine {
 	public static boolean isUnblockedPawnPath(Move move,
 			BoardController boardController) {
 		boolean result = true;
-
+		
+		int distance =move.getEndRow() - move.getStartRow();
+		
+		// White pawn
+		if (distance  == 2 && move.getPiece().isWhite()){
+			if (boardController.getPieceByCoords(move.getStartRow() +1, move.getStartCol()) != null)
+			result = false;
+		}
+		// Black pawn
+		else if (distance == -2 && !move.getPiece().isWhite()){
+			if (boardController.getPieceByCoords(move.getStartRow() -1, move.getStartCol()) != null);
+			result = false;
+		}
 		return result;
 	}
 

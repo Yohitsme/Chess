@@ -42,6 +42,7 @@ public class Controller {
 		view.updateDragLabelIcon(((PiecePanel) e.getSource()).getRow(), ((PiecePanel) e.getSource()).getCol());
 		handleMouseDrag(e);
 		view.clearSelectedPiece(masterListener.getPiecePanelPressed().getRow(), masterListener.getPiecePanelPressed().getCol());
+		if (masterListener.getPiecePanelPressed().getPieceRepresented() != null)
 		highlightLegalMoves();
 	}
 	
@@ -101,7 +102,8 @@ public class Controller {
 	    
 	    int x=(e.getXOnScreen()-leftSpace)/imgSideLength;
 	    int y=7 -(e.getYOnScreen()-topSpace)/imgSideLength;
-	        
+	    
+	    if (masterListener.getPiecePanelPressed().getPieceRepresented()!= null){
 	    Move move = new Move(masterListener.getPiecePanelPressed().getPieceRepresented(),
 	    		((PiecePanel) e.getSource()).getRow(),
 	    		((PiecePanel) e.getSource()).getCol(),
@@ -118,6 +120,7 @@ public class Controller {
 			else
 				System.out.println("Controller.handleMouseRelease: Invalid move. Board not modified.");
 			System.out.println("======================================================================================");
+	    }
 		view.removeHighlights();
 		view.update();	
 	}

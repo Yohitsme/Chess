@@ -31,7 +31,7 @@ public class RuleEngine {
 			BoardController boardController) {
 
 		boolean result = true;
-		boolean debugPrint = false;
+		boolean debugPrint = true;
 
 		if (!isNotSameSquare(move)) {
 			result = false;
@@ -219,12 +219,14 @@ public class RuleEngine {
 				// White pawns
 				if (deltaRow == 1 && move.getPiece().isWhite())
 					result = true;
-				else if (deltaRow == 2 && !move.getPiece().isHasMoved() && move.getPiece().isWhite())
+				else if (deltaRow == 2 && !move.getPiece().isHasMoved()
+						&& move.getPiece().isWhite())
 					result = true;
 				// Black pawns
 				else if (deltaRow == -1 && !move.getPiece().isWhite())
 					result = true;
-				else if (deltaRow == -2 && !move.getPiece().isHasMoved() && !move.getPiece().isWhite())
+				else if (deltaRow == -2 && !move.getPiece().isHasMoved()
+						&& !move.getPiece().isWhite())
 					result = true;
 			}
 		}
@@ -328,10 +330,32 @@ public class RuleEngine {
 		return true;
 	}
 
+	/**
+	 * Returns true if there are no pieces on the diagonal from the start square
+	 * in argument move to the end square in the argument move.
+	 * 
+	 * @param move
+	 * @param boardController
+	 * @return
+	 */
 	public static boolean isUnblockedBishopPath(Move move,
 			BoardController boardController) {
-		boolean result = false;
+		boolean result = true;
 
+		int rowDirection = 0;
+		int colDirection = 0;
+
+		colDirection = calculateColDirection(move);
+		rowDirection = calculateRowDirection(move);
+
+		int distance = calculateDeltaRow(move);
+
+		for (int i = 1; i < distance; i++) {
+			int newRow = move.getStartRow() + i * rowDirection;
+			int newCol = move.getStartCol() + i * colDirection;
+			if (boardController.getPieceByCoords(newRow, newCol) != null)
+				result = false;
+		}
 		return result;
 	}
 
@@ -353,10 +377,7 @@ public class RuleEngine {
 		if (move.getStartCol() != move.getEndCol()) {
 			distance = Math.abs(move.getStartCol() - move.getEndCol());
 
-			if (move.getStartCol() > move.getEndCol())
-				direction = -1;
-			else
-				direction = 1;
+			direction = calculateColDirection(move);
 
 			for (int i = 1; i < distance; i++) {
 
@@ -368,14 +389,12 @@ public class RuleEngine {
 				}
 			}
 		}
+		
 		// If moving across rows
 		else {
 			distance = Math.abs(move.getStartRow() - move.getEndRow());
 
-			if (move.getStartRow() > move.getEndRow())
-				direction = -1;
-			else
-				direction = 1;
+			direction = calculateRowDirection(move);
 
 			for (int i = 1; i < distance; i++) {
 
@@ -395,17 +414,20 @@ public class RuleEngine {
 	public static boolean isUnblockedPawnPath(Move move,
 			BoardController boardController) {
 		boolean result = true;
-		
-		int distance =move.getEndRow() - move.getStartRow();
-		
+
+		int distance = move.getEndRow() - move.getStartRow();
+
 		// White pawn
-		if (distance  == 2 && move.getPiece().isWhite()){
-			if (boardController.getPieceByCoords(move.getStartRow() +1, move.getStartCol()) != null)
-			result = false;
+		if (distance == 2 && move.getPiece().isWhite()) {
+			if (boardController.getPieceByCoords(move.getStartRow() + 1,
+					move.getStartCol()) != null)
+				result = false;
 		}
 		// Black pawn
-		else if (distance == -2 && !move.getPiece().isWhite()){
-			if (boardController.getPieceByCoords(move.getStartRow() -1, move.getStartCol()) != null);
+		else if (distance == -2 && !move.getPiece().isWhite()) {
+			if (boardController.getPieceByCoords(move.getStartRow() - 1,
+					move.getStartCol()) != null)
+				
 			result = false;
 		}
 		return result;
@@ -414,7 +436,16 @@ public class RuleEngine {
 	public static boolean isUnblockedQueenPath(Move move,
 			BoardController boardController) {
 		boolean result = false;
-
+		
+		// If queen is moving like a rook
+		if (move.getStartCol() == move.getEndCol() || move.getStartRow() == move.getEndRow())
+			result = isUnblockedRookPath(move,boardController);
+		
+		// If queen is moving like a bishop
+		else
+			result = isUnblockedBishopPath(move,boardController);
+		
+		
 		return result;
 	}
 
@@ -435,6 +466,26 @@ public class RuleEngine {
 
 	public static int calculateDeltaCol(Move move) {
 		return Math.abs(move.getStartCol() - move.getEndCol());
+	}
+
+	public static int calculateColDirection(Move move) {
+		int colDirection;
+
+		if (move.getStartCol() > move.getEndCol())
+			colDirection = -1;
+		else
+			colDirection = 1;
+		return colDirection;
+	}
+
+	public static int calculateRowDirection(Move move) {
+		int rowDirection;
+
+		if (move.getStartRow() > move.getEndRow())
+			rowDirection = -1;
+		else
+			rowDirection = 1;
+		return rowDirection;
 	}
 
 }

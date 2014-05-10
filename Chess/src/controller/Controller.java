@@ -9,13 +9,15 @@ import javax.swing.SwingUtilities;
 import utils.Utils;
 import model.Model;
 import model.Move;
+import model.Piece;
 import view.PiecePanel;
 import view.View;
 
 /**
  * Controller class that runs the game and handles logic for user interaction
+ * 
  * @author Matthew
- *
+ * 
  */
 public class Controller {
 
@@ -23,106 +25,129 @@ public class Controller {
 	Model model;
 	BoardController boardController;
 	MasterListener masterListener;
-	
+
 	/**
 	 * Constructor
 	 */
-	public Controller(){
+	public Controller() {
 		model = new Model();
 		boardController = new BoardController(model);
 		masterListener = new MasterListener(this);
 		view = new View(boardController, masterListener);
 	}
-	
+
 	/**
-	 * Sets drag icon to that of the square where mouse was pressed, clears the square where mouse was pressed
+	 * Sets drag icon to that of the square where mouse was pressed, clears the
+	 * square where mouse was pressed
+	 * 
 	 * @param e
 	 */
-	public void handleMousePress(MouseEvent e){
-		view.updateDragLabelIcon(((PiecePanel) e.getSource()).getRow(), ((PiecePanel) e.getSource()).getCol());
+	public void handleMousePress(MouseEvent e) {
+		int row = computeRowFromMouseEvent(e);
+		int col = computeColFromMouseEvent(e);
+		view.updateDragLabelIcon(row, col);
+
 		handleMouseDrag(e);
-		view.clearSelectedPiece(masterListener.getPiecePanelPressed().getRow(), masterListener.getPiecePanelPressed().getCol());
-		if (masterListener.getPiecePanelPressed().getPieceRepresented() != null)
-		highlightLegalMoves();
+		view.clearSelectedPiece(row, col);
+		if (boardController.getPieceByCoords(row, col) != null)
+			highlightLegalMoves();
 	}
-	
+
 	/**
-	 * Puts a blue highlight on any square the currently selected piece can legally move to.
+	 * Puts a blue highlight on any square the currently selected piece can
+	 * legally move to.
 	 */
 	private void highlightLegalMoves() {
 		// TODO Auto-generated method stub
-		PiecePanel panelSelected =masterListener.getPiecePanelPressed(); 
-		Move move = new Move(panelSelected.getPieceRepresented(), panelSelected.getRow(),panelSelected.getCol(),0,0 );
-		
-		for (int row = 0; row < 8; row++)
-			for (int col = 0; col< 8; col++){
-				move.setEndCol(col);
-				move.setEndRow(row);
+		MouseEvent e = masterListener.getPressEvent();
+
+		int row = computeRowFromMouseEvent(e);
+		int col = computeColFromMouseEvent(e);
+
+		Piece piece = boardController.getPieceByCoords(row, col);
+		Move move = new Move(piece, row, col, 0, 0);
+
+		for (int i = 0; i < 8; i++)
+			for (int j = 0; j < 8; j++) {
+				move.setEndCol(j);
+				move.setEndRow(i);
 				if (RuleEngine.validateMove(move, boardController))
-					view.highlightSquare(row,col);
+					view.highlightSquare(i, j);
 			}
-	
+
 	}
 
 	/**
 	 * Calculates position of mouse on screen, puts dragIcon at that point
+	 * 
 	 * @param e
 	 */
-	public void handleMouseDrag(MouseEvent e){
-		
-	
-		final int imgSideLength = ((PiecePanel) e.getSource()).getLabel().getIcon().getIconHeight();
-		int col = ((PiecePanel) e.getSource()).getCol();
-		int row = ((PiecePanel) e.getSource()).getRow();
-		
-		int x = col*imgSideLength + e.getX()-imgSideLength/2;
-		int y = (7-row)*imgSideLength + e.getY()-imgSideLength/2;
-		view.moveDraggedPiece(x,y);
+	public void handleMouseDrag(MouseEvent e) {
+		view.moveDraggedPiece(e.getX() - 40, e.getY() - 40);
 	}
-	
+
 	/**
 	 * Runs the chess game
+	 * 
 	 * @param arg
 	 */
-	public static void main(String []arg){
+	public static void main(String[] arg) {
 		Controller controller = new Controller();
 	}
 
 	/**
-	 * Checks if the move was valid, if so, moves the piece to that spot, clears the old one. 
-	 * Otherwise, board is returned to it's state before the move was attempted
+	 * Checks if the move was valid, if so, moves the piece to that spot, clears
+	 * the old one. Otherwise, board is returned to it's state before the move
+	 * was attempted
+	 * 
 	 * @param e
 	 */
 	public void handleMouseRelease(MouseEvent e) {
 		view.clearDragLabelIcon();
-		final int imgSideLength = ((PiecePanel) e.getSource()).getLabel().getIcon().getIconHeight();
-    
-	    int topSpace = view.getFrame().getInsets().top;
-	    int leftSpace = view.getFrame().getInsets().left;
-	    
-	    int x=(e.getXOnScreen()-leftSpace)/imgSideLength;
-	    int y=7 -(e.getYOnScreen()-topSpace)/imgSideLength;
-	    
-	    if (masterListener.getPiecePanelPressed().getPieceRepresented()!= null){
-	    Move move = new Move(masterListener.getPiecePanelPressed().getPieceRepresented(),
-	    		((PiecePanel) e.getSource()).getRow(),
-	    		((PiecePanel) e.getSource()).getCol(),
-	    		y,x );
-	    
-		if (RuleEngine.validateMove(move, boardController)){
-			if (boardController.setPieceByCoords(y, x, masterListener.getPiecePanelPressed().getPieceRepresented())){
-				boardController.getPieceByCoords(move.getStartRow(), move.getStartCol()).setHasMoved(true);
-				boardController.clearSquare(((PiecePanel) e.getSource()).getRow(), ((PiecePanel) e.getSource()).getCol());
-				System.out.println("Controller.handleMouseRelease: Valid Move. Setting "+ masterListener.getPiecePanelPressed().getPieceRepresented()+ " to row "+  Utils.getRowFromMouseEvent(e)+ " and col " + Utils.getColFromMouseEvent(e));
-			}else
-				System.out.println("Controller.handleMouseRelease: setPieceByCoords returned false, board not modified.");
+		final int imgSideLength = 80;
+
+		MouseEvent pressEvent = masterListener.getPressEvent();
+		int startRow = computeRowFromMouseEvent(pressEvent);
+		int startCol = computeColFromMouseEvent(pressEvent);
+		int endRow = computeRowFromMouseEvent(e);
+		int endCol = computeColFromMouseEvent(e);
+		Piece piece = boardController.getPieceByCoords(startRow, startCol);
+
+		if (piece != null) {
+			Move move = new Move(piece, startRow, startCol, endRow, endCol);
+			if (RuleEngine.validateMove(move, boardController)) {
+				if (boardController.setPieceByCoords(endRow, endCol, piece)) {
+					boardController.getPieceByCoords(move.getStartRow(),
+							move.getStartCol()).setHasMoved(true);
+					boardController.clearSquare(startRow,startCol);
+					System.out
+							.println("Controller.handleMouseRelease: Valid Move. Setting "
+									+ piece.toString()
+									+ " to row "
+									+ endRow
+									+ " and col " + endCol);
+				} else
+					System.out
+							.println("Controller.handleMouseRelease: setPieceByCoords returned false, board not modified.");
+			} else
+				System.out
+						.println("Controller.handleMouseRelease: Invalid move. Board not modified.");
+
 		}
-			else
-				System.out.println("Controller.handleMouseRelease: Invalid move. Board not modified.");
-			System.out.println("======================================================================================");
-	    }
 		view.removeHighlights();
-		view.update();	
+		view.update();
 	}
-	
+
+	public int computeColFromMouseEvent(MouseEvent e) {
+
+		int result = e.getX() / 80;
+		return result;
+	}
+
+	public int computeRowFromMouseEvent(MouseEvent e) {
+
+		int result = (640 - e.getY()) / 80;
+		return result;
+	}
+
 }

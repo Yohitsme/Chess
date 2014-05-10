@@ -15,15 +15,15 @@ import view.PiecePanel;
 public class MasterListener implements MouseListener, MouseMotionListener, ActionListener,KeyListener {
 
 	Controller controller;
-	PiecePanel piecePanelPressed;
+	MouseEvent pressEvent;
 	MouseEvent lastDragEvent;
-	
-	public PiecePanel getPiecePanelPressed() {
-		return piecePanelPressed;
+
+	public MouseEvent getPressEvent() {
+		return pressEvent;
 	}
 
-	public void setPiecePanelPressed(PiecePanel piecePanelPressed) {
-		this.piecePanelPressed = piecePanelPressed;
+	public void setPressEvent(MouseEvent pressEvent) {
+		this.pressEvent = pressEvent;
 	}
 
 	public MasterListener(Controller controllerIn){
@@ -53,7 +53,7 @@ public class MasterListener implements MouseListener, MouseMotionListener, Actio
 	public void mousePressed(MouseEvent e) {
 		// TODO Auto-generated method stub
 		
-		piecePanelPressed = (PiecePanel) e.getSource();
+		pressEvent = e;
 		controller.handleMousePress(e);
 	}
 
@@ -61,7 +61,7 @@ public class MasterListener implements MouseListener, MouseMotionListener, Actio
 	public void mouseReleased(MouseEvent e) {
 		// TODO Auto-generated method stub
 		controller.handleMouseRelease(e);
-		piecePanelPressed = null;
+		pressEvent = null;
 	}
 
 	@Override

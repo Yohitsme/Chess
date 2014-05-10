@@ -27,7 +27,7 @@ public class PiecePanel extends JPanel {
 	 * @param masterListenerIn
 	 * @param pieceRepresentedIn
 	 */
-	public PiecePanel(int row, int col, JLabel labelIn, MasterListener masterListenerIn, Piece pieceRepresentedIn){
+	public PiecePanel(int row, int col, JLabel labelIn, Piece pieceRepresentedIn){
 		super();
 		
 		this.row = row;
@@ -35,8 +35,8 @@ public class PiecePanel extends JPanel {
 		this.label = labelIn;
 		this.add(label);
 		this.setOpaque(false);
-		this.addMouseListener(masterListenerIn);
-		this.addMouseMotionListener(masterListenerIn);
+//		this.addMouseListener(masterListenerIn);
+//		this.addMouseMotionListener(masterListenerIn);
 		this.pieceRepresented = pieceRepresentedIn;
 	}
 

@@ -26,8 +26,13 @@ public class Piece {
 
 	@Override
 	public String toString() {
-		return "Piece [type=" + type + ", isWhite=" + isWhite + ", hasMoved="
-				+ hasMoved + "]";
+		String str = "";
+		if (isWhite)
+			str = "white ";
+		else
+			str = "black ";
+		
+		return str += type;
 	}
 
 	public String getType() {

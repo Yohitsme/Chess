@@ -103,6 +103,8 @@ public class View {
 		dragPanel.setOpaque(false);
 		dragPanel.setPreferredSize(new Dimension(640, 640));
 		dragPanel.setBounds(0, 0, 640, 640);
+		dragPanel.addMouseListener(masterListener);
+		dragPanel.addMouseMotionListener(masterListener);
 
 		dragPiece = new JLabel();
 		dragPanel.add(dragPiece);
@@ -136,7 +138,7 @@ public class View {
 		for (int row = 7; row >= 0; row--) {
 			for (int col = 0; col < 8; col++) {
 				piecePanelArray[row][col] = new PiecePanel(row, col,
-						generateJLabel(row, col), masterListener,
+						generateJLabel(row, col),
 						boardController.getPieceByCoords(row, col));
 				piecePanel.add(piecePanelArray[row][col]);
 

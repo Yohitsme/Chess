@@ -63,6 +63,7 @@ public class View {
 		configureHighlightPanel();
 		configureDragPanel();
 		configureLayeredPane();
+		
 
 		frame.add(layeredPane, BorderLayout.CENTER);
 		frame.pack();
@@ -160,8 +161,8 @@ public class View {
 		layeredPane.setVisible(true);
 
 		layeredPane.add(boardPanel, new Integer(0));
-		layeredPane.add(highlightPanel, new Integer(1));
-		layeredPane.add(piecePanel, new Integer(2));
+		layeredPane.add(piecePanel, new Integer(1));
+		layeredPane.add(highlightPanel, new Integer(2));
 		layeredPane.add(dragPanel, new Integer(3));
 
 	}

@@ -12,7 +12,7 @@ public class Model {
 	Piece[][] board;
 	ArrayList<Piece> whitePieces;
 	ArrayList<Piece> blackPieces;
-	
+	ArrayList<Move> moveList;
 
 	/**
 	 * Constructor. Initializes board to classic chess start position
@@ -21,9 +21,30 @@ public class Model {
 		
 		whitePieces = new ArrayList<Piece>();
 		blackPieces = new ArrayList<Piece>();
+		moveList = new ArrayList<Move>();
 		
 		board = new Piece[8][8];
 		initializeBoard();
+		populateLists();
+	}
+	
+	/**
+	 * Copy constructor.  Don't need the same references to pieces to be the same across moveList and board and piece lists? I don't think so
+	 * @param modelIn
+	 */
+	public Model(Model modelIn){
+		this.board=new Piece[8][8];
+		
+		for (int i = 0; i < 8; i++){
+			for (int j = 0; j < 8; j++){
+				this.board[i][j] = new Piece(modelIn.getBoard()[i][j]);
+			}
+		}
+		
+		this.whitePieces = new ArrayList<Piece>(modelIn.getWhitePieces());
+		this.blackPieces = new ArrayList<Piece>(modelIn.getBlackPieces());
+		this.moveList = new ArrayList<Move>(modelIn.getMoveList());
+	
 	}
 	
 	/**
@@ -47,18 +68,18 @@ public class Model {
 		boolean black = false;
 		
 		// Set white piece row
-		board [0][0] = new Piece("rook",white,hasMoved);
-		board [0][1] = new Piece("knight",white,hasMoved);
-		board [0][2] = new Piece("bishop",white,hasMoved);
-		board [0][3] = new Piece("queen",white,hasMoved);
-		board [0][4] = new Piece("king",white,hasMoved);
-		board [0][5] = new Piece("bishop",white,hasMoved);
-		board [0][6] = new Piece("knight",white,hasMoved);
-		board [0][7] = new Piece("rook",white,hasMoved);
+		board [0][0] = new Piece("rook",white,hasMoved,0,0);
+		board [0][1] = new Piece("knight",white,hasMoved,0,1);
+		board [0][2] = new Piece("bishop",white,hasMoved,0,2);
+		board [0][3] = new Piece("queen",white,hasMoved,0,3);
+		board [0][4] = new Piece("king",white,hasMoved,0,4);
+		board [0][5] = new Piece("bishop",white,hasMoved,0,5);
+		board [0][6] = new Piece("knight",white,hasMoved,0,6);
+		board [0][7] = new Piece("rook",white,hasMoved,0,7);
 		
 		// Set white pawns
 		for (int i = 0; i < 8; i++){
-			board[1][i] = new Piece("pawn", white, hasMoved);
+			board[1][i] = new Piece("pawn", white, hasMoved,1,i);
 		}
 		
 		// Set empty rows
@@ -68,18 +89,18 @@ public class Model {
 		
 		// Set black pawns
 		for (int i = 0; i < 8; i++){
-			board[6][i] = new Piece("pawn", black, hasMoved);
+			board[6][i] = new Piece("pawn", black, hasMoved,6,i);
 		}
 		
 		// Set black piece row
-		board [7][0] = new Piece("rook",black,hasMoved);
-		board [7][1] = new Piece("knight",black,hasMoved);
-		board [7][2] = new Piece("bishop",black,hasMoved);
-		board [7][3] = new Piece("queen",black,hasMoved);
-		board [7][4] = new Piece("king",black,hasMoved);
-		board [7][5] = new Piece("bishop",black,hasMoved);
-		board [7][6] = new Piece("knight",black,hasMoved);
-		board [7][7] = new Piece("rook",black,hasMoved);
+		board [7][0] = new Piece("rook",black,hasMoved,7,0);
+		board [7][1] = new Piece("knight",black,hasMoved,7,1);
+		board [7][2] = new Piece("bishop",black,hasMoved,7,2);
+		board [7][3] = new Piece("queen",black,hasMoved,7,3);
+		board [7][4] = new Piece("king",black,hasMoved,7,4);
+		board [7][5] = new Piece("bishop",black,hasMoved,7,5);
+		board [7][6] = new Piece("knight",black,hasMoved,7,6);
+		board [7][7] = new Piece("rook",black,hasMoved,7,7);
 	}
 	
 	/**
@@ -105,5 +126,29 @@ public class Model {
 	
 	public void setBoard(Piece[][] board) {
 		this.board = board;
+	}
+
+	public ArrayList<Move> getMoveList() {
+		return moveList;
+	}
+
+	public void setMoveList(ArrayList<Move> moveList) {
+		this.moveList = moveList;
+	}
+
+	public ArrayList<Piece> getWhitePieces() {
+		return whitePieces;
+	}
+
+	public void setWhitePieces(ArrayList<Piece> whitePieces) {
+		this.whitePieces = whitePieces;
+	}
+
+	public ArrayList<Piece> getBlackPieces() {
+		return blackPieces;
+	}
+
+	public void setBlackPieces(ArrayList<Piece> blackPieces) {
+		this.blackPieces = blackPieces;
 	}
 }

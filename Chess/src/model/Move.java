@@ -7,6 +7,13 @@ package model;
  */
 public class Move {
 
+	@Override
+	public String toString() {
+		return "Move [startRow=" + startRow + ", startCol=" + startCol
+				+ ", endRow=" + endRow + ", endCol=" + endCol + ", piece="
+				+ piece + "]";
+	}
+
 	int startRow;
 	int startCol;
 	int endRow;

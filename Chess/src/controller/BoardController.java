@@ -1,6 +1,7 @@
 package controller;
 
 import model.Model;
+import model.Move;
 import model.Piece;
 
 /**
@@ -32,9 +33,9 @@ public class BoardController {
 		Piece piece = null;
 		
 		if (row >=8 || row <0)
-			System.out.println("Model.getPieceByCoords: Row value of " + row + " outside range [0,7]. Null value returned.");
+		;//	System.out.println("BoardController.getPieceByCoords: Row value of " + row + " outside range [0,7]. Null value returned.");
 		else if (col >=8 || col <0)
-			System.out.println("Model.getPieceByCoords: Column value of " + row + " outside range [0,7]. Null value returned.");
+		;//	System.out.println("BoardController.getPieceByCoords: Column value of " + row + " outside range [0,7]. Null value returned.");
 		else
 			piece = model.getBoard()[row][col];
 		
@@ -66,6 +67,7 @@ public class BoardController {
 	}
 		return result;
 	}
+	
 	
 	/**
 	 * Sets the square (row, col) to null if it is within the bounds of the board. Returns true if

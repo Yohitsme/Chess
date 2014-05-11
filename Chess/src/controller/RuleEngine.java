@@ -1,5 +1,8 @@
 package controller;
 
+import java.util.ArrayList;
+
+import model.Model;
 import model.Move;
 import model.Piece;
 
@@ -10,6 +13,12 @@ import model.Piece;
  * 
  */
 public class RuleEngine {
+	private static boolean printFlag;
+	private static Controller controller;
+
+	public RuleEngine(Controller controllerIn) {
+		RuleEngine.controller = controllerIn;
+	}
 
 	/**
 	 * All-in-one legal move checker. This method calls various checks to ensure
@@ -27,42 +36,54 @@ public class RuleEngine {
 	 * @param boardController
 	 * @return
 	 */
+
 	public static boolean validateMove(Move move,
-			BoardController boardController) {
+			BoardController boardController, boolean printFlag) {
+		RuleEngine.printFlag = printFlag;
 
 		boolean result = true;
-		boolean debugPrint = true;
+
+		if (move.getEndCol() == 2 && move.getEndRow() == 0)
+			printFlag = true;
 
 		if (!isNotSameSquare(move)) {
 			result = false;
-			if (debugPrint)
+			if (printFlag)
 				System.out
 						.println("RuleEngine.validateMove: Invalid move: You cannot move a piece to the same square it started on.");
 		}
-		if (!isNotSelfCapture(move, boardController)) {
-			result = false;
-			if (debugPrint)
-				System.out
-						.println("RuleEngine.validateMove: Invalid move: You cannot capture your own piece.");
+		if (result) {
+			if (!isNotSelfCapture(move, boardController)) {
+				result = false;
+				if (printFlag)
+					System.out
+							.println("RuleEngine.validateMove: Invalid move: You cannot capture your own piece.");
+			}
 		}
-		if (!isLegalMoveStyle(move, boardController)) {
-			result = false;
-			if (debugPrint)
-				System.out
-						.println("RuleEngine.validateMove: Invalid move: You cannot move a "
-								+ move.getPiece() + " like that.");
+		if (result) {
+			if (!isLegalMoveStyle(move, boardController)) {
+				result = false;
+				if (printFlag)
+					System.out
+							.println("RuleEngine.validateMove: Invalid move: You cannot move a "
+									+ move.getPiece() + " like that.");
+			}
 		}
-		if (!isUnblocked(move, boardController)) {
-			result = false;
-			if (debugPrint)
-				System.out
-						.println("RuleEngine.validateMove: Invalid move: The path is blocked.");
+		if (result) {
+			if (!isUnblocked(move, boardController)) {
+				result = false;
+				if (printFlag)
+					System.out
+							.println("RuleEngine.validateMove: Invalid move: The path is blocked.");
+			}
 		}
-		if (!isNotSelfCheck(move, boardController)) {
-			result = false;
-			if (debugPrint)
-				System.out
-						.println("RuleEngine.validateMove: Invalid move: You cannot put yourself in check.");
+		if (result) {
+			if (!isNotSelfCheck(move, boardController)) {
+				result = false;
+				if (printFlag)
+					System.out
+							.println("RuleEngine.validateMove: Invalid move: You cannot put yourself in check.");
+			}
 		}
 
 		return result;
@@ -183,7 +204,7 @@ public class RuleEngine {
 			result = true;
 
 		// If moving like a bishop
-		else if (calculateDeltaRow(move) == calculateDeltaCol(move)) {
+		else if (calculateDeltaRowUnsigned(move) == calculateDeltaColUnsigned(move)) {
 			result = true;
 		}
 
@@ -203,16 +224,10 @@ public class RuleEngine {
 		boolean result = false;
 
 		// TODO En passant
-		// If it's a capture move
-		if (boardController
-				.getPieceByCoords(move.getEndRow(), move.getEndCol()) != null)
-			System.out
-					.println("RuleEngine.isLegalPawnMove: Pawn capture logic not yet coded."
-							+ boardController.getPieceByCoords(
-									move.getEndRow(), move.getEndCol()));
-
-		// If it's not a capture move
-		else {
+		// If it's a not capture move
+		if (move.getStartCol() == move.getEndCol()
+				&& boardController.getPieceByCoords(move.getEndRow(),
+						move.getEndCol()) == null) {
 			int deltaRow = move.getEndRow() - move.getStartRow();
 
 			if (move.getEndCol() == move.getStartCol()) {
@@ -229,7 +244,54 @@ public class RuleEngine {
 						&& !move.getPiece().isWhite())
 					result = true;
 			}
+		} else
+		// If normal capture
+		if (boardController
+				.getPieceByCoords(move.getEndRow(), move.getEndCol()) != null) {
+
+			int deltaCol = calculateDeltaColUnsigned(move);
+			int deltaRow = move.getEndRow() - move.getStartRow();
+
+			// Legal purchase
+			if (deltaCol == 1) {
+
+				// If white pawn
+				if (move.getPiece().isWhite() && deltaRow == 1)
+					result = true;
+				// If black pawn
+				else if (!move.getPiece().isWhite() && deltaRow == -1)
+					result = true;
+
+			}
 		}
+		// If en passant
+		else if (!controller.getModel().getMoveList().isEmpty()) {
+			Move previousMove = controller.getModel().getMoveList()
+					.get(controller.getModel().getMoveList().size() - 1);
+			boolean previousPieceIsPawn = previousMove.getPiece().getType()
+					.equals("pawn");
+			boolean previousPieceIsDifferentColor = previousMove.getPiece()
+					.isWhite() != move.getPiece().isWhite();
+			boolean correctCol = move.getEndCol() == previousMove.getStartCol();
+
+			if (previousPieceIsPawn && previousPieceIsDifferentColor
+					&& correctCol) {
+				// If white pawn
+				if (move.getPiece().isWhite()) {
+					if (calculateDeltaRowSigned(previousMove) == -2
+							&& move.getEndRow() == (previousMove.getEndRow() + 1))
+						result = true;
+				}
+				// If black pawn
+				else {
+					if (calculateDeltaRowSigned(previousMove) == 2
+							&& move.getEndRow() == (previousMove.getEndRow() - 1))
+						result = true;
+
+				}
+			}
+		}
+		// If it's not a capture move
 		return result;
 	}
 
@@ -245,8 +307,8 @@ public class RuleEngine {
 			BoardController boardController) {
 		boolean result = false;
 
-		int deltaRow = calculateDeltaRow(move);
-		int deltaCol = calculateDeltaCol(move);
+		int deltaRow = calculateDeltaRowUnsigned(move);
+		int deltaCol = calculateDeltaColUnsigned(move);
 
 		if (deltaRow == deltaCol)
 			result = true;
@@ -265,8 +327,8 @@ public class RuleEngine {
 			BoardController boardController) {
 		boolean result = false;
 
-		int deltaRow = calculateDeltaRow(move);
-		int deltaCol = calculateDeltaCol(move);
+		int deltaRow = calculateDeltaRowUnsigned(move);
+		int deltaCol = calculateDeltaColUnsigned(move);
 
 		if ((deltaRow == 1 && deltaCol == 2)
 				|| (deltaRow == 2 && deltaCol == 1))
@@ -286,15 +348,151 @@ public class RuleEngine {
 			BoardController boardController) {
 		boolean result = false;
 
-		int deltaRow = calculateDeltaRow(move);
-		int deltaCol = calculateDeltaCol(move);
+		int deltaRow = calculateDeltaRowUnsigned(move);
+		int deltaCol = calculateDeltaColUnsigned(move);
 
+		// Normal moving
 		if (deltaRow < 2 && deltaCol < 2)
 			result = true;
+
+		// Castling
+		else if (deltaCol == 2 && deltaRow == 0
+				&& (move.getStartRow() == 0 || move.getStartRow() == 7)) {
+
+			// Conditions for castling
+			boolean kingHasMoved = false;
+			boolean rookHasMoved = false;
+			boolean isInCheck = false;
+			boolean isCastlingThroughCheck = false;
+			boolean isCastlingIntoCheck = false;
+			boolean piecesBetweenRookAndKing = false;
+
+			// Get signed deltaCol
+			deltaCol = calculateDeltaColSigned(move);
+
+			String color = move.getPiece().isWhite() ? "black" : "white";
+			kingHasMoved = move.getPiece().isHasMoved();
+			isInCheck = isAttackedSquare(move.getPiece().getRow(), move
+					.getPiece().getCol(), color);
+			// If castling kingside and rook is alive
+			if (deltaCol > 0
+					&& boardController.getPieceByCoords(move.getStartRow(), 7) != null) {
+
+				rookHasMoved = boardController.getPieceByCoords(
+						move.getStartRow(), 7).isHasMoved();
+
+				for (int i = 1; i < 3; i++) {
+					if (boardController.getPieceByCoords(move.getStartRow(),
+							move.getStartCol() + i) != null)
+						piecesBetweenRookAndKing = true;
+				}
+
+				isCastlingThroughCheck = isAttackedSquare(
+						(move.getPiece().getRow()),
+						move.getPiece().getCol() + 1, color);
+				isCastlingIntoCheck = isAttackedSquare(
+						(move.getPiece().getRow()),
+						move.getPiece().getCol() + 2, color);
+
+			}
+			// If castling queenside and rook is alive
+			else if (boardController.getPieceByCoords(move.getStartRow(), 0) != null) {
+				rookHasMoved = boardController.getPieceByCoords(
+						move.getStartRow(), 0).isHasMoved();
+
+				for (int i = 1; i < 4; i++) {
+					if (boardController.getPieceByCoords(move.getStartRow(),
+							move.getStartCol() - i) != null)
+						piecesBetweenRookAndKing = true;
+				}
+
+				isCastlingThroughCheck = isAttackedSquare(
+						(move.getPiece().getRow()),
+						move.getPiece().getCol() - 1, color);
+				isCastlingIntoCheck = isAttackedSquare(
+						(move.getPiece().getRow()),
+						move.getPiece().getCol() - 2, color);
+			}
+
+			result = !kingHasMoved && !rookHasMoved && !isInCheck
+					&& !isCastlingThroughCheck && !isCastlingIntoCheck
+					&& !piecesBetweenRookAndKing;
+		}
+		return result;
+	}
+
+	/**
+	 * Checks to see if any piece of team color can attack the square designated
+	 * by parameters row and col.
+	 * 
+	 * @return
+	 */
+	public static boolean isAttackedSquare(int row, int col, String color) {
+		boolean result = false;
+		ArrayList<Piece> pieces;
+		if (color.equals("white"))
+			pieces = controller.getModel().getWhitePieces();
+		else
+			pieces = controller.getModel().getBlackPieces();
+		for (Piece piece : pieces) {
+			if (validateCheck(new Move(piece, piece.getRow(), piece.getCol(),
+					row, col), controller.getBoardController(), false))
+				result = true;
+		}
 
 		return result;
 	}
 
+	/**
+	 * Returns true if Piece piece can check a king on the square designated by
+	 * row and col. Different from validateMove because it doesn't matter if the
+	 * move would put the checking player into check. Avoids infinite mutual
+	 * recursion
+	 * 
+	 * @return
+	 */
+	public static boolean validateCheck(Move move,
+			BoardController boardController, boolean printFlag) {
+		RuleEngine.printFlag = printFlag;
+
+		boolean result = true;
+
+		if (!isNotSameSquare(move)) {
+			result = false;
+			if (printFlag)
+				System.out
+						.println("RuleEngine.validateCheck: Invalid move: You cannot move a piece to the same square it started on.");
+		}
+		if (!isNotSelfCapture(move, boardController)) {
+			result = false;
+			if (printFlag)
+				System.out
+						.println("RuleEngine.validateCheck: Invalid move: You cannot capture your own piece.");
+		}
+		if (!isLegalMoveStyle(move, boardController)) {
+			result = false;
+			if (printFlag)
+				System.out
+						.println("RuleEngine.validateCheck: Invalid move: You cannot move a "
+								+ move.getPiece() + " like that.");
+		}
+		if (!isUnblocked(move, boardController)) {
+			result = false;
+			if (printFlag)
+				System.out
+						.println("RuleEngine.validateCheck: Invalid move: The path is blocked.");
+		}
+
+		return result;
+	}
+
+	/**
+	 * Delegates to the appropriate handler to verify the that path of the piece in the move parameter
+	 * is not blocked. Returns true if path is unobstructed, false otherwise.
+	 * @param move
+	 * @param boardController
+	 * @return
+	 */
 	public static boolean isUnblocked(Move move, BoardController boardController) {
 		boolean result = true;
 
@@ -348,7 +546,7 @@ public class RuleEngine {
 		colDirection = calculateColDirection(move);
 		rowDirection = calculateRowDirection(move);
 
-		int distance = calculateDeltaRow(move);
+		int distance = calculateDeltaRowUnsigned(move);
 
 		for (int i = 1; i < distance; i++) {
 			int newRow = move.getStartRow() + i * rowDirection;
@@ -389,7 +587,7 @@ public class RuleEngine {
 				}
 			}
 		}
-		
+
 		// If moving across rows
 		else {
 			distance = Math.abs(move.getStartRow() - move.getEndRow());
@@ -411,6 +609,12 @@ public class RuleEngine {
 		return result;
 	}
 
+	/**
+	 * Returns true if the initial movement of a pawn is two squares and is blocked. Returns false otherwise
+	 * @param move
+	 * @param boardController
+	 * @return
+	 */
 	public static boolean isUnblockedPawnPath(Move move,
 			BoardController boardController) {
 		boolean result = true;
@@ -427,45 +631,184 @@ public class RuleEngine {
 		else if (distance == -2 && !move.getPiece().isWhite()) {
 			if (boardController.getPieceByCoords(move.getStartRow() - 1,
 					move.getStartCol()) != null)
-				
-			result = false;
+
+				result = false;
 		}
 		return result;
 	}
 
+	/**
+	 * Returns true if there is an unobstructed path from the queen to her destination square, false otherwise.
+	 * @param move
+	 * @param boardController
+	 * @return
+	 */
 	public static boolean isUnblockedQueenPath(Move move,
 			BoardController boardController) {
 		boolean result = false;
-		
+
 		// If queen is moving like a rook
-		if (move.getStartCol() == move.getEndCol() || move.getStartRow() == move.getEndRow())
-			result = isUnblockedRookPath(move,boardController);
-		
+		if (move.getStartCol() == move.getEndCol()
+				|| move.getStartRow() == move.getEndRow())
+			result = isUnblockedRookPath(move, boardController);
+
 		// If queen is moving like a bishop
 		else
-			result = isUnblockedBishopPath(move,boardController);
-		
-		
+			result = isUnblockedBishopPath(move, boardController);
+
 		return result;
 	}
 
+	/**
+	 * Returns true.  The one square movement of a king cannot be blocked, and the error checking for castling
+	 * handles blocking of that type of movement.
+	 * @param move
+	 * @param boardController
+	 * @return
+	 */
 	public static boolean isUnblockedKingPath(Move move,
 			BoardController boardController) {
 		return true;
 	}
 
+	/**
+	 * Simulates the move in question, and checks to see if the moving player would be in check afterwards.  If so, false is returned, true otherwise.
+	 * The board is reverted to it's position before the simulation afterwards.
+	 * @param move
+	 * @param boardController
+	 * @return
+	 */
 	public static boolean isNotSelfCheck(Move move,
 			BoardController boardController) {
 		boolean result = true;
+		String color = move.getPiece().isWhite() ? "white" : "black";
+		String opponentColor = color.equals("white") ? "black" : "white";
+		Piece king = null;
+		int kingRow = 0;
+		int kingCol = 0;
+
+		Piece capturedPiece = processMove(move);
+
+		ArrayList<Piece> pieces = null;
+		if (color.equals("white"))
+			pieces = controller.getModel().getWhitePieces();
+		else
+			pieces = controller.getModel().getBlackPieces();
+
+		for (Piece piece : pieces) {
+			if (piece.getType().equals("king")) {
+				king = piece;
+			}
+		}
+
+		// If it is the king that's moving, it is his new position which will
+		// need to be checked if it is being attacked. Otherwise, use his
+		// current location
+		if (move.getPiece().getType().equals("king")) {
+			kingRow = move.getEndRow();
+			kingCol = move.getEndCol();
+		} else {
+			kingRow = king.getRow();
+			kingCol = king.getCol();
+		}
+
+		result = !isAttackedSquare(kingRow, kingCol, opponentColor);
+
+		// Revert the board to it's previous state
+		undoChanges(capturedPiece, move);
+
 		return result;
 	}
 
-	public static int calculateDeltaRow(Move move) {
+	/**
+	 * If parameter capturedPiece is a real piece, it is returned to the board and the piece list in the model.
+	 * The piece that was moved via parameter move is returned to it's initial square also.
+	 * @param capturedPiece
+	 * @param move
+	 */
+	private static void undoChanges(Piece capturedPiece, Move move) {
+		if (capturedPiece != null) {
+			ArrayList<Piece> pieces;
+			if (capturedPiece.isWhite())
+				pieces = controller.getModel().getWhitePieces();
+			else
+				pieces = controller.getModel().getBlackPieces();
+
+			pieces.add(capturedPiece);
+
+			controller.getBoardController().setPieceByCoords(move.getEndRow(),
+					move.getEndCol(), capturedPiece);
+
+		}
+
+		// Clear the end spot of the tested move
+		controller.getBoardController().clearSquare(move.getEndRow(),
+				move.getEndCol());
+
+		// Set the captured piece back where it went
+		if (capturedPiece != null)
+			controller.getBoardController().setPieceByCoords(
+					capturedPiece.getRow(), capturedPiece.getCol(),
+					capturedPiece);
+
+		// Set the tested move piece back where it was
+		controller.getBoardController().setPieceByCoords(move.getStartRow(),
+				move.getStartCol(), move.getPiece());
+
+	}
+
+	/**
+	 * Handles the movement of parameter move on the real board, and returns a
+	 * reference to any piece that got captured
+	 * 
+	 * @param move
+	 * @return
+	 */
+	private static Piece processMove(Move move) {
+		// Move piece. Need to account for castling and en passant (when more
+		// material
+		// changes place on the board than just the piece moved by the player)
+
+		Piece capturedPiece = controller.getBoardController().getPieceByCoords(
+				move.getEndRow(), move.getEndCol());
+
+		// If the move was a successful capture, remove the captured piece from
+		// the list
+		if (capturedPiece != null) {
+			controller.removePieceFromList(move);
+		}
+
+		// Handle En Passant. If a non-null value is returned, then there was a
+		// en passant capture and we save a reference to the captured
+		// pawn
+		Piece tmpPiece = controller.handleEnPassantCaptures(move);
+
+		if (tmpPiece != null)
+			capturedPiece = tmpPiece;
+
+		// Clear move the piece to the new square, clear the old square
+		controller.getBoardController().setPieceByCoords(move.getEndRow(),
+				move.getEndCol(), move.getPiece());
+		controller.getBoardController().clearSquare(move.getStartRow(),
+				move.getStartCol());
+
+		return capturedPiece;
+	}
+
+	public static int calculateDeltaRowUnsigned(Move move) {
 		return Math.abs(move.getStartRow() - move.getEndRow());
 	}
 
-	public static int calculateDeltaCol(Move move) {
+	public static int calculateDeltaColUnsigned(Move move) {
 		return Math.abs(move.getStartCol() - move.getEndCol());
+	}
+
+	public static int calculateDeltaColSigned(Move move) {
+		return move.getEndCol() - move.getStartCol();
+	}
+
+	public static int calculateDeltaRowSigned(Move move) {
+		return move.getEndRow() - move.getStartRow();
 	}
 
 	public static int calculateColDirection(Move move) {

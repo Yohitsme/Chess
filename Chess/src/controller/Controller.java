@@ -2,6 +2,7 @@ package controller;
 
 import java.awt.Component;
 import java.awt.Point;
+import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 
 import javax.swing.JFrame;
@@ -140,11 +141,7 @@ public class Controller {
 				model.getMoveList().add(move);
 
 				System.out
-						.println("Controller.handleMouseRelease: Valid Move. Setting "
-								+ piece.toString()
-								+ " to row "
-								+ endRow
-								+ " and col " + endCol);
+						.println("Controller.handleMouseRelease: Valid Move: " + move.algebraicNotationPrint());
 				//printTeams();
 
 			} else
@@ -327,6 +324,25 @@ public class Controller {
 
 	public void setModel(Model model) {
 		this.model = model;
+	}
+
+	/**
+	 * Processes action events
+	 * @param e
+	 */
+	public void handleActionEvent(ActionEvent e) {
+		if (e.getActionCommand().equals("newGame")){
+			System.out.println("Controller.handleActionEvent: ResettingGame");
+			model.resetModel();
+			view.update();
+		}
+		else if(e.getActionCommand().equals("flipBoard")){
+			String str = view.getBoardOrientation();
+		}
+		else
+			System.out.println("Controller.handleActionEvent: Action command /'" + e.getActionCommand() + "/' not recognized");
+			
+		
 	}
 
 }

@@ -48,6 +48,19 @@ public class Model {
 	}
 	
 	/**
+	 * Resets all data to initial game state
+	 */
+	public void resetModel(){
+		whitePieces.removeAll(whitePieces);
+		blackPieces.removeAll(blackPieces);
+		moveList.removeAll(moveList);
+		
+		
+		initializeBoard();
+		populateLists();
+	}
+	
+	/**
 	 * Initializes board to classic chess start position
 	 */
 	public void initializeBoard(){

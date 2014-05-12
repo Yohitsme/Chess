@@ -1,9 +1,13 @@
 package model;
 
+import utils.Utils;
+
 /**
- * The Move class holds the int values of the starting and ending position of a piece. The piece is also stored.
+ * The Move class holds the int values of the starting and ending position of a
+ * piece. The piece is also stored.
+ * 
  * @author Matthew
- *
+ * 
  */
 public class Move {
 
@@ -19,16 +23,18 @@ public class Move {
 	int endRow;
 	int endCol;
 	Piece piece;
-	
+
 	/**
 	 * Constructor
+	 * 
 	 * @param pieceIn
 	 * @param startRowIn
 	 * @param startColIn
 	 * @param endRowIn
 	 * @param endColIn
 	 */
-	public Move(Piece pieceIn, int startRowIn, int startColIn, int endRowIn, int endColIn){
+	public Move(Piece pieceIn, int startRowIn, int startColIn, int endRowIn,
+			int endColIn) {
 		this.piece = pieceIn;
 		this.startRow = startRowIn;
 		this.startCol = startColIn;
@@ -36,13 +42,26 @@ public class Move {
 		this.endCol = endColIn;
 	}
 
+	public String algebraicNotationPrint() {
+
+		char startCol = Utils.getAlgebraicCharacterFromCol(this.startCol);
+		char endCol = Utils.getAlgebraicCharacterFromCol(this.endCol);
+		char pieceAbbreviation = Utils.getAlgebraicCharacterFromPieceType(this.piece.getType());
+		
+		String result = "" + pieceAbbreviation + startCol + (this.startRow + 1) + " " + pieceAbbreviation + endCol
+				+ (this.endRow + 1);
+
+		return result;
+	}
+
 	public Piece getPiece() {
 		return piece;
 	}
-	
+
 	public void setPiece(Piece piece) {
 		this.piece = piece;
 	}
+
 	public int getStartRow() {
 		return startRow;
 	}

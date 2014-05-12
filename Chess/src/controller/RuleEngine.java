@@ -272,20 +272,20 @@ public class RuleEngine {
 					.equals("pawn");
 			boolean previousPieceIsDifferentColor = previousMove.getPiece()
 					.isWhite() != move.getPiece().isWhite();
-			boolean correctCol = move.getEndCol() == previousMove.getStartCol();
+			boolean correctCol = move.getEndCol() == previousMove.getStartCol() && calculateDeltaColUnsigned(move)==1;
 
 			if (previousPieceIsPawn && previousPieceIsDifferentColor
 					&& correctCol) {
 				// If white pawn
 				if (move.getPiece().isWhite()) {
 					if (calculateDeltaRowSigned(previousMove) == -2
-							&& move.getEndRow() == (previousMove.getEndRow() + 1))
+							&& move.getEndRow() == (previousMove.getEndRow() + 1) && move.getStartRow() == (previousMove.getEndRow()))
 						result = true;
 				}
 				// If black pawn
 				else {
 					if (calculateDeltaRowSigned(previousMove) == 2
-							&& move.getEndRow() == (previousMove.getEndRow() - 1))
+							&& move.getEndRow() == (previousMove.getEndRow() - 1)&& move.getStartRow() == (previousMove.getEndRow()))
 						result = true;
 
 				}
@@ -707,16 +707,23 @@ public class RuleEngine {
 		if (move.getPiece().getType().equals("king")) {
 			kingRow = move.getEndRow();
 			kingCol = move.getEndCol();
-		} else {
+		} else if (king != null){
 			kingRow = king.getRow();
 			kingCol = king.getCol();
 		}
-
+		
+		
 		result = !isAttackedSquare(kingRow, kingCol, opponentColor);
 
 		// Revert the board to it's previous state
 		undoChanges(capturedPiece, move);
-
+		
+		// If the king wasnt located in the above logic, all bets are off.
+		if (king == null){
+			System.out.println("RuleEngine.isNotSelfCheck: King was not found on the board, something has gone wrong. King got captured? Returning false.");
+			result = false;
+		}
+		
 		return result;
 	}
 

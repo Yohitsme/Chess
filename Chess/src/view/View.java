@@ -1,5 +1,7 @@
 package view;
 
+
+
 import java.awt.BorderLayout;
 import java.awt.Dimension;
 import java.awt.GridLayout;
@@ -12,6 +14,9 @@ import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JLayeredPane;
+import javax.swing.JMenu;
+import javax.swing.JMenuBar;
+import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 
 import controller.BoardController;
@@ -38,6 +43,7 @@ public class View {
 	PiecePanel[][] piecePanelArray;
 	JLabel [][] highlightArray;
 	JLabel dragPiece;
+	String boardOrientation;
 
 	HashMap<String, ImageIcon> imgMap;
 
@@ -53,23 +59,47 @@ public class View {
 
 		this.boardController = boardControllerIn;
 		this.masterListener = masterListenerIn;
+		this.boardOrientation = "normal";
 		// Populate imageMap
 		loadImages();
 
 		// Configure Panels
 		configureFrame();
+		configureMenuBar();
 		configureBoardPanel();
 		configurePiecePanel();
 		configureHighlightPanel();
 		configureDragPanel();
 		configureLayeredPane();
-		
 
 		frame.add(layeredPane, BorderLayout.CENTER);
 		frame.pack();
 
 	}
 
+	/**
+	 * Sets up the menu options available to the user
+	 */
+	public void configureMenuBar(){
+		JMenuBar menuBar = new JMenuBar();
+		JMenu fileMenu = new JMenu("File");
+		JMenu viewMenu = new JMenu("View");
+		
+		JMenuItem newGame = new JMenuItem("New Game");
+		newGame.setActionCommand("newGame");
+		newGame.addActionListener(this.masterListener);
+		
+		JMenuItem flipBoard = new JMenuItem("Flip Board");
+		flipBoard.setActionCommand("flipBoard");
+		flipBoard.addActionListener(masterListener);
+		
+		fileMenu.add(newGame);
+		viewMenu.add(flipBoard);
+		menuBar.add(fileMenu);
+		menuBar.add(viewMenu);
+		frame.setJMenuBar(menuBar);
+	}
+	
 	/**
 	 * Boilerplate highlight panel configuration.  The highlight panel is between the board panel and
 	 * the piece panel.  When a player presses the mouse on a piece, all squares that are legal to move 
@@ -136,6 +166,8 @@ public class View {
 	public void update() {
 
 		piecePanel.removeAll();
+		
+		if (boardOrientation.equals("normal")){
 		for (int row = 7; row >= 0; row--) {
 			for (int col = 0; col < 8; col++) {
 				piecePanelArray[row][col] = new PiecePanel(row, col,
@@ -144,6 +176,20 @@ public class View {
 				piecePanel.add(piecePanelArray[row][col]);
 
 			}
+		}}
+		else if (boardOrientation.equals("flipped")){
+			
+			for (int row = 0; row < 8; row++) {
+				for (int col = 0; col < 8; col++) {
+					piecePanelArray[row][col] = new PiecePanel(row, col,
+							generateJLabel(row, col),
+							boardController.getPieceByCoords(row, col));
+					piecePanel.add(piecePanelArray[row][col]);
+
+				}
+			}
+			
+			
 		}
 		piecePanel.repaint();
 		piecePanel.revalidate();
@@ -365,6 +411,14 @@ public class View {
 		for (int row = 0; row < 8; row++)
 			for (int col = 0; col < 8; col++)
 				highlightArray[row][col].setIcon(imgMap.get("blank"));
+	}
+
+	public String getBoardOrientation() {
+		return boardOrientation;
+	}
+
+	public void setBoardOrientation(String boardOrientation) {
+		this.boardOrientation = boardOrientation;
 	}
 
 	public void highlightSquare(int row, int col) {

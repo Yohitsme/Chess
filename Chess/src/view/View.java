@@ -416,12 +416,32 @@ public class View {
 	public String getBoardOrientation() {
 		return boardOrientation;
 	}
+	
+	/** 
+	 * Flips the board
+	 */
+	public void flipBoard(){
+		if (boardOrientation.equals("flipped")){
+			boardOrientation = "normal";
+			update();
+		}
+		else if (boardOrientation.equals("normal")){
+			boardOrientation = "flipped";
+			update();			
+		}
+		else
+			System.out.println("View.flipBoard: boardOrientation of /'" + boardOrientation + "/' not recognized.");
+	}
 
 	public void setBoardOrientation(String boardOrientation) {
 		this.boardOrientation = boardOrientation;
 	}
 
 	public void highlightSquare(int row, int col) {
+		if (boardOrientation.equals("flipped"))
+			row = 7-row;
+		
+		
 		highlightArray[row][col].setIcon(imgMap.get("highlight"));
 		
 	}

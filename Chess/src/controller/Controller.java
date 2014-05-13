@@ -116,9 +116,10 @@ public class Controller {
 		int startCol = computeColFromMouseEvent(pressEvent);
 		int endRow = computeRowFromMouseEvent(e);
 		int endCol = computeColFromMouseEvent(e);
+		boolean withinBounds = isWithinBounds(endRow, endCol);
 		Piece piece = boardController.getPieceByCoords(startRow, startCol);
-
-		if (piece != null) {
+		
+		if (piece != null && withinBounds) {
 			Move move = new Move(piece, startRow, startCol, endRow, endCol);
 			if (RuleEngine.validateMove(move, boardController, true)) {
 				
@@ -153,6 +154,10 @@ public class Controller {
 		view.removeHighlights();
 		view.update();
 	}
+
+	private boolean isWithinBounds(int endRow, int endCol) {
+		return (endRow >=0 && endRow <=7 && endCol >= 0 && endCol <=7);
+		}
 
 	/**
 	 * Calls methods to check and handle edge case moves
@@ -305,8 +310,21 @@ public class Controller {
 	}
 
 	public int computeRowFromMouseEvent(MouseEvent e) {
-
+		
+		boolean isFlipped;
+		
+		
+		if (view.getBoardOrientation().equals("normal"))
+			isFlipped = false;
+		else
+			isFlipped = true;
+		
 		int result = (640 - e.getY()) / 80;
+		
+		if (isFlipped)
+			result = 7-result;
+		
+		
 		return result;
 	}
 
@@ -337,7 +355,7 @@ public class Controller {
 			view.update();
 		}
 		else if(e.getActionCommand().equals("flipBoard")){
-			String str = view.getBoardOrientation();
+			view.flipBoard();
 		}
 		else
 			System.out.println("Controller.handleActionEvent: Action command /'" + e.getActionCommand() + "/' not recognized");

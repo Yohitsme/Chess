@@ -88,7 +88,8 @@ public class RuleEngine {
 
 		return result;
 	}
-
+	
+	
 	/**
 	 * Returns true if the start square is different than the end square, false
 	 * otherwise
@@ -156,7 +157,7 @@ public class RuleEngine {
 		else if (move.getPiece().getType().equals("pawn"))
 			result = isLegalPawnMove(move, boardController);
 		else if (move.getPiece().getType().equals("king"))
-			result = isLegalKingMove(move, boardController);
+			result = isLegalKingMove(move);
 		else if (move.getPiece().getType().equals("bishop"))
 			result = isLegalBishopMove(move, boardController);
 
@@ -167,7 +168,9 @@ public class RuleEngine {
 
 		return result;
 	}
+	
 
+	
 	/**
 	 * Returns true if move was along a column or along a row.
 	 * 
@@ -344,10 +347,9 @@ public class RuleEngine {
 	 * @param boardController
 	 * @return
 	 */
-	public static boolean isLegalKingMove(Move move,
-			BoardController boardController) {
+	public static boolean isLegalKingMove(Move move) {
 		boolean result = false;
-
+		BoardController boardController = controller.getBoardController();
 		int deltaRow = calculateDeltaRowUnsigned(move);
 		int deltaCol = calculateDeltaColUnsigned(move);
 
@@ -366,6 +368,7 @@ public class RuleEngine {
 			boolean isCastlingThroughCheck = false;
 			boolean isCastlingIntoCheck = false;
 			boolean piecesBetweenRookAndKing = false;
+			boolean isRookDeadOrMissing = false;
 
 			// Get signed deltaCol
 			deltaCol = calculateDeltaColSigned(move);
@@ -375,9 +378,12 @@ public class RuleEngine {
 			isInCheck = isAttackedSquare(move.getPiece().getRow(), move
 					.getPiece().getCol(), color);
 			// If castling kingside and rook is alive
-			if (deltaCol > 0
-					&& boardController.getPieceByCoords(move.getStartRow(), 7) != null) {
-
+			if (deltaCol > 0)
+					{
+if (boardController.getPieceByCoords(move.getStartRow(), 7) == null) 
+	isRookDeadOrMissing = true;
+else{
+				
 				rookHasMoved = boardController.getPieceByCoords(
 						move.getStartRow(), 7).isHasMoved();
 
@@ -393,13 +399,16 @@ public class RuleEngine {
 				isCastlingIntoCheck = isAttackedSquare(
 						(move.getPiece().getRow()),
 						move.getPiece().getCol() + 2, color);
-
+}
 			}
 			// If castling queenside and rook is alive
-			else if (boardController.getPieceByCoords(move.getStartRow(), 0) != null) {
+			else 
+				if (boardController.getPieceByCoords(move.getStartRow(), 0) == null) 
+				isRookDeadOrMissing = true;
+				else{
 				rookHasMoved = boardController.getPieceByCoords(
 						move.getStartRow(), 0).isHasMoved();
-
+				
 				for (int i = 1; i < 4; i++) {
 					if (boardController.getPieceByCoords(move.getStartRow(),
 							move.getStartCol() - i) != null)
@@ -413,11 +422,12 @@ public class RuleEngine {
 						(move.getPiece().getRow()),
 						move.getPiece().getCol() - 2, color);
 			}
-
+			
 			result = !kingHasMoved && !rookHasMoved && !isInCheck
 					&& !isCastlingThroughCheck && !isCastlingIntoCheck
-					&& !piecesBetweenRookAndKing;
+					&& !piecesBetweenRookAndKing && !isRookDeadOrMissing;
 		}
+		
 		return result;
 	}
 
@@ -435,6 +445,7 @@ public class RuleEngine {
 		else
 			pieces = controller.getModel().getBlackPieces();
 		for (Piece piece : pieces) {
+			
 			if (validateCheck(new Move(piece, piece.getRow(), piece.getCol(),
 					row, col), controller.getBoardController(), false))
 				result = true;

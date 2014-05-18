@@ -1,5 +1,7 @@
 package model;
 
+import utils.Utils;
+
 /**
  * The Piece class holds information about a chess piece
  * @author Matthew
@@ -41,11 +43,11 @@ public class Piece {
 
 	@Override
 	public String toString() {
-		String str = "";
+		String str = ""+Utils.getAlgebraicCharacterFromCol(getCol())+getRow();
 		if (isWhite)
-			str = "white ";
+			str += " white ";
 		else
-			str = "black ";
+			str += " black ";
 		
 		return str += type;
 	}

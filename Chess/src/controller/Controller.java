@@ -4,6 +4,7 @@ import java.awt.Component;
 import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
+import java.util.ArrayList;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -29,6 +30,7 @@ public class Controller {
 	BoardController boardController;
 	MasterListener masterListener;
 	RuleEngine ruleEngine;
+	MoveGenerator moveGenerator;
 
 	/**
 	 * Constructor
@@ -37,6 +39,7 @@ public class Controller {
 		model = new Model();
 		ruleEngine = new RuleEngine(this);
 		boardController = new BoardController(model);
+		moveGenerator = new MoveGenerator(boardController, ruleEngine);
 		masterListener = new MasterListener(this);
 		view = new View(boardController, masterListener);
 	}
@@ -70,16 +73,13 @@ public class Controller {
 		int col = computeColFromMouseEvent(e);
 
 		Piece piece = boardController.getPieceByCoords(row, col);
-		Move move = new Move(piece, row, col, 0, 0);
+		//Move move = new Move(piece, row, col, 0, 0);
 
-		for (int i = 0; i < 8; i++)
-			for (int j = 0; j < 8; j++) {
-				move.setEndCol(j);
-				move.setEndRow(i);
-				if (RuleEngine.validateMove(move, boardController, false))
-					view.highlightSquare(i, j);
-			}
-
+		ArrayList<Move> legalMoves = moveGenerator.findMoves(row,col);
+		
+		for (Move move: legalMoves)
+			view.highlightSquare(move.getEndRow(), move.getEndCol());
+		
 	}
 
 	/**
@@ -109,7 +109,6 @@ public class Controller {
 	 */
 	public void handleMouseRelease(MouseEvent e) {
 		view.clearDragLabelIcon();
-		final int imgSideLength = 80;
 
 		MouseEvent pressEvent = masterListener.getPressEvent();
 		int startRow = computeRowFromMouseEvent(pressEvent);
@@ -143,7 +142,7 @@ public class Controller {
 
 				System.out
 						.println("Controller.handleMouseRelease: Valid Move: " + move.algebraicNotationPrint());
-				//printTeams();
+		
 
 			} else
 				System.out
@@ -151,8 +150,23 @@ public class Controller {
 
 		}
 		System.out.println("========================================================");
+	
 		view.removeHighlights();
 		view.update();
+		
+//		printLegalMoves();
+//		printTeams();
+//		int m = 1;
+//		ArrayList<Move> list = new ArrayList<Move>();
+//		for (int i = 0; i < 8; i++){
+//			for (int j = 0; j < 8; j++)
+//				if (boardController.getPieceByCoords(i,j) != null &&boardController.getPieceByCoords(i,j).isWhite()){
+//			list.addAll(moveGenerator.findMoves(i,j));
+//		
+//		}}
+//			for (Move move: list)
+//				System.out.println("Legal move" + "[" + m++ +"]: " + move.algebraicNotationPrint());
+//		
 	}
 
 	private boolean isWithinBounds(int endRow, int endCol) {
@@ -172,6 +186,23 @@ public class Controller {
 		handleCastling(move);
 	}
 
+	/**
+	 * Calls move generator and prints all the legal moves that it finds
+	 */
+	public void printLegalMoves(){
+		ArrayList<Move> legalMoves = new ArrayList<Move>();
+		
+		
+		for (int row = 0; row < 8; row++){
+			for (int col = 0; col < 8; col++){
+				legalMoves.addAll(moveGenerator.findMoves(row,col));
+			}
+		}
+		
+		for (Move move: legalMoves)
+			System.out.println(move.toString());
+	}
+	
 	/**
 	 * If parameter move was a kingside or queenside castle, this method moves the rook to the proper square
 	 * @param move

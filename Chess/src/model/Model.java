@@ -4,8 +4,9 @@ import java.util.ArrayList;
 
 /**
  * The array of pieces that represents the board is stored here.
+ * 
  * @author Matthew
- *
+ * 
  */
 public class Model {
 
@@ -13,130 +14,126 @@ public class Model {
 	ArrayList<Piece> whitePieces;
 	ArrayList<Piece> blackPieces;
 	ArrayList<Move> moveList;
+	String gameMode; // "pVc,pVp,cVp,cVc"
 
 	/**
 	 * Constructor. Initializes board to classic chess start position
 	 */
-	public Model(){
-		
+	public Model() {
+
 		whitePieces = new ArrayList<Piece>();
 		blackPieces = new ArrayList<Piece>();
 		moveList = new ArrayList<Move>();
+		gameMode = "pvp";
 		
 		board = new Piece[8][8];
 		initializeBoard();
 		populateLists();
 	}
-	
+
 	/**
-	 * Copy constructor.  Don't need the same references to pieces to be the same across moveList and board and piece lists? I don't think so
+	 * Copy constructor. Don't need the same references to pieces to be the same
+	 * across moveList and board and piece lists? I don't think so
+	 * 
 	 * @param modelIn
 	 */
-	public Model(Model modelIn){
-		this.board=new Piece[8][8];
-		
-		for (int i = 0; i < 8; i++){
-			for (int j = 0; j < 8; j++){
+	public Model(Model modelIn) {
+		this.board = new Piece[8][8];
+
+		for (int i = 0; i < 8; i++) {
+			for (int j = 0; j < 8; j++) {
 				this.board[i][j] = new Piece(modelIn.getBoard()[i][j]);
 			}
 		}
-		
+
 		this.whitePieces = new ArrayList<Piece>(modelIn.getWhitePieces());
 		this.blackPieces = new ArrayList<Piece>(modelIn.getBlackPieces());
 		this.moveList = new ArrayList<Move>(modelIn.getMoveList());
-	
+
 	}
-	
+
 	/**
 	 * Resets all data to initial game state
 	 */
-	public void resetModel(){
+	public void resetModel() {
 		whitePieces.removeAll(whitePieces);
 		blackPieces.removeAll(blackPieces);
 		moveList.removeAll(moveList);
-		
-		
+
 		initializeBoard();
 		populateLists();
 	}
-	
+
 	/**
 	 * Initializes board to classic chess start position
 	 */
-	public void initializeBoard(){
-		
+	public void initializeBoard() {
+
 		/*
-		 * (row,col)
-		 * (7,0) ... ... ... (7,7)
-		 * ...           ...
-		 * ...           ...
-		 * ...       ...
-		 * (2,0)     ...
-		 * (1,0) ...
-		 * (0,0) ... ... ... (0,7)
+		 * (row,col) (7,0) ... ... ... (7,7) ... ... ... ... ... ... (2,0) ...
+		 * (1,0) ... (0,0) ... ... ... (0,7)
 		 */
-		
+
 		boolean hasMoved = false;
 		boolean white = true;
 		boolean black = false;
-		
+
 		// Set white piece row
-		board [0][0] = new Piece("rook",white,hasMoved,0,0);
-		board [0][1] = new Piece("knight",white,hasMoved,0,1);
-		board [0][2] = new Piece("bishop",white,hasMoved,0,2);
-		board [0][3] = new Piece("queen",white,hasMoved,0,3);
-		board [0][4] = new Piece("king",white,hasMoved,0,4);
-		board [0][5] = new Piece("bishop",white,hasMoved,0,5);
-		board [0][6] = new Piece("knight",white,hasMoved,0,6);
-		board [0][7] = new Piece("rook",white,hasMoved,0,7);
-		
+		board[0][0] = new Piece("rook", white, hasMoved, 0, 0);
+		board[0][1] = new Piece("knight", white, hasMoved, 0, 1);
+		board[0][2] = new Piece("bishop", white, hasMoved, 0, 2);
+		board[0][3] = new Piece("queen", white, hasMoved, 0, 3);
+		board[0][4] = new Piece("king", white, hasMoved, 0, 4);
+		board[0][5] = new Piece("bishop", white, hasMoved, 0, 5);
+		board[0][6] = new Piece("knight", white, hasMoved, 0, 6);
+		board[0][7] = new Piece("rook", white, hasMoved, 0, 7);
+
 		// Set white pawns
-		for (int i = 0; i < 8; i++){
-			board[1][i] = new Piece("pawn", white, hasMoved,1,i);
+		for (int i = 0; i < 8; i++) {
+			board[1][i] = new Piece("pawn", white, hasMoved, 1, i);
 		}
-		
+
 		// Set empty rows
 		for (int row = 2; row < 6; row++)
 			for (int col = 0; col < 8; col++)
 				board[row][col] = null;
-		
+
 		// Set black pawns
-		for (int i = 0; i < 8; i++){
-			board[6][i] = new Piece("pawn", black, hasMoved,6,i);
+		for (int i = 0; i < 8; i++) {
+			board[6][i] = new Piece("pawn", black, hasMoved, 6, i);
 		}
-		
+
 		// Set black piece row
-		board [7][0] = new Piece("rook",black,hasMoved,7,0);
-		board [7][1] = new Piece("knight",black,hasMoved,7,1);
-		board [7][2] = new Piece("bishop",black,hasMoved,7,2);
-		board [7][3] = new Piece("queen",black,hasMoved,7,3);
-		board [7][4] = new Piece("king",black,hasMoved,7,4);
-		board [7][5] = new Piece("bishop",black,hasMoved,7,5);
-		board [7][6] = new Piece("knight",black,hasMoved,7,6);
-		board [7][7] = new Piece("rook",black,hasMoved,7,7);
+		board[7][0] = new Piece("rook", black, hasMoved, 7, 0);
+		board[7][1] = new Piece("knight", black, hasMoved, 7, 1);
+		board[7][2] = new Piece("bishop", black, hasMoved, 7, 2);
+		board[7][3] = new Piece("queen", black, hasMoved, 7, 3);
+		board[7][4] = new Piece("king", black, hasMoved, 7, 4);
+		board[7][5] = new Piece("bishop", black, hasMoved, 7, 5);
+		board[7][6] = new Piece("knight", black, hasMoved, 7, 6);
+		board[7][7] = new Piece("rook", black, hasMoved, 7, 7);
 	}
-	
+
 	/**
 	 * Adds all of each team's pieces to their respective list
+	 * 
 	 * @return
 	 */
-	public void populateLists(){
-		for (int row = 0; row < 2; row++){
+	public void populateLists() {
+		for (int row = 0; row < 2; row++) {
 			for (int col = 0; col < 8; col++)
 				whitePieces.add(board[row][col]);
 		}
-		for (int row = 6; row < 8; row++){
+		for (int row = 6; row < 8; row++) {
 			for (int col = 0; col < 8; col++)
 				blackPieces.add(board[row][col]);
 		}
 	}
-	
-	
-	
+
 	public Piece[][] getBoard() {
 		return board;
 	}
-	
+
 	public void setBoard(Piece[][] board) {
 		this.board = board;
 	}
@@ -163,5 +160,13 @@ public class Model {
 
 	public void setBlackPieces(ArrayList<Piece> blackPieces) {
 		this.blackPieces = blackPieces;
+	}
+
+	public String getGameMode() {
+		return gameMode;
+	}
+
+	public void setGameMode(String gameMode) {
+		this.gameMode = gameMode;
 	}
 }

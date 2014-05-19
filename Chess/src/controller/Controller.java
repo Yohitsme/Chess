@@ -1,20 +1,15 @@
 package controller;
 
-import java.awt.Component;
-import java.awt.Point;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.SwingUtilities;
 
-import utils.Utils;
 import model.Model;
 import model.Move;
 import model.Piece;
-import view.PiecePanel;
 import view.View;
 
 /**
@@ -31,6 +26,7 @@ public class Controller {
 	MasterListener masterListener;
 	RuleEngine ruleEngine;
 	MoveGenerator moveGenerator;
+	AI AI;
 
 	/**
 	 * Constructor
@@ -42,6 +38,7 @@ public class Controller {
 		moveGenerator = new MoveGenerator(boardController, ruleEngine);
 		masterListener = new MasterListener(this);
 		view = new View(boardController, masterListener);
+		AI = new AI(this);
 	}
 
 	/**
@@ -73,13 +70,13 @@ public class Controller {
 		int col = computeColFromMouseEvent(e);
 
 		Piece piece = boardController.getPieceByCoords(row, col);
-		//Move move = new Move(piece, row, col, 0, 0);
+		// Move move = new Move(piece, row, col, 0, 0);
 
-		ArrayList<Move> legalMoves = moveGenerator.findMoves(row,col);
-		
-		for (Move move: legalMoves)
+		ArrayList<Move> legalMoves = moveGenerator.findMoves(row, col);
+
+		for (Move move : legalMoves)
 			view.highlightSquare(move.getEndRow(), move.getEndCol());
-		
+
 	}
 
 	/**
@@ -109,75 +106,234 @@ public class Controller {
 	 */
 	public void handleMouseRelease(MouseEvent e) {
 		view.clearDragLabelIcon();
-
+		boolean gameOver = false;
 		MouseEvent pressEvent = masterListener.getPressEvent();
 		int startRow = computeRowFromMouseEvent(pressEvent);
 		int startCol = computeColFromMouseEvent(pressEvent);
 		int endRow = computeRowFromMouseEvent(e);
 		int endCol = computeColFromMouseEvent(e);
-		boolean withinBounds = isWithinBounds(endRow, endCol);
+		boolean iswithinBounds = isWithinBounds(endRow, endCol);
 		Piece piece = boardController.getPieceByCoords(startRow, startCol);
-		
-		if (piece != null && withinBounds) {
-			Move move = new Move(piece, startRow, startCol, endRow, endCol);
-			if (RuleEngine.validateMove(move, boardController, true)) {
-				
-				// Check for special cases, such as pawn promotes, en passant captures
-				handleSpecialCases(move);
-				
-				// Remove piece from it's list in model if a capture occurred
-				updatePieceLists(move);
+		Move move = new Move(piece, startRow, startCol, endRow, endCol);
 
-				// Move the piece
-				boardController.setPieceByCoords(endRow, endCol, piece);
-				piece.setCol(endCol);
-				piece.setRow(endRow);
-				
-				// Mark the piece has having moved
-				boardController.getPieceByCoords(move.getStartRow(),
-						move.getStartCol()).setHasMoved(true);
+		if (isAcceptableInput(piece) && piece != null && iswithinBounds)
+			processMoveAttempt(move);
 
-				boardController.clearSquare(startRow, startCol);
-				model.getMoveList().add(move);
+		System.out.println("================================================");
 
-				System.out
-						.println("Controller.handleMouseRelease: Valid Move: " + move.algebraicNotationPrint());
-		
-
-			} else
-				System.out
-						.println("Controller.handleMouseRelease: Invalid move. Board not modified.");
-
-		}
-		System.out.println("========================================================");
-	
 		view.removeHighlights();
 		view.update();
+
+		if (isBlackCheckmated() || isWhiteCheckmated())
+			gameOver = true;
 		
-//		printLegalMoves();
-//		printTeams();
-//		int m = 1;
-//		ArrayList<Move> list = new ArrayList<Move>();
-//		for (int i = 0; i < 8; i++){
-//			for (int j = 0; j < 8; j++)
-//				if (boardController.getPieceByCoords(i,j) != null &&boardController.getPieceByCoords(i,j).isWhite()){
-//			list.addAll(moveGenerator.findMoves(i,j));
-//		
-//		}}
-//			for (Move move: list)
-//				System.out.println("Legal move" + "[" + m++ +"]: " + move.algebraicNotationPrint());
-//		
+		if (gameOver)
+			JOptionPane.showMessageDialog(new JFrame(), "Game over!");
+
+		if (isAIturn() && !gameOver) {
+			processMove(AI.move(computeTurn()));
+		}
+
+		view.update();
+		
+		if (isBlackCheckmated() || isWhiteCheckmated())
+			JOptionPane.showMessageDialog(new JFrame(), "Game over!");
+
+	}
+
+	/**
+	 * Checks to see if the attempted move was valid, and processes it if so.
+	 * Invalid moves are ignored.
+	 * 
+	 * @param move
+	 */
+	public void processMoveAttempt(Move move) {
+
+		if (RuleEngine.validateMove(move, boardController, true)) {
+
+			// Check for special cases, such as pawn promotes, en
+			// passant captures
+			handleSpecialCases(move);
+
+			// Remove piece from it's list in model if a capture
+			// occurred
+			updatePieceLists(move);
+
+			// Move the piece
+			boardController.setPieceByCoords(move.getEndRow(),
+					move.getEndCol(), move.getPiece());
+			move.getPiece().setCol(move.getEndCol());
+			move.getPiece().setRow(move.getEndRow());
+
+			// Mark the piece has having moved
+			boardController.getPieceByCoords(move.getStartRow(),
+					move.getStartCol()).setHasMoved(true);
+
+			boardController.clearSquare(move.getStartRow(), move.getStartCol());
+			model.getMoveList().add(move);
+
+			System.out.println("Controller.handleMouseRelease: Valid Move: "
+					+ move.algebraicNotationPrint());
+
+		} else
+			System.out
+					.println("Controller.handleMouseRelease: Invalid move. Board not modified.");
+	}
+
+	/**
+	 * Assumes that the move is valid and updates the move on the board
+	 * 
+	 * @param move
+	 */
+	public void processMove(Move move) {
+		// Check for special cases, such as pawn promotes, en
+		// passant captures
+		handleSpecialCases(move);
+
+		// Remove piece from it's list in model if a capture
+		// occurred
+		updatePieceLists(move);
+
+		// Move the piece
+		boardController.setPieceByCoords(move.getEndRow(), move.getEndCol(),
+				move.getPiece());
+		move.getPiece().setCol(move.getEndCol());
+		move.getPiece().setRow(move.getEndRow());
+
+		// Mark the piece has having moved
+		boardController
+				.getPieceByCoords(move.getStartRow(), move.getStartCol())
+				.setHasMoved(true);
+
+		boardController.clearSquare(move.getStartRow(), move.getStartCol());
+		model.getMoveList().add(move);
+	}
+
+	/**
+	 * Returns true if it is the human's turn and a piece was moved that is the
+	 * color of the current player
+	 * 
+	 * @param piece
+	 * @return
+	 */
+	public boolean isAcceptableInput(Piece piece) {
+		String currentPlayerColor = computeTurn();
+		boolean result = false;
+
+		if (piece != null) {
+			if (currentPlayerColor.equals("white") && piece.isWhite()
+					&& !isWhiteAI()) {
+				result = true;
+			} else if (currentPlayerColor.equals("black") && !piece.isWhite()
+					&& !isBlackAI())
+				result = true;
+		}
+		return result;
+	}
+
+	/**
+	 * Returns true if it is the AI's turn
+	 * 
+	 * @return
+	 */
+	public boolean isAIturn() {
+		boolean result = false;
+		String currentPlayerColor = computeTurn();
+
+		if (currentPlayerColor.equals("white") && isWhiteAI()) {
+			result = true;
+		} else if (currentPlayerColor.equals("black") && isBlackAI())
+			result = true;
+
+		return result;
+
+	}
+
+	/**
+	 * Returns true if white or black is in checkmate or stalemate.
+	 * 
+	 * @return
+	 */
+	public boolean isGameOver() {
+
+		boolean result;
+
+		return false;
+	}
+
+	/**
+	 * Returns true if white is in check and has no legal moves
+	 * 
+	 * @return
+	 */
+	public boolean isWhiteCheckmated() {
+		ArrayList<Piece> white = model.getWhitePieces();
+		Piece king = null;
+		boolean inCheck = false;
+		boolean result = false;
+
+		for (Piece piece : white) {
+			if (piece.getType().equals("king"))
+				king = piece;
+		}
+
+		if (RuleEngine.isAttackedSquare(king.getRow(), king.getCol(), "black"))
+			inCheck = true;
+
+		ArrayList<Move> list = new ArrayList<Move>();
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++)
+				if (boardController.getPieceByCoords(row, col) != null
+						&& boardController.getPieceByCoords(row, col).isWhite()) {
+					list.addAll(moveGenerator.findMoves(row, col));
+
+				}
+		}
+		result = inCheck && (list.isEmpty());
+		return result;
+	}
+
+	/**
+	 * Returns true if black is in check and has no legal moves
+	 * 
+	 * @return
+	 */
+	public boolean isBlackCheckmated() {
+		ArrayList<Piece> black = model.getBlackPieces();
+		Piece king = null;
+		boolean inCheck = false;
+		boolean result = false;
+
+		for (Piece piece : black) {
+			if (piece.getType().equals("king"))
+				king = piece;
+		}
+
+		if (RuleEngine.isAttackedSquare(king.getRow(), king.getCol(), "white"))
+			inCheck = true;
+
+		ArrayList<Move> list = new ArrayList<Move>();
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++)
+				if (boardController.getPieceByCoords(row, col) != null
+						&& !boardController.getPieceByCoords(row, col)
+								.isWhite()) {
+					list.addAll(moveGenerator.findMoves(row, col));
+
+				}
+		}
+		result = inCheck && (list.isEmpty());
+		return result;
 	}
 
 	private boolean isWithinBounds(int endRow, int endCol) {
-		return (endRow >=0 && endRow <=7 && endCol >= 0 && endCol <=7);
-		}
+		return (endRow >= 0 && endRow <= 7 && endCol >= 0 && endCol <= 7);
+	}
 
 	/**
-	 * Calls methods to check and handle edge case moves
-	 * <li> En Passant captures
-	 * <li> Pawn promotions
-	 * <li> Castling
+	 * Calls methods to check and handle edge case moves <li>En Passant captures
+	 * <li>Pawn promotions <li>Castling
+	 * 
 	 * @param move
 	 */
 	private void handleSpecialCases(Move move) {
@@ -189,73 +345,79 @@ public class Controller {
 	/**
 	 * Calls move generator and prints all the legal moves that it finds
 	 */
-	public void printLegalMoves(){
+	public void printLegalMoves() {
 		ArrayList<Move> legalMoves = new ArrayList<Move>();
-		
-		
-		for (int row = 0; row < 8; row++){
-			for (int col = 0; col < 8; col++){
-				legalMoves.addAll(moveGenerator.findMoves(row,col));
+
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				legalMoves.addAll(moveGenerator.findMoves(row, col));
 			}
 		}
-		
-		for (Move move: legalMoves)
+
+		for (Move move : legalMoves)
 			System.out.println(move.toString());
 	}
-	
+
 	/**
-	 * If parameter move was a kingside or queenside castle, this method moves the rook to the proper square
+	 * If parameter move was a kingside or queenside castle, this method moves
+	 * the rook to the proper square
+	 * 
 	 * @param move
 	 */
 	private void handleCastling(Move move) {
-		if (move.getPiece().getType().equals("king") && RuleEngine.calculateDeltaColUnsigned(move) ==2){
-			if (RuleEngine.calculateDeltaColSigned(move) == 2){
-				Piece rook = boardController.getPieceByCoords(move.getStartRow(), 7);
+		if (move.getPiece().getType().equals("king")
+				&& RuleEngine.calculateDeltaColUnsigned(move) == 2) {
+			if (RuleEngine.calculateDeltaColSigned(move) == 2) {
+				Piece rook = boardController.getPieceByCoords(
+						move.getStartRow(), 7);
 				boardController.setPieceByCoords(move.getStartRow(), 5, rook);
 				rook.setCol(5);
 				boardController.clearSquare(move.getStartRow(), 7);
-			}else{
-				Piece rook = boardController.getPieceByCoords(move.getStartRow(), 0);
+			} else {
+				Piece rook = boardController.getPieceByCoords(
+						move.getStartRow(), 0);
 				boardController.setPieceByCoords(move.getStartRow(), 3, rook);
 				rook.setCol(3);
 				boardController.clearSquare(move.getStartRow(), 0);
 			}
-				
+
 		}
-		
-		
+
 	}
 
 	/**
-	 * If parameter move was a pawn being moved to the first or last rank, this method prompts the user
-	 * for a piece type and turns the pawn into the type chosen by the user
+	 * If parameter move was a pawn being moved to the first or last rank, this
+	 * method prompts the user for a piece type and turns the pawn into the type
+	 * chosen by the user
+	 * 
 	 * @param move
 	 */
 	private void handlePawnPromote(Move move) {
-		if (move.getPiece().getType().equals("pawn") && (move.getEndRow() == 7 || move.getEndRow() == 0)){
+		if (move.getPiece().getType().equals("pawn")
+				&& (move.getEndRow() == 7 || move.getEndRow() == 0)) {
 			String choice = getPawnPromoteChoice();
 			move.getPiece().setType(choice);
 		}
-		
+
 	}
 
 	/**
-	 * Prompts the user for the type of piece they want to promote their pawn to, and returns a string of the name
-	 * of that type.  
+	 * Prompts the user for the type of piece they want to promote their pawn
+	 * to, and returns a string of the name of that type.
+	 * 
 	 * @return
 	 */
 	private String getPawnPromoteChoice() {
 		// TODO Auto-generated method stub
-		Object[] options = {"queen", "rook","knight","bishop"};
+		Object[] options = { "queen", "rook", "knight", "bishop" };
 		int selection = -1;
-		
+
 		while (selection == -1)
 			selection = JOptionPane.showOptionDialog(new JFrame(),
-				"Select what type of piece to promote you pawn to",
-				"Pawn Promotion", JOptionPane.YES_NO_CANCEL_OPTION,
-				JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+					"Select what type of piece to promote you pawn to",
+					"Pawn Promotion", JOptionPane.YES_NO_CANCEL_OPTION,
+					JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
 
-		
 		return (String) options[selection];
 	}
 
@@ -264,12 +426,11 @@ public class Controller {
 	 */
 	private void printTeams() {
 		System.out.println("Controller.printTeams: White pieces remaining: ");
-		for (Piece piece: model.getWhitePieces())
+		for (Piece piece : model.getWhitePieces())
 			System.out.println("-" + piece.toString());
-		
 
 		System.out.println("Controller.printTeams: Black pieces remaining: ");
-		for (Piece piece: model.getBlackPieces())
+		for (Piece piece : model.getBlackPieces())
 			System.out.println("-" + piece.toString());
 	}
 
@@ -297,7 +458,7 @@ public class Controller {
 	 */
 	public Piece handleEnPassantCaptures(Move move) {
 		Piece pawnCaptured = null;
-		
+
 		if (move.getPiece().getType().equals("pawn")
 				&& move.getStartCol() != move.getEndCol()
 				&& boardController.getPieceByCoords(move.getEndRow(),
@@ -308,7 +469,7 @@ public class Controller {
 			removePieceFromList(previousMove);
 
 			pawnCaptured = previousMove.getPiece();
-			
+
 			boardController.clearSquare(previousMove.getEndRow(),
 					previousMove.getEndCol());
 		}
@@ -341,21 +502,19 @@ public class Controller {
 	}
 
 	public int computeRowFromMouseEvent(MouseEvent e) {
-		
+
 		boolean isFlipped;
-		
-		
+
 		if (view.getBoardOrientation().equals("normal"))
 			isFlipped = false;
 		else
 			isFlipped = true;
-		
+
 		int result = (640 - e.getY()) / 80;
-		
+
 		if (isFlipped)
-			result = 7-result;
-		
-		
+			result = 7 - result;
+
 		return result;
 	}
 
@@ -377,21 +536,129 @@ public class Controller {
 
 	/**
 	 * Processes action events
+	 * 
 	 * @param e
 	 */
 	public void handleActionEvent(ActionEvent e) {
-		if (e.getActionCommand().equals("newGame")){
+		if (e.getActionCommand().equals("newGame")) {
 			System.out.println("Controller.handleActionEvent: ResettingGame");
 			model.resetModel();
 			view.update();
-		}
-		else if(e.getActionCommand().equals("flipBoard")){
+		} else if (e.getActionCommand().equals("flipBoard")) {
 			view.flipBoard();
-		}
-		else
-			System.out.println("Controller.handleActionEvent: Action command /'" + e.getActionCommand() + "/' not recognized");
-			
-		
+		} else if (e.getActionCommand().equals("changeGameMode")) {
+			String choice = promptForGameMode();
+			if (choice != null) {
+				model.setGameMode(choice);
+				model.resetModel();
+				view.update();
+			}
+		} else
+			System.out
+					.println("Controller.handleActionEvent: Action command /'"
+							+ e.getActionCommand() + "/' not recognized");
+
 	}
 
+	public String promptForGameMode() {
+
+		// TODO Auto-generated method stub
+		String[] choices = { "pVp", "pVc", "cVp", "cVc" };
+		String result = null;
+		Object[] options = { "Player Vs Player", "Player Vs Computer",
+				"Computer Vs Player", "Computer Vs Computer" };
+
+		int selection = JOptionPane.showOptionDialog(new JFrame(),
+				"Select a game mode (this will restart the game)", "Game Mode",
+				JOptionPane.YES_NO_CANCEL_OPTION, JOptionPane.QUESTION_MESSAGE,
+				null, options, options[0]);
+
+		if (selection != -1)
+			result = choices[selection];
+		return result;
+
+	}
+
+	/**
+	 * Returns "white" if it is white's turn, and "black" if it is black's turn
+	 * 
+	 * @return
+	 */
+	public String computeTurn() {
+		String result;
+		int turnNumber = model.getMoveList().size();
+
+		if ((turnNumber % 2) == 1)
+			result = "black";
+		else
+			result = "white";
+		return result;
+	}
+
+	/**
+	 * Returns true if white is played by the computer
+	 */
+	public boolean isWhiteAI() {
+		boolean result = false;
+		if (model.getGameMode().equals("cVp")
+				|| model.getGameMode().equals("cVc"))
+			result = true;
+
+		return result;
+	}
+
+	/**
+	 * Returns true if black is played by the computer
+	 * 
+	 * @return
+	 */
+	public boolean isBlackAI() {
+		boolean result = false;
+		if (model.getGameMode().equals("cVc")
+				|| model.getGameMode().equals("pVc"))
+			result = true;
+
+		return result;
+
+	}
+
+	public View getView() {
+		return view;
+	}
+
+	public void setView(View view) {
+		this.view = view;
+	}
+
+	public MasterListener getMasterListener() {
+		return masterListener;
+	}
+
+	public void setMasterListener(MasterListener masterListener) {
+		this.masterListener = masterListener;
+	}
+
+	public RuleEngine getRuleEngine() {
+		return ruleEngine;
+	}
+
+	public void setRuleEngine(RuleEngine ruleEngine) {
+		this.ruleEngine = ruleEngine;
+	}
+
+	public MoveGenerator getMoveGenerator() {
+		return moveGenerator;
+	}
+
+	public void setMoveGenerator(MoveGenerator moveGenerator) {
+		this.moveGenerator = moveGenerator;
+	}
+
+	public AI getAI() {
+		return AI;
+	}
+
+	public void setAI(AI aI) {
+		AI = aI;
+	}
 }

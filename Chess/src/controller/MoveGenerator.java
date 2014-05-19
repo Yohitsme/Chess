@@ -56,7 +56,35 @@ public class MoveGenerator {
 				legalMoves.addAll(findKingMoves(row, col));
 			else if (piece.getType().equals("pawn"))
 				legalMoves.addAll(findPawnMoves(row, col));
-				
+
+		}
+
+		return legalMoves;
+	}
+
+	/**
+	 * Finds all moves for the color of the given parameter <code>color</code>
+	 * 
+	 * @return
+	 */
+	public ArrayList<Move> findMoves(String color) {
+		Piece piece = null;
+		ArrayList<Move> legalMoves = new ArrayList<Move>();
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++) {
+				piece = boardController.getPieceByCoords(row, col);
+				if (piece != null){
+				if (color.equals("white")) {
+					if (piece.isWhite())
+						legalMoves.addAll(findMoves(row,col));
+				}
+				else{
+					if (!piece.isWhite())
+						legalMoves.addAll(findMoves(row,col));
+					
+				}
+				}
+			}
 		}
 
 		return legalMoves;
@@ -305,35 +333,33 @@ public class MoveGenerator {
 			rowDirection = 1;
 		else
 			rowDirection = -1;
-		
+
 		// Moving one step forward
-		move = new Move(piece, row, col,
-				row + 1*rowDirection, col);
+		move = new Move(piece, row, col, row + 1 * rowDirection, col);
 		if (RuleEngine.isLegalPawnMove(move, boardController)
 				&& RuleEngine.isNotSelfCheck(move, boardController))
 			legalMoves.add(move);
-	
+
 		// Moving two steps forward
-		if (boardController.getPieceByCoords(row + 1*rowDirection, col) == null) {
-			move = new Move(piece, row, col,
-					row + 2*rowDirection, col);
+		if (boardController.getPieceByCoords(row + 1 * rowDirection, col) == null) {
+			move = new Move(piece, row, col, row + 2 * rowDirection, col);
 			if (RuleEngine.isLegalPawnMove(move, boardController)
 					&& RuleEngine.isNotSelfCheck(move, boardController))
 				legalMoves.add(move);
 		}
-	
+
 		// Capturing to the right
-		move = new Move(piece, row, col,
-				row + 1*rowDirection, col + 1);
+		move = new Move(piece, row, col, row + 1 * rowDirection, col + 1);
 		if (RuleEngine.isLegalPawnMove(move, boardController)
-				&& RuleEngine.isNotSelfCheck(move, boardController)&&isEnemyPieceOrEmpty(piece,row+1*rowDirection,col+1))
+				&& RuleEngine.isNotSelfCheck(move, boardController)
+				&& isEnemyPieceOrEmpty(piece, row + 1 * rowDirection, col + 1))
 			legalMoves.add(move);
-		
+
 		// Capturing to the left
-		move = new Move(piece, row, col,
-				row + 1*rowDirection, col - 1);
+		move = new Move(piece, row, col, row + 1 * rowDirection, col - 1);
 		if (RuleEngine.isLegalPawnMove(move, boardController)
-				&& RuleEngine.isNotSelfCheck(move, boardController)&&isEnemyPieceOrEmpty(piece,row+1,col-1))
+				&& RuleEngine.isNotSelfCheck(move, boardController)
+				&& isEnemyPieceOrEmpty(piece, row + 1, col - 1))
 			legalMoves.add(move);
 		return legalMoves;
 	}
@@ -457,7 +483,7 @@ public class MoveGenerator {
 			result = true;
 		return result;
 	}
-	
+
 	/**
 	 * Returns true if the piece on square (row,col) is not the same color as
 	 * parameter <code>piece</code>, or if it is null.
@@ -474,7 +500,7 @@ public class MoveGenerator {
 		if (otherPiece == null || (otherPiece.isWhite() != piece.isWhite()))
 			result = true;
 		return result;
-	}	
+	}
 
 	public BoardController getBoardController() {
 		return boardController;

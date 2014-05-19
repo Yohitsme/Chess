@@ -89,11 +89,16 @@ public class View {
 		newGame.setActionCommand("newGame");
 		newGame.addActionListener(this.masterListener);
 		
+		JMenuItem changeGameMode = new JMenuItem("Change Game Mode");
+		changeGameMode.setActionCommand("changeGameMode");
+		changeGameMode.addActionListener(this.masterListener);
+		
 		JMenuItem flipBoard = new JMenuItem("Flip Board");
 		flipBoard.setActionCommand("flipBoard");
 		flipBoard.addActionListener(masterListener);
 		
 		fileMenu.add(newGame);
+		fileMenu.add(changeGameMode);
 		viewMenu.add(flipBoard);
 		menuBar.add(fileMenu);
 		menuBar.add(viewMenu);

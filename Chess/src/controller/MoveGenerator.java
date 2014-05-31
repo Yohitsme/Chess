@@ -19,7 +19,8 @@ public class MoveGenerator {
 
 	BoardController boardController;
 	RuleEngine ruleEngine;
-
+	Controller controller;
+	
 	/**
 	 * Constructor
 	 * 
@@ -27,9 +28,10 @@ public class MoveGenerator {
 	 * @param ruleEngineIn
 	 */
 	public MoveGenerator(BoardController boardControllerIn,
-			RuleEngine ruleEngineIn) {
+			RuleEngine ruleEngineIn,Controller controllerIn) {
 		this.boardController = boardControllerIn;
 		this.ruleEngine = ruleEngineIn;
+		this.controller = controllerIn;
 	}
 
 	/**
@@ -37,7 +39,6 @@ public class MoveGenerator {
 	 * of legal moves for the piece on that square.
 	 */
 	public ArrayList<Move> findMoves(int row, int col) {
-
 		ArrayList<Move> legalMoves = new ArrayList<Move>();
 
 		Piece piece = boardController.getPieceByCoords(row, col);
@@ -67,27 +68,65 @@ public class MoveGenerator {
 	 * 
 	 * @return
 	 */
-	public ArrayList<Move> findMoves(String color) {
+	public ArrayList<Move> findMoves(boolean isWhite) {
 		Piece piece = null;
 		ArrayList<Move> legalMoves = new ArrayList<Move>();
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++) {
 				piece = boardController.getPieceByCoords(row, col);
-				if (piece != null){
-				if (color.equals("white")) {
-					if (piece.isWhite())
-						legalMoves.addAll(findMoves(row,col));
-				}
-				else{
-					if (!piece.isWhite())
-						legalMoves.addAll(findMoves(row,col));
-					
-				}
+				if (piece != null) {
+					if (isWhite == piece.isWhite())
+
+						legalMoves.addAll(findMoves(row, col));
+
 				}
 			}
 		}
-
 		return legalMoves;
+	}
+
+	/**
+	 * Returns true i
+	 */
+	public boolean isStalemated(boolean isWhite) {
+		Piece piece = null;
+		int row = 0;
+		int col = 0;
+		int numMoves = 0;
+		boolean result = false;
+		Piece king = null;
+		
+		while (row < 8 && numMoves == 0) {
+			col = 0;
+			while (col < 8 && numMoves == 0) {
+				piece = boardController.getPieceByCoords(row, col);
+				if (piece != null) {
+					if ((isWhite == piece.isWhite())){
+						numMoves += findMoves(row, col).size();
+					}
+				}
+			col++;
+			}
+			row++;
+		}
+		
+		
+		
+		
+		if (numMoves == 0){
+			king = controller.getAI().findKing(isWhite);
+			String color = isWhite?"white":"black";
+			
+			// If the king's square is attacked, it's checkmate, not stalemate.
+			if (!RuleEngine.isAttackedSquare(king.getRow(),king.getCol(),color));
+			result = true;
+		}
+		
+		
+		
+		if (result)
+			System.out.println("MoveGenerator.isStaleMated: StalemateDetected");
+		return result;
 	}
 
 	/**
@@ -359,7 +398,7 @@ public class MoveGenerator {
 		move = new Move(piece, row, col, row + 1 * rowDirection, col - 1);
 		if (RuleEngine.isLegalPawnMove(move, boardController)
 				&& RuleEngine.isNotSelfCheck(move, boardController)
-				&& isEnemyPieceOrEmpty(piece, row + 1, col - 1))
+				&& isEnemyPieceOrEmpty(piece, row + 1 * rowDirection, col - 1))
 			legalMoves.add(move);
 		return legalMoves;
 	}

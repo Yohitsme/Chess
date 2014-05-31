@@ -123,6 +123,7 @@ public class RuleEngine {
 		Piece endPiece = boardController.getPieceByCoords(move.getEndRow(),
 				move.getEndCol());
 
+		
 		// If the destination square is empty, it can't be a self capture
 		if (endPiece == null)
 			result = true;
@@ -744,7 +745,7 @@ else{
 	 * @param capturedPiece
 	 * @param move
 	 */
-	private static void undoChanges(Piece capturedPiece, Move move) {
+	public static void undoChanges(Piece capturedPiece, Move move) {
 		if (capturedPiece != null) {
 			ArrayList<Piece> pieces;
 			if (capturedPiece.isWhite())
@@ -773,6 +774,9 @@ else{
 		controller.getBoardController().setPieceByCoords(move.getStartRow(),
 				move.getStartCol(), move.getPiece());
 
+
+		move.getPiece().setRow(move.getStartRow());
+		move.getPiece().setCol(move.getStartCol());
 	}
 
 	/**
@@ -782,7 +786,7 @@ else{
 	 * @param move
 	 * @return
 	 */
-	private static Piece processMove(Move move) {
+	public static Piece processMove(Move move) {
 		// Move piece. Need to account for castling and en passant (when more
 		// material
 		// changes place on the board than just the piece moved by the player)
@@ -810,6 +814,9 @@ else{
 		controller.getBoardController().clearSquare(move.getStartRow(),
 				move.getStartCol());
 
+		move.getPiece().setRow(move.getEndRow());
+		move.getPiece().setCol(move.getEndCol());
+		
 		return capturedPiece;
 	}
 

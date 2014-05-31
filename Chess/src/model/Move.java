@@ -42,6 +42,14 @@ public class Move {
 		this.endCol = endColIn;
 	}
 
+	public Move(Move move) {
+		this.piece = move.getPiece();
+		this.startRow = move.getStartRow();
+		this.startCol = move.getStartCol();
+		this.endRow = move.getEndRow();
+		this.endCol = move.getEndCol();
+	}
+
 	public String algebraicNotationPrint() {
 
 		char startCol = Utils.getAlgebraicCharacterFromCol(this.startCol);

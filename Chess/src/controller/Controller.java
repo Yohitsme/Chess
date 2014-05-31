@@ -35,7 +35,7 @@ public class Controller {
 		model = new Model();
 		ruleEngine = new RuleEngine(this);
 		boardController = new BoardController(model);
-		moveGenerator = new MoveGenerator(boardController, ruleEngine);
+		moveGenerator = new MoveGenerator(boardController, ruleEngine, this);
 		masterListener = new MasterListener(this);
 		view = new View(boardController, masterListener);
 		AI = new AI(this);
@@ -121,9 +121,8 @@ public class Controller {
 		view.removeHighlights();
 		view.update();
 
-		if (isBlackCheckmated() || isWhiteCheckmated())
-			gameOver = true;
-		
+		gameOver = isGameOver();
+
 		if (gameOver)
 			JOptionPane.showMessageDialog(new JFrame(), "Game over!");
 
@@ -132,8 +131,8 @@ public class Controller {
 		}
 
 		view.update();
-		
-		if (isBlackCheckmated() || isWhiteCheckmated())
+
+		if (isGameOver())
 			JOptionPane.showMessageDialog(new JFrame(), "Game over!");
 
 	}
@@ -252,9 +251,15 @@ public class Controller {
 	 */
 	public boolean isGameOver() {
 
-		boolean result;
+		boolean result = false;
 
-		return false;
+		boolean isWhite = true;
+
+		if (isBlackCheckmated() || isWhiteCheckmated() || moveGenerator.isStalemated(isWhite)
+				|| moveGenerator.isStalemated(!isWhite))
+			result = true;
+
+		return result;
 	}
 
 	/**
@@ -285,7 +290,11 @@ public class Controller {
 
 				}
 		}
+		
 		result = inCheck && (list.isEmpty());
+		if (result)
+		System.out.println("Controller.isWhiteCheckMated: White is checkmated");
+		
 		return result;
 	}
 
@@ -318,7 +327,15 @@ public class Controller {
 
 				}
 		}
+		
+		
 		result = inCheck && (list.isEmpty());
+		
+		
+
+		if (result)
+		System.out.println("Controller.isWhiteCheckMated: Black is checkmated");
+		
 		return result;
 	}
 

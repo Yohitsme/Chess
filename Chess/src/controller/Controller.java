@@ -69,9 +69,6 @@ public class Controller {
 		int row = computeRowFromMouseEvent(e);
 		int col = computeColFromMouseEvent(e);
 
-		Piece piece = boardController.getPieceByCoords(row, col);
-		// Move move = new Move(piece, row, col, 0, 0);
-
 		ArrayList<Move> legalMoves = moveGenerator.findMoves(row, col);
 
 		for (Move move : legalMoves)
@@ -239,7 +236,6 @@ public class Controller {
 	public boolean isAIturn() {
 		boolean result = false;
 		String currentPlayerColor = computeTurn();
-
 		if (currentPlayerColor.equals("white") && isWhiteAI()) {
 			result = true;
 		} else if (currentPlayerColor.equals("black") && isBlackAI())

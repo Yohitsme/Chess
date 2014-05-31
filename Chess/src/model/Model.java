@@ -24,7 +24,7 @@ public class Model {
 		whitePieces = new ArrayList<Piece>();
 		blackPieces = new ArrayList<Piece>();
 		moveList = new ArrayList<Move>();
-		gameMode = "pvp";
+		gameMode = "pVc";
 		
 		board = new Piece[8][8];
 		initializeBoard();

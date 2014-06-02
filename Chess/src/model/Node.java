@@ -10,6 +10,9 @@ public class Node extends Move{
 	
 	public Node(Move move) {
 		super(move);
+		score = 0;
+		children = new ArrayList<Node>();
+		
 		// TODO Auto-generated constructor stub
 	}
 

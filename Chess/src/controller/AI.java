@@ -10,7 +10,7 @@ import utils.Constants;
 public class AI {
 
 	Controller controller;
-	boolean debug = true;
+	boolean debug = false;
 
 	public AI(Controller controllerIn) {
 		this.controller = controllerIn;

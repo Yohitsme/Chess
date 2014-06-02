@@ -54,11 +54,19 @@ public class Move {
 
 		char startCol = Utils.getAlgebraicCharacterFromCol(this.startCol);
 		char endCol = Utils.getAlgebraicCharacterFromCol(this.endCol);
-		char pieceAbbreviation = Utils.getAlgebraicCharacterFromPieceType(this.piece.getType());
-		
-		String result = "" + pieceAbbreviation + startCol + (this.startRow + 1) + " " + pieceAbbreviation + endCol
-				+ (this.endRow + 1);
+		char pieceAbbreviation = Utils
+				.getAlgebraicCharacterFromPieceType(this.piece.getType());
 
+		String result = "" + pieceAbbreviation + startCol + (this.startRow + 1)
+				+ " " + pieceAbbreviation + endCol + (this.endRow + 1);
+
+		return result;
+	}
+
+	public String coloredAlgebraicNotationPrint() {
+
+		char color = piece.isWhite() ? 'w' : 'b';
+		String result = "[" + color + "]" + algebraicNotationPrint();
 		return result;
 	}
 

@@ -24,4 +24,6 @@ public class GameTree {
 	public void setCurrentNode(Node currentNode) {
 		this.currentNode = currentNode;
 	}
+	
+	
 }

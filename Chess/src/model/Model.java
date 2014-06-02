@@ -15,7 +15,8 @@ public class Model {
 	ArrayList<Piece> blackPieces;
 	ArrayList<Move> moveList;
 	String gameMode; // "pVc,pVp,cVp,cVc"
-
+	GameTree gameTree;
+	
 	/**
 	 * Constructor. Initializes board to classic chess start position
 	 */
@@ -24,6 +25,7 @@ public class Model {
 		whitePieces = new ArrayList<Piece>();
 		blackPieces = new ArrayList<Piece>();
 		moveList = new ArrayList<Move>();
+		gameTree = new GameTree();
 		gameMode = "pVc";
 		
 		board = new Piece[8][8];
@@ -113,6 +115,34 @@ public class Model {
 		board[7][6] = new Piece("knight", black, hasMoved, 7, 6);
 		board[7][7] = new Piece("rook", black, hasMoved, 7, 7);
 	}
+	
+	/**
+	 * Initialize a very simple version of the board for gameTree testing
+	 */
+	public void initializeSimpleBoard(){
+		boolean hasMoved = false;
+		boolean white = true;
+		boolean black = false;
+
+		// Set white piece row
+		
+		board[0][4] = new Piece("king", white, hasMoved, 0, 4);
+	
+
+		// Set white pawns
+		
+			board[1][4] = new Piece("pawn", white, hasMoved, 1, 4);
+		
+
+		// Set empty rows
+		for (int row = 2; row < 6; row++)
+			for (int col = 0; col < 8; col++)
+				board[row][col] = null;
+
+	
+		// Set black piece row
+		board[7][4] = new Piece("king", black, hasMoved, 7, 4);
+	}
 
 	/**
 	 * Adds all of each team's pieces to their respective list
@@ -122,10 +152,12 @@ public class Model {
 	public void populateLists() {
 		for (int row = 0; row < 2; row++) {
 			for (int col = 0; col < 8; col++)
+				if (board[row][col] != null)
 				whitePieces.add(board[row][col]);
 		}
 		for (int row = 6; row < 8; row++) {
 			for (int col = 0; col < 8; col++)
+				if (board[row][col] != null)
 				blackPieces.add(board[row][col]);
 		}
 	}
@@ -168,5 +200,13 @@ public class Model {
 
 	public void setGameMode(String gameMode) {
 		this.gameMode = gameMode;
+	}
+
+	public GameTree getGameTree() {
+		return gameTree;
+	}
+
+	public void setGameTree(GameTree gameTree) {
+		this.gameTree = gameTree;
 	}
 }

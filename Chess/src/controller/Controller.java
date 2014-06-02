@@ -9,7 +9,9 @@ import javax.swing.JOptionPane;
 
 import model.Model;
 import model.Move;
+import model.Node;
 import model.Piece;
+import utils.Constants;
 import view.View;
 
 /**
@@ -26,8 +28,22 @@ public class Controller {
 	MasterListener masterListener;
 	RuleEngine ruleEngine;
 	MoveGenerator moveGenerator;
+	GameTreeController gameTreeController;
 	AI AI;
 
+	
+	/**
+	 * Runs the chess game
+	 * 
+	 * @param arg
+	 */
+	public static void main(String[] arg) {
+		Controller controller = new Controller();
+	
+		
+	
+	}
+	
 	/**
 	 * Constructor
 	 */
@@ -38,7 +54,14 @@ public class Controller {
 		moveGenerator = new MoveGenerator(boardController, ruleEngine, this);
 		masterListener = new MasterListener(this);
 		view = new View(boardController, masterListener);
+		gameTreeController = new GameTreeController(model.getGameTree(),this);
 		AI = new AI(this);
+	
+		long startTime = System.currentTimeMillis();
+		gameTreeController.generateSubtree(Constants.getDepth(), 0, null);
+		gameTreeController.print(gameTreeController.getRootNode(), 0);
+		long endTime = System.currentTimeMillis();
+		System.out.println("Controller.Controller(): Done printing. Time elapsed: " + (endTime-startTime)/1000.0 +" seconds");
 	}
 
 	/**
@@ -85,14 +108,7 @@ public class Controller {
 		view.moveDraggedPiece(e.getX() - 40, e.getY() - 40);
 	}
 
-	/**
-	 * Runs the chess game
-	 * 
-	 * @param arg
-	 */
-	public static void main(String[] arg) {
-		Controller controller = new Controller();
-	}
+	
 
 	/**
 	 * Checks if the move was valid, if so, moves the piece to that spot, clears
@@ -171,6 +187,13 @@ public class Controller {
 			System.out.println("Controller.handleMouseRelease: Valid Move: "
 					+ move.algebraicNotationPrint());
 
+//			System.out.println("Controller.processMoveAttempt:---------------------------------------------");
+//			gameTreeController.setRootNode(new Node(move));
+////			model.getGameTree().setRootNode(new Node(move));
+//			gameTreeController.generateSubtree(Constants.getDepth(), 0, gameTreeController.getRootNode());
+//			gameTreeController.print(gameTreeController.getRootNode(), 0);
+//			System.out.println("\nController.processMoveAttempt:---------------------------------------------");
+			
 		} else
 			System.out
 					.println("Controller.handleMouseRelease: Invalid move. Board not modified.");

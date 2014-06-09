@@ -1,6 +1,10 @@
 package controller;
 
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import model.GameTree;
@@ -23,6 +27,7 @@ public class GameTreeController {
 	
 	public void generateSubtree(int maxDepth, int currentDepth, Node currentNodeIn){
 		Node currentNode = currentNodeIn;
+		boolean tmpHasMoved = false;
 		
 		if (currentNode == null)
 			currentNode = rootNode;
@@ -40,6 +45,8 @@ public class GameTreeController {
 			for (Move move:legalMoves){
 				Node node = new Node(move);
 				currentNode.getChildren().add(node);
+				tmpHasMoved = move.getPiece().isHasMoved();
+				move.getPiece().setHasMoved(true);
 				
 				Piece capturedPiece = RuleEngine.processMove(move);
 				
@@ -50,6 +57,7 @@ public class GameTreeController {
 				
 				generateSubtree(maxDepth, currentDepth,node);
 				RuleEngine.undoChanges(capturedPiece, move);
+				move.getPiece().setHasMoved(tmpHasMoved);
 				
 			}
 			
@@ -60,21 +68,49 @@ public class GameTreeController {
 	}
 	
 	public void print(Node currentNode, int indentCounter){
+//		try {
+			 
+ 
+//			File file = new File("C:/Users/Matthew/Desktop/ChessStuff.txt");
+// 
+//			// if file doesnt exists, then create it
+//			if (!file.exists()) {
+//				file.createNewFile();
+//			}
+//			else{
+//				if(counter == 1 && file.delete())
+//					System.out.print("File not deleted");
+//				file.createNewFile();
+//			}
+//			FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
+//			BufferedWriter bw = new BufferedWriter(fw);
+//
+//			bw.write("");
+ 
+			
+ 
 		
 		if (currentNode != null){
-			//if (currentNode.getChildren().size() == 0){
+			if (currentNode.getChildren().size() == 0){
 		
 			for (int i = 0; i < indentCounter; i++){
+//				bw.append("+--");
 				System.out.print("+--");
 			}
-			System.out.print(currentNode.coloredAlgebraicNotationPrint() + ", counter" + (counter++ +1) +"\n");
+			counter++;
+//			bw.append(currentNode.coloredAlgebraicNotationPrint() + ", counter" + (counter) +"\n");
+//			bw.flush();
+//			bw.close();
+			System.out.print(currentNode.coloredAlgebraicNotationPrint() + ", counter" + (counter) +"\n");
 //			System.out.print(currentNode.coloredAlgebraicNotationPrint() + "\n");
-			//}
+			}
 			for (Node node: currentNode.getChildren())
 				print(node,indentCounter+1);
 			}
 		
-		
+//		} catch (IOException e) {
+//			e.printStackTrace();
+//		}
 	}
 
 	public Node getRootNode() {
@@ -83,6 +119,14 @@ public class GameTreeController {
 
 	public void setRootNode(Node rootNode) {
 		this.rootNode = rootNode;
+	}
+
+	public int getCounter() {
+		return counter;
+	}
+
+	public void setCounter(int counter) {
+		this.counter = counter;
 	}
 	
 	

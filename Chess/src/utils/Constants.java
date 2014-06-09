@@ -15,7 +15,7 @@ public class Constants {
 	private final static int connectedRooksBonusWeight = 5;
 	private final static int bishopPairBonusWeight = 3;
 	private final static int centralPawnsPushedBonusWeight = 5;
-	private final static int depth = 6;
+	private final static int depth = 1;
 	
 	public static int getPieceWeight(Piece piece){
 		int result = 0;

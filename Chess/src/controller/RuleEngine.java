@@ -817,6 +817,7 @@ else{
 		move.getPiece().setRow(move.getEndRow());
 		move.getPiece().setCol(move.getEndCol());
 		
+		
 		return capturedPiece;
 	}
 

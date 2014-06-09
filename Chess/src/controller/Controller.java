@@ -57,11 +57,7 @@ public class Controller {
 		gameTreeController = new GameTreeController(model.getGameTree(),this);
 		AI = new AI(this);
 	
-		long startTime = System.currentTimeMillis();
-		gameTreeController.generateSubtree(Constants.getDepth(), 0, null);
-		gameTreeController.print(gameTreeController.getRootNode(), 0);
-		long endTime = System.currentTimeMillis();
-		System.out.println("Controller.Controller(): Done printing. Time elapsed: " + (endTime-startTime)/1000.0 +" seconds");
+		
 	}
 
 	/**
@@ -150,7 +146,14 @@ public class Controller {
 
 		if (isGameOver())
 			JOptionPane.showMessageDialog(new JFrame(), "Game over!");
-
+		long startTime = System.currentTimeMillis();
+		Node node = new Node(move);
+		gameTreeController.setRootNode(node);
+		gameTreeController.generateSubtree(Constants.getDepth(), 0, node);
+		gameTreeController.print(gameTreeController.getRootNode(), 0);
+		long endTime = System.currentTimeMillis();
+		System.out.println("Controller.Controller(): Done printing. Time elapsed: " + (endTime-startTime)/1000.0 +" seconds");
+		gameTreeController.setCounter(0);
 	}
 
 	/**

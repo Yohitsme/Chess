@@ -6,6 +6,7 @@ import java.util.ArrayList;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.JTree;
 
 import model.Model;
 import model.Move;
@@ -56,7 +57,8 @@ public class Controller {
 		view = new View(boardController, masterListener);
 		gameTreeController = new GameTreeController(model.getGameTree(),this);
 		AI = new AI(this);
-	
+		long startTime = System.currentTimeMillis();
+		
 		
 	}
 
@@ -149,11 +151,14 @@ public class Controller {
 		long startTime = System.currentTimeMillis();
 		Node node = new Node(move);
 		gameTreeController.setRootNode(node);
-		gameTreeController.generateSubtree(Constants.getDepth(), 0, node);
-		gameTreeController.print(gameTreeController.getRootNode(), 0);
+		gameTreeController.generateSubtree(Constants.getDepth(), 0, node, null);
+//		gameTreeController.print(gameTreeController.getRootNode(), 0);
 		long endTime = System.currentTimeMillis();
 		System.out.println("Controller.Controller(): Done printing. Time elapsed: " + (endTime-startTime)/1000.0 +" seconds");
+		System.out.println("Moves found: "+ gameTreeController.getCounter());
 		gameTreeController.setCounter(0);
+		
+		
 	}
 
 	/**

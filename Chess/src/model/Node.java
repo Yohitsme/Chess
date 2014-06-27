@@ -7,10 +7,12 @@ public class Node extends Move{
 	Node parent;
 	ArrayList<Node> children;
 	int score;
+	int depth;
 	
 	public Node(Move move) {
 		super(move);
 		score = 0;
+		depth = 0;
 		children = new ArrayList<Node>();
 		
 		// TODO Auto-generated constructor stub
@@ -30,6 +32,16 @@ public class Node extends Move{
 
 	public void setChildren(ArrayList<Node> children) {
 		this.children = children;
+	}
+
+	public void setDepth(int currentDepth) {
+		this.depth = currentDepth;
+		
+	}
+
+	public int getDepth() {
+		// TODO Auto-generated method stub
+		return this.depth;
 	}
 
 	

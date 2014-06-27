@@ -7,6 +7,10 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 
+import javax.swing.JTree;
+import javax.swing.SwingUtilities;
+import javax.swing.tree.DefaultMutableTreeNode;
+
 import model.GameTree;
 import model.Move;
 import model.Node;
@@ -18,14 +22,18 @@ public class GameTreeController {
 	Controller controller;
 	Node rootNode;			// Dummy node, doesn't actually represent a move
 	int counter = 0;
+	Piece debugPiece;
+	int debugNum = 0;
+	DefaultMutableTreeNode root = new DefaultMutableTreeNode("Root");
 	
 	public GameTreeController(GameTree gameTreeIn, Controller controllerIn){
 		this.gameTree = gameTreeIn;
 		this.controller = controllerIn;
 		rootNode = new Node(new Move(new Piece("z",false,false,0,0),0,0,0,0));
+		
 	}
 	
-	public void generateSubtree(int maxDepth, int currentDepth, Node currentNodeIn){
+	public void generateSubtree(int maxDepth, int currentDepth, Node currentNodeIn, Node node1){
 		Node currentNode = currentNodeIn;
 		boolean tmpHasMoved = false;
 		
@@ -44,18 +52,26 @@ public class GameTreeController {
 			
 			for (Move move:legalMoves){
 				Node node = new Node(move);
+				node.setDepth(currentDepth);
 				currentNode.getChildren().add(node);
 				tmpHasMoved = move.getPiece().isHasMoved();
 				move.getPiece().setHasMoved(true);
-				
 				Piece capturedPiece = RuleEngine.processMove(move);
+				if (currentDepth == maxDepth)
+					counter++;
 				
+//				DefaultMutableTreeNode guiNode = new DefaultMutableTreeNode(move.algebraicNotationPrint());
+//				if (currentNode == rootNode)
+//					root.add(guiNode);
+//				else
+//					parentNode.add(guiNode);
+//				
 //				System.out.print("\nGameTreeController.generateSubtree:");
 //				for (int i = 0; i < currentDepth; i++)
 //					System.out.print("   ");
 //				System.out.print(node.algebraicNotationPrint());
 				
-				generateSubtree(maxDepth, currentDepth,node);
+				generateSubtree(maxDepth, currentDepth,node,node);
 				RuleEngine.undoChanges(capturedPiece, move);
 				move.getPiece().setHasMoved(tmpHasMoved);
 				
@@ -68,49 +84,73 @@ public class GameTreeController {
 	}
 	
 	public void print(Node currentNode, int indentCounter){
-//		try {
+		try {
 			 
+			if (currentNode.getDepth() == 1)
+				debugPiece = currentNode.getPiece();
+			else if (currentNode.getDepth() == 3){
+				
+				String type1 = debugPiece.getType();
+				String type2 = currentNode.getPiece().getType();
+//				if ((type1.equals("pawn") && !type2.equals("pawn"))
+//					|| (type2.equals("pawn")&& !type1.equals("pawn")))
+//				if (debugPiece == currentNode.getPiece() && debugPiece.getType().equals("knight")
+//						&& currentNode.getEndRow()!=0)	
+				if ((type1.equals("rook")&&type2.equals("knight"))||(type1.equals("knight")&&type2.equals("rook")) )
+				
+				debugNum++;
+			}
+			
+			File file = new File("C:/Users/Matthew/Desktop/ChessStuff.txt");
  
-//			File file = new File("C:/Users/Matthew/Desktop/ChessStuff.txt");
-// 
-//			// if file doesnt exists, then create it
-//			if (!file.exists()) {
-//				file.createNewFile();
-//			}
-//			else{
-//				if(counter == 1 && file.delete())
-//					System.out.print("File not deleted");
-//				file.createNewFile();
-//			}
-//			FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
-//			BufferedWriter bw = new BufferedWriter(fw);
-//
-//			bw.write("");
+			// if file doesnt exists, then create it
+			if (!file.exists()) {
+				file.createNewFile();
+			}
+			else{
+				if(counter == 1 && file.delete())
+					System.out.print("File not deleted");
+				file.createNewFile();
+			}
+			FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
+			BufferedWriter bw = new BufferedWriter(fw);
+
+			bw.write("");
  
 			
  
 		
 		if (currentNode != null){
-			if (currentNode.getChildren().size() == 0){
 		
 			for (int i = 0; i < indentCounter; i++){
-//				bw.append("+--");
+				bw.append("+--");
 				System.out.print("+--");
 			}
-			counter++;
-//			bw.append(currentNode.coloredAlgebraicNotationPrint() + ", counter" + (counter) +"\n");
-//			bw.flush();
-//			bw.close();
-			System.out.print(currentNode.coloredAlgebraicNotationPrint() + ", counter" + (counter) +"\n");
-//			System.out.print(currentNode.coloredAlgebraicNotationPrint() + "\n");
-			}
+			
+			if (currentNode.getChildren().size() == 0)
+				counter++;
+			
+			String text = currentNode.coloredAlgebraicNotationPrint() + ", " + (counter);
+			if (currentNode.getChildren().size()!= 0)
+				text += "{";
+			
+			bw.append(text +"\n");
+			System.out.print(text +"\n");
+
 			for (Node node: currentNode.getChildren())
 				print(node,indentCounter+1);
 			}
+		if (currentNode.getChildren().size()!= 0){
+			bw.append("}");
+			System.out.print("}");
+		}
+			
 		
-//		} catch (IOException e) {
-//			e.printStackTrace();
-//		}
+			bw.flush();
+		bw.close();
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
 
 	public Node getRootNode() {
@@ -128,6 +168,22 @@ public class GameTreeController {
 	public void setCounter(int counter) {
 		this.counter = counter;
 	}
+	public int getDebugNum() {
+		return debugNum;
+	}
+
+	public void setDebugNum(int debugNum) {
+		this.debugNum = debugNum;
+	}
+
+	public DefaultMutableTreeNode getRoot() {
+		return root;
+	}
+
+	public void setRoot(DefaultMutableTreeNode root) {
+		this.root = root;
+	}
+
 	
 	
 }

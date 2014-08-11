@@ -475,26 +475,31 @@ else{
 				System.out
 						.println("RuleEngine.validateCheck: Invalid move: You cannot move a piece to the same square it started on.");
 		}
-		if (!isNotSelfCapture(move, boardController)) {
-			result = false;
-			if (printFlag)
-				System.out
-						.println("RuleEngine.validateCheck: Invalid move: You cannot capture your own piece.");
-		}
+		
+		// Commented out below 8.9.2014 - This method is called to see if a piece can check the enemy king
+		// so there shouldn't ever be a time when the the move is attacking the color piece.
+//		if (!isNotSelfCapture(move, boardController)) {
+//			result = false;
+//			if (printFlag)
+//				System.out
+//						.println("RuleEngine.validateCheck: Invalid move: You cannot capture your own piece.");
+//		}  
+		if (result){
 		if (!isLegalMoveStyle(move, boardController)) {
 			result = false;
 			if (printFlag)
 				System.out
 						.println("RuleEngine.validateCheck: Invalid move: You cannot move a "
 								+ move.getPiece() + " like that.");
-		}
+		}}
+		if (result){
 		if (!isUnblocked(move, boardController)) {
 			result = false;
 			if (printFlag)
 				System.out
 						.println("RuleEngine.validateCheck: Invalid move: The path is blocked.");
 		}
-
+		}
 		return result;
 	}
 
@@ -712,6 +717,9 @@ else{
 				king = piece;
 			}
 		}
+		
+		if (king == null)
+			System.out.println("hi");
 
 		// If it is the king that's moving, it is his new position which will
 		// need to be checked if it is being attacked. Otherwise, use his
@@ -719,7 +727,7 @@ else{
 		if (move.getPiece().getType().equals("king")) {
 			kingRow = move.getEndRow();
 			kingCol = move.getEndCol();
-		} else if (king != null){
+		} else {
 			kingRow = king.getRow();
 			kingCol = king.getCol();
 		}
@@ -733,6 +741,7 @@ else{
 		// If the king wasnt located in the above logic, all bets are off.
 		if (king == null){
 			System.out.println("RuleEngine.isNotSelfCheck: King was not found on the board, something has gone wrong. King got captured? Returning false.");
+			System.out.println("Move: " + move.algebraicNotationPrint());
 			result = false;
 		}
 		
@@ -759,6 +768,10 @@ else{
 					move.getEndCol(), capturedPiece);
 
 		}
+		
+		// Add move to move list
+		ArrayList<Move> moveList = controller.getModel().getMoveList();
+		moveList.remove(move);
 
 		// Clear the end spot of the tested move
 		controller.getBoardController().clearSquare(move.getEndRow(),
@@ -793,7 +806,11 @@ else{
 
 		Piece capturedPiece = controller.getBoardController().getPieceByCoords(
 				move.getEndRow(), move.getEndCol());
-
+		
+		// Add move to move list
+		ArrayList<Move> moveList = controller.getModel().getMoveList();
+		moveList.add(move);
+		
 		// If the move was a successful capture, remove the captured piece from
 		// the list
 		if (capturedPiece != null) {

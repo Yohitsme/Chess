@@ -389,16 +389,16 @@ public class MoveGenerator {
 
 		// Capturing to the right
 		move = new Move(piece, row, col, row + 1 * rowDirection, col + 1);
-		if (RuleEngine.isLegalPawnMove(move, boardController)
-				&& RuleEngine.isNotSelfCheck(move, boardController)
-				&& isEnemyPieceOrEmpty(piece, row + 1 * rowDirection, col + 1))
+		if (isEnemyPieceOrEmpty(piece, row + 1 * rowDirection, col + 1) &&
+				RuleEngine.isLegalPawnMove(move, boardController)
+				&& RuleEngine.isNotSelfCheck(move, boardController))
 			legalMoves.add(move);
 
 		// Capturing to the left
 		move = new Move(piece, row, col, row + 1 * rowDirection, col - 1);
-		if (RuleEngine.isLegalPawnMove(move, boardController)
-				&& RuleEngine.isNotSelfCheck(move, boardController)
-				&& isEnemyPieceOrEmpty(piece, row + 1 * rowDirection, col - 1))
+		if (isEnemyPieceOrEmpty(piece, row + 1 * rowDirection, col - 1) && 
+				RuleEngine.isLegalPawnMove(move, boardController)
+				&& RuleEngine.isNotSelfCheck(move, boardController))
 			legalMoves.add(move);
 		return legalMoves;
 	}

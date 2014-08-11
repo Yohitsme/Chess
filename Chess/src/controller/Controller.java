@@ -6,13 +6,11 @@ import java.util.ArrayList;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.JTree;
 
 import model.Model;
 import model.Move;
-import model.Node;
 import model.Piece;
-import utils.Constants;
+import utils.Log;
 import view.View;
 
 /**
@@ -31,6 +29,7 @@ public class Controller {
 	MoveGenerator moveGenerator;
 	GameTreeController gameTreeController;
 	AI AI;
+	Log log;
 
 	
 	/**
@@ -58,6 +57,7 @@ public class Controller {
 		gameTreeController = new GameTreeController(model.getGameTree(),this);
 		AI = new AI(this);
 		long startTime = System.currentTimeMillis();
+		log = new Log();
 		
 		
 	}
@@ -149,14 +149,14 @@ public class Controller {
 		if (isGameOver())
 			JOptionPane.showMessageDialog(new JFrame(), "Game over!");
 		long startTime = System.currentTimeMillis();
-		Node node = new Node(move);
-		gameTreeController.setRootNode(node);
+		//Node node = new Node(move);
+		/*gameTreeController.setRootNode(node);
 		gameTreeController.generateSubtree(Constants.getDepth(), 0, node, null);
 //		gameTreeController.print(gameTreeController.getRootNode(), 0);
 		long endTime = System.currentTimeMillis();
 		System.out.println("Controller.Controller(): Done printing. Time elapsed: " + (endTime-startTime)/1000.0 +" seconds");
 		System.out.println("Moves found: "+ gameTreeController.getCounter());
-		gameTreeController.setCounter(0);
+		gameTreeController.setCounter(0);*/
 		
 		
 	}
@@ -170,7 +170,7 @@ public class Controller {
 	public void processMoveAttempt(Move move) {
 
 		if (RuleEngine.validateMove(move, boardController, true)) {
-
+			model.getMoveList().add(move);
 			// Check for special cases, such as pawn promotes, en
 			// passant captures
 			handleSpecialCases(move);
@@ -190,7 +190,7 @@ public class Controller {
 					move.getStartCol()).setHasMoved(true);
 
 			boardController.clearSquare(move.getStartRow(), move.getStartCol());
-			model.getMoveList().add(move);
+			
 
 			System.out.println("Controller.handleMouseRelease: Valid Move: "
 					+ move.algebraicNotationPrint());
@@ -508,7 +508,10 @@ public class Controller {
 				&& boardController.getPieceByCoords(move.getEndRow(),
 						move.getEndCol()) == null) {
 			int size = model.getMoveList().size();
-			Move previousMove = model.getMoveList().get(size - 1);
+			
+			// This method only gets called after the passant move has been added to the move list,
+			// so we need to look 2 moves back to fine the move where the enemy pawn moved 2 squares.
+			Move previousMove = model.getMoveList().get(size - 2);
 
 			removePieceFromList(previousMove);
 
@@ -525,13 +528,23 @@ public class Controller {
 	 * Removes the piece on the destination square of Move parameter move from
 	 * it's black/white piece list in the model.
 	 * 
+	 * Note: This method gets called eventually when checking to see how many
+	 * moves a player has form a given position. If the player can check their opponent,
+	 * then capturing the enemy king is a legal move from that position (even though it
+	 * is not that player's turn). The end result is that the king might get "captured" 
+	 * by this method, but it's not because it's possible, the engine is just seeing if
+	 * that is a legal move from the position (assuming it were able to move).
+	 * 
 	 * @param move
 	 */
 	public void removePieceFromList(Move move) {
 
 		Piece piece = boardController.getPieceByCoords(move.getEndRow(),
 				move.getEndCol());
-
+		
+		if (piece == null)
+			log.error("Removing null piece?");
+		
 		if (piece.isWhite()) {
 			model.getWhitePieces().remove(piece);
 		} else

@@ -16,7 +16,7 @@ public class Model {
 	ArrayList<Move> moveList;
 	String gameMode; // "pVc,pVp,cVp,cVc"
 	GameTree gameTree;
-	
+
 	/**
 	 * Constructor. Initializes board to classic chess start position
 	 */
@@ -27,9 +27,10 @@ public class Model {
 		moveList = new ArrayList<Move>();
 		gameTree = new GameTree();
 		gameMode = "pVc";
-		
+
 		board = new Piece[8][8];
-		initializeBoard();
+		// initializeBoard();
+		initializeSimpleBoard();
 		populateLists();
 	}
 
@@ -115,33 +116,40 @@ public class Model {
 		board[7][6] = new Piece("knight", black, hasMoved, 7, 6);
 		board[7][7] = new Piece("rook", black, hasMoved, 7, 7);
 	}
-	
+
 	/**
 	 * Initialize a very simple version of the board for gameTree testing
 	 */
-	public void initializeSimpleBoard(){
-		boolean hasMoved = false;
+	public void initializeSimpleBoard() {
+		boolean hasMoved = true;
 		boolean white = true;
 		boolean black = false;
 
 		// Set white piece row
-		
-		board[0][4] = new Piece("king", white, hasMoved, 0, 4);
-	
 
 		// Set white pawns
-		
-			board[1][4] = new Piece("pawn", white, hasMoved, 1, 4);
-		
 
 		// Set empty rows
-		for (int row = 2; row < 6; row++)
+		for (int row = 0; row < 8; row++)
 			for (int col = 0; col < 8; col++)
 				board[row][col] = null;
 
-	
+		board[1][0] = new Piece("king", white, hasMoved, 1, 0);
+		board[1][1] = new Piece("pawn", white, hasMoved, 1, 1);
+		board[2][0] = new Piece("pawn", white, hasMoved, 2, 0);
+		board[2][1] = new Piece("pawn", white, hasMoved, 2, 1);
+
+		board[7][7] = new Piece("king", black, hasMoved, 7, 7);
+		board[6][7] = new Piece("pawn", black, hasMoved, 6, 7);
+		board[7][6] = new Piece("pawn", black, hasMoved, 7, 6);
+		board[6][6] = new Piece("pawn", black, hasMoved, 6, 6);
+		
+		board[3][4] = new Piece("pawn", white, hasMoved, 3, 4);
+		board[3][7] = new Piece("pawn", white, hasMoved, 3, 4);
+		board[4][5] = new Piece("queen", black, hasMoved, 4, 5);
+		board[4][6] = new Piece("rook",white,hasMoved,4,6);
 		// Set black piece row
-		board[7][4] = new Piece("king", black, hasMoved, 7, 4);
+		
 	}
 
 	/**
@@ -153,12 +161,12 @@ public class Model {
 		for (int row = 0; row < 2; row++) {
 			for (int col = 0; col < 8; col++)
 				if (board[row][col] != null)
-				whitePieces.add(board[row][col]);
+					whitePieces.add(board[row][col]);
 		}
 		for (int row = 6; row < 8; row++) {
 			for (int col = 0; col < 8; col++)
 				if (board[row][col] != null)
-				blackPieces.add(board[row][col]);
+					blackPieces.add(board[row][col]);
 		}
 	}
 

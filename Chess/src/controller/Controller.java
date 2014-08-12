@@ -146,19 +146,19 @@ public class Controller {
 			processMove(AI.move(computeTurn()));
 		}
 
+		view.updateAnalysisPanel(new JTree(gameTreeController.getRoot()));
+		view.updateMoveListPanel(model.getMoveList());
 		view.update();
 
 		if (isGameOver())
 			JOptionPane.showMessageDialog(new JFrame(), "Game over!");
+		
+		/*
 		long startTime = System.currentTimeMillis();
-		//Node node = new Node(move);
-		/*gameTreeController.setRootNode(node);
-		gameTreeController.generateSubtree(Constants.getDepth(), 0, node, null);
-//		gameTreeController.print(gameTreeController.getRootNode(), 0);
 		long endTime = System.currentTimeMillis();
 		System.out.println("Controller.Controller(): Done printing. Time elapsed: " + (endTime-startTime)/1000.0 +" seconds");
-		System.out.println("Moves found: "+ gameTreeController.getCounter());
-		gameTreeController.setCounter(0);*/
+	*/
+		
 //		
 //		JFrame frame = new JFrame();
 //		frame.setVisible(true);

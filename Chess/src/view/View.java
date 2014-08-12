@@ -7,9 +7,11 @@ import java.awt.Dimension;
 import java.awt.GridLayout;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 import javax.imageio.ImageIO;
+import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -18,11 +20,14 @@ import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTable;
+import javax.swing.JTree;
 
+import model.Move;
+import model.Piece;
 import controller.BoardController;
 import controller.MasterListener;
-import model.Model;
-import model.Piece;
 
 /**
  * The entire view. 
@@ -37,6 +42,9 @@ public class View {
 	JPanel piecePanel;
 	JPanel dragPanel;
 	JPanel highlightPanel;
+	JPanel analysisPanel;
+	JPanel moveListPanel;
+	JPanel sidePanel;
 	JLayeredPane layeredPane;
 	BoardController boardController;
 	MasterListener masterListener;
@@ -71,8 +79,12 @@ public class View {
 		configureHighlightPanel();
 		configureDragPanel();
 		configureLayeredPane();
+		configureAnalysisPanel();
+		configureMoveListPanel();
+		configureSidePanel();
 
 		frame.add(layeredPane, BorderLayout.CENTER);
+		frame.add(sidePanel,BorderLayout.EAST);
 		frame.pack();
 
 	}
@@ -105,6 +117,21 @@ public class View {
 		frame.setJMenuBar(menuBar);
 	}
 	
+	public void configureAnalysisPanel(){
+		analysisPanel = new JPanel();
+	}
+	
+	public void configureMoveListPanel(){
+		moveListPanel = new JPanel(new BorderLayout());
+	}
+	
+	public void configureSidePanel(){
+		sidePanel = new JPanel();
+		sidePanel.setLayout(new BorderLayout());
+		//sidePanel.setPreferredSize(new Dimension(250,200));
+		sidePanel.add(moveListPanel, BorderLayout.NORTH);
+		sidePanel.add(analysisPanel,BorderLayout.CENTER);
+	}
 	/**
 	 * Boilerplate highlight panel configuration.  The highlight panel is between the board panel and
 	 * the piece panel.  When a player presses the mouse on a piece, all squares that are legal to move 
@@ -198,6 +225,7 @@ public class View {
 		}
 		piecePanel.repaint();
 		piecePanel.revalidate();
+		frame.pack();
 
 	}
 
@@ -230,6 +258,42 @@ public class View {
 		piecePanelArray = new PiecePanel[8][8];
 		update();
 
+	}
+	
+	/**
+	 * 
+	 * @param jTree
+	 */
+	public void updateAnalysisPanel(JTree jTree){
+		analysisPanel.removeAll();
+		
+		JScrollPane pane = new JScrollPane(jTree);
+		//pane.setPreferredSize(new Dimension(250,400));
+		analysisPanel.add(pane);
+	}
+	
+	public void updateMoveListPanel(ArrayList<Move>moveList){
+		moveListPanel.removeAll();
+		
+		int size = moveList.size()/2 + 1;
+		String [] columnNames = {"White","Black"};
+		Object [][] data = new String[20][2];
+		
+		for(int i = 0; i < moveList.size(); i++)
+			data[i/2][i%2] = moveList.get(i).algebraicNotationPrint();
+		
+		JTable table = new JTable(data, columnNames);
+		table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+		
+		table.setEnabled(false);
+		
+		table.setPreferredScrollableViewportSize(table.getPreferredSize());
+		table.setFillsViewportHeight(true);
+		
+		JPanel panel = new JPanel();
+		panel.add(new JScrollPane(table));
+		JScrollPane scrollPane = new JScrollPane(panel);
+		moveListPanel.add(scrollPane, BorderLayout.CENTER);
 	}
 
 	/**

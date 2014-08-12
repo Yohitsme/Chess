@@ -3,6 +3,8 @@ package controller;
 import java.util.ArrayList;
 import java.util.Random;
 
+import javax.swing.tree.DefaultMutableTreeNode;
+
 import model.Move;
 import model.Piece;
 import utils.Constants;
@@ -28,6 +30,7 @@ public class AI {
 
 		move = chooseMove(legalMoves);
 
+		
 		log.info("AI.move: Move chosen: " + move.algebraicNotationPrint());
 
 		return move;
@@ -39,11 +42,26 @@ public class AI {
 		double highest = -100000000;
 		Move bestMove = null;
 		Random rand = new Random();
+		DefaultMutableTreeNode parentNode = controller.gameTreeController.root;
 		for (Move move : legalMoves) {
 			Piece capturedPiece = RuleEngine.processMove(move);
 			ArrayList<Move> moveList = controller.getModel().getMoveList();
-			score = -maxi(Constants.getDepth(),
-					moveList.get(moveList.size() - 1));
+			
+			
+			DefaultMutableTreeNode node = new DefaultMutableTreeNode();
+			node.setAllowsChildren(true);
+			//score = -Negamax(depth - 1, move, node);
+			
+			score = -Negamax(Constants.getDepth() -1,
+					moveList.get(moveList.size() - 1), node);
+			
+			
+			node.setUserObject(move.algebraicNotationPrint() + ": " + score);
+			
+			parentNode.add(node);
+			
+			
+			
 			log.writeLine();
 			log.error("AI.chooseMove: score: " + score + ", " + move.algebraicNotationPrint());
 			RuleEngine.undoChanges(capturedPiece, move);
@@ -66,7 +84,7 @@ public class AI {
 		return bestMove;
 	}
 
-	public double maxi(int depth, Move previousMove) {
+	public double Negamax(int depth, Move previousMove, DefaultMutableTreeNode parentNode) {
 //		System.out.println(depth);
 		if (depth == 0) {
 			//log.debug("AI.maxi: evaluating white? "
@@ -79,10 +97,19 @@ public class AI {
 		boolean isWhite = !previousMove.getPiece().isWhite();
 		ArrayList<Move> legalMoves = controller.getMoveGenerator().findMoves(
 				isWhite);
-
+int i = 0;
 		for (Move move : legalMoves) {
+			i++;
 			Piece capturedPiece = RuleEngine.processMove(move);
-			score = -maxi(depth - 1, move);
+			
+			DefaultMutableTreeNode node = new DefaultMutableTreeNode();
+			node.setAllowsChildren(true);
+			score = -Negamax(depth - 1, move, node);
+			
+			node.setUserObject(i + ", "  + move.algebraicNotationPrint() + ": " + score);
+			
+			parentNode.add(node);
+			
 			if (score > max)
 				max = score;
 			RuleEngine.undoChanges(capturedPiece, move);
@@ -90,11 +117,7 @@ public class AI {
 		return max;
 	}
 
-	public Move mini(int depth, ArrayList<Move> legalMoves) {
 
-		return null;
-
-	}
 
 	/**
 	 * Calls all evaluation methods on a potential move and returns the score of
@@ -105,7 +128,7 @@ public class AI {
 	public double evaluate(Move move) {
 
 		int positionalScore = computePositionalScore(move);
-		//int positionalScore = 0;
+//		int positionalScore = 0;
 		int materialScore = computeMaterialScore(move);
 		int bonusScore = computeBonusScore(move);
 
@@ -154,7 +177,7 @@ public class AI {
 				false);
 
 		int difference = 0;
-		if (move.getPiece().isWhite())
+		if (!move.getPiece().isWhite())
 			difference = whiteMoves.size() - blackMoves.size();
 		else
 			difference = blackMoves.size() - whiteMoves.size();
@@ -191,7 +214,7 @@ public class AI {
 		// TODO account for passant
 		// TODO pawn promotion
 
-		if (move.getPiece().isWhite())
+		if (!move.getPiece().isWhite())
 			result = whiteScore - blackScore;
 		else
 			result = blackScore - whiteScore;
@@ -210,7 +233,7 @@ public class AI {
 
 		// Preprocess information that several methods need to find anyway
 		int result = 0;
-		boolean isWhite = move.getPiece().isWhite();
+		boolean isWhite = !move.getPiece().isWhite();
 		Piece king = findKing(isWhite);
 
 		int castlingBonus = computeCastlingBonus(move, king);

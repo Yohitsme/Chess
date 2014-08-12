@@ -6,6 +6,8 @@ import java.util.ArrayList;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
+import javax.swing.JTree;
 
 import model.Model;
 import model.Move;
@@ -157,7 +159,11 @@ public class Controller {
 		System.out.println("Controller.Controller(): Done printing. Time elapsed: " + (endTime-startTime)/1000.0 +" seconds");
 		System.out.println("Moves found: "+ gameTreeController.getCounter());
 		gameTreeController.setCounter(0);*/
-		
+//		
+//		JFrame frame = new JFrame();
+//		frame.setVisible(true);
+//		frame.add(new JScrollPane(new JTree(gameTreeController.getRoot())));
+//		frame.pack();
 		
 	}
 

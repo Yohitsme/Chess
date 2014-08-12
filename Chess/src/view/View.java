@@ -84,7 +84,7 @@ public class View {
 		configureSidePanel();
 
 		frame.add(layeredPane, BorderLayout.CENTER);
-		frame.add(sidePanel,BorderLayout.EAST);
+		//frame.add(sidePanel,BorderLayout.EAST);
 		frame.pack();
 
 	}

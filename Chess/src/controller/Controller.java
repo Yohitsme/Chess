@@ -40,8 +40,21 @@ public class Controller {
 	 * @param arg
 	 */
 	public static void main(String[] arg) {
-		Controller controller = new Controller();
-	
+		Controller controller = null;
+		try{
+		controller = new Controller();
+		}
+		
+		catch(Exception e){
+			controller.getLog().error(e.toString());
+			controller.getLog().error(e.getStackTrace().toString());
+				
+			String moveListDump = "";
+			for(Move move :controller.getModel().getMoveList())
+				moveListDump += move.algebraicNotationPrint() +"\n";
+			
+			controller.getLog().error(moveListDump);
+		}
 		
 	
 	}
@@ -150,6 +163,7 @@ public class Controller {
 		view.updateMoveListPanel(model.getMoveList());
 		view.update();
 
+		gameTreeController.getRoot().removeAllChildren();
 		if (isGameOver())
 			JOptionPane.showMessageDialog(new JFrame(), "Game over!");
 		
@@ -549,7 +563,7 @@ public class Controller {
 				move.getEndCol());
 		
 		if (piece == null)
-			log.error("Removing null piece?");
+			log.error("Controller.removePieceFromList: Removing null piece?");
 		
 		if (piece.isWhite()) {
 			model.getWhitePieces().remove(piece);
@@ -595,6 +609,14 @@ public class Controller {
 
 	public void setModel(Model model) {
 		this.model = model;
+	}
+
+	public Log getLog() {
+		return log;
+	}
+
+	public void setLog(Log log) {
+		this.log = log;
 	}
 
 	/**

@@ -62,11 +62,11 @@ public class AI {
 			
 			
 			
-			log.writeLine();
-			log.error("AI.chooseMove: score: " + score + ", " + move.algebraicNotationPrint());
+			//log.writeLine();
+			log.info("AI.chooseMove: score: " + score + ", " + move.algebraicNotationPrint());
 			RuleEngine.undoChanges(capturedPiece, move);
 			if (score > highest) {
-				log.error("AI.chooseMove: New highest: "
+				log.info("AI.chooseMove: New highest: "
 						+ move.algebraicNotationPrint());
 				bestMove = move;
 				highest = score;
@@ -152,7 +152,7 @@ int i = 0;
 		
 		ArrayList<Move> moveList = controller.getModel().getMoveList();
 		for (Move pastMove: moveList)
-			log.error(pastMove.algebraicNotationPrint());
+			log.info(pastMove.algebraicNotationPrint());
 	//	log.writeLine();
 		
 		return weightedPositionalScore + weightedMaterialScore

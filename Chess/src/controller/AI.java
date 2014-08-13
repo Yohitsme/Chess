@@ -191,12 +191,26 @@ public class AI {
 		ArrayList<Piece> whitePieces = controller.getModel().getWhitePieces();
 		ArrayList<Piece> blackPieces = controller.getModel().getBlackPieces();
 
-		for (Piece piece : whitePieces)
+		for (Piece piece : whitePieces) {
 			whiteScore += Constants.getPieceWeight(piece);
 
-		for (Piece piece : blackPieces)
+			// If it's a pawn that will be promoting, let it have the extra
+			// value it would have if it promotes to a queen (-1 because it
+			// already has 1 for being pawn)
+			if (piece.getType().equals("pawn") && piece.getRow() == 7) {
+				whiteScore += Constants.getQueenweight() - 1;
+				// System.out.println("was " + whiteScore);
+				// System.out.println("now " + whiteScore);
+			}
+		}
+		for (Piece piece : blackPieces) {
 			blackScore += Constants.getPieceWeight(piece);
 
+			if (piece.getType().equals("pawn") && piece.getRow() == 0) {
+				blackScore += Constants.getQueenweight() - 1;
+
+			}
+		}
 		// TODO account for passant
 		// TODO pawn promotion
 
@@ -219,7 +233,7 @@ public class AI {
 
 		// Preprocess information that several methods need to find anyway
 		int result = 0;
-		boolean isWhite = !move.getPiece().isWhite();
+		boolean isWhite =!move.getPiece().isWhite();
 		Piece king = findKing(isWhite);
 
 		int castlingBonus = computeCastlingBonus(move, king);

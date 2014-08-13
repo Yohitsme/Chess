@@ -454,14 +454,20 @@ public class Controller {
 	/**
 	 * If parameter move was a pawn being moved to the first or last rank, this
 	 * method prompts the user for a piece type and turns the pawn into the type
-	 * chosen by the user
+	 * chosen by the user.  If it's the AI's move, default to a queen.
 	 * 
 	 * @param move
 	 */
 	private void handlePawnPromote(Move move) {
+		
+		
 		if (move.getPiece().getType().equals("pawn")
 				&& (move.getEndRow() == 7 || move.getEndRow() == 0)) {
-			String choice = getPawnPromoteChoice();
+			String choice = "";
+			if ((move.getPiece().isWhite() && isWhiteAI()) || (!move.getPiece().isWhite() && isBlackAI()))
+				choice = "queen";
+			else
+				choice = getPawnPromoteChoice();
 			move.getPiece().setType(choice);
 		}
 

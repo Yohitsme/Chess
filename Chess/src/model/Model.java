@@ -29,8 +29,8 @@ public class Model {
 		gameMode = "pVc";
 
 		board = new Piece[8][8];
-		initializeBoard();
-//		initializeSimpleBoard();
+//		initializeBoard();
+		initializeSimpleBoard();
 		populateLists();
 	}
 
@@ -138,12 +138,14 @@ public class Model {
 
 
 		board[7][7] = new Piece("king", black, hasMoved, 7, 7);
-		board[6][7] = new Piece("rook", black, hasMoved, 6, 7);
-		board[7][6] = new Piece("rook", black, hasMoved, 7, 6);
-		board[6][6] = new Piece("rook", black, hasMoved, 6, 6);
+//		board[6][7] = new Piece("pawn", black, hasMoved, 6, 7);
+//		board[7][6] = new Piece("pawn", black, hasMoved, 7, 6);
+//		board[6][6] = new Piece("pawn", black, hasMoved, 6, 6);
 		
 		
-		board[4][5] = new Piece("queen", black, hasMoved, 4, 5);
+		board[4][4] = new Piece("pawn", black, hasMoved, 4,4);
+		board[3][5] = new Piece("rook", white,hasMoved,3,5);
+		board[1][7] = new Piece("pawn",black,hasMoved,1,7);
 
 		// Set black piece row
 		

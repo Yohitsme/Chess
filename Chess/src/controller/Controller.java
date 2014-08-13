@@ -2,6 +2,10 @@ package controller;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.swing.JFrame;
@@ -13,6 +17,7 @@ import model.Model;
 import model.Move;
 import model.Piece;
 import utils.Log;
+import utils.Utils;
 import view.View;
 
 /**
@@ -33,7 +38,6 @@ public class Controller {
 	AI AI;
 	Log log;
 
-	
 	/**
 	 * Runs the chess game
 	 * 
@@ -41,24 +45,23 @@ public class Controller {
 	 */
 	public static void main(String[] arg) {
 		Controller controller = null;
-		try{
-		controller = new Controller();
+		try {
+			controller = new Controller();
 		}
-		
-		catch(Exception e){
+
+		catch (Exception e) {
 			controller.getLog().error(e.toString());
 			controller.getLog().error(e.getStackTrace().toString());
-				
+
 			String moveListDump = "";
-			for(Move move :controller.getModel().getMoveList())
-				moveListDump += move.algebraicNotationPrint() +"\n";
-			
+			for (Move move : controller.getModel().getMoveList())
+				moveListDump += move.algebraicNotationPrint() + "\n";
+
 			controller.getLog().error(moveListDump);
 		}
-		
-	
+
 	}
-	
+
 	/**
 	 * Constructor
 	 */
@@ -69,12 +72,11 @@ public class Controller {
 		moveGenerator = new MoveGenerator(boardController, ruleEngine, this);
 		masterListener = new MasterListener(this);
 		view = new View(boardController, masterListener);
-		gameTreeController = new GameTreeController(model.getGameTree(),this);
+		gameTreeController = new GameTreeController(model.getGameTree(), this);
 		AI = new AI(this);
 		long startTime = System.currentTimeMillis();
 		log = new Log();
-		
-		
+
 	}
 
 	/**
@@ -121,8 +123,6 @@ public class Controller {
 		view.moveDraggedPiece(e.getX() - 40, e.getY() - 40);
 	}
 
-	
-
 	/**
 	 * Checks if the move was valid, if so, moves the piece to that spot, clears
 	 * the old one. Otherwise, board is returned to it's state before the move
@@ -166,19 +166,21 @@ public class Controller {
 		gameTreeController.getRoot().removeAllChildren();
 		if (isGameOver())
 			JOptionPane.showMessageDialog(new JFrame(), "Game over!");
-		
+
+		view.highlightPreviousMove(model.getMoveList());
 		/*
-		long startTime = System.currentTimeMillis();
-		long endTime = System.currentTimeMillis();
-		System.out.println("Controller.Controller(): Done printing. Time elapsed: " + (endTime-startTime)/1000.0 +" seconds");
-	*/
-		
-//		
-//		JFrame frame = new JFrame();
-//		frame.setVisible(true);
-//		frame.add(new JScrollPane(new JTree(gameTreeController.getRoot())));
-//		frame.pack();
-		
+		 * long startTime = System.currentTimeMillis(); long endTime =
+		 * System.currentTimeMillis(); System.out.println(
+		 * "Controller.Controller(): Done printing. Time elapsed: " +
+		 * (endTime-startTime)/1000.0 +" seconds");
+		 */
+
+		//
+		// JFrame frame = new JFrame();
+		// frame.setVisible(true);
+		// frame.add(new JScrollPane(new JTree(gameTreeController.getRoot())));
+		// frame.pack();
+
 	}
 
 	/**
@@ -210,18 +212,18 @@ public class Controller {
 					move.getStartCol()).setHasMoved(true);
 
 			boardController.clearSquare(move.getStartRow(), move.getStartCol());
-			
 
 			System.out.println("Controller.handleMouseRelease: Valid Move: "
 					+ move.algebraicNotationPrint());
 
-//			System.out.println("Controller.processMoveAttempt:---------------------------------------------");
-//			gameTreeController.setRootNode(new Node(move));
-////			model.getGameTree().setRootNode(new Node(move));
-//			gameTreeController.generateSubtree(Constants.getDepth(), 0, gameTreeController.getRootNode());
-//			gameTreeController.print(gameTreeController.getRootNode(), 0);
-//			System.out.println("\nController.processMoveAttempt:---------------------------------------------");
-			
+			// System.out.println("Controller.processMoveAttempt:---------------------------------------------");
+			// gameTreeController.setRootNode(new Node(move));
+			// // model.getGameTree().setRootNode(new Node(move));
+			// gameTreeController.generateSubtree(Constants.getDepth(), 0,
+			// gameTreeController.getRootNode());
+			// gameTreeController.print(gameTreeController.getRootNode(), 0);
+			// System.out.println("\nController.processMoveAttempt:---------------------------------------------");
+
 		} else
 			System.out
 					.println("Controller.handleMouseRelease: Invalid move. Board not modified.");
@@ -233,6 +235,7 @@ public class Controller {
 	 * @param move
 	 */
 	public void processMove(Move move) {
+		model.getMoveList().add(move);
 		// Check for special cases, such as pawn promotes, en
 		// passant captures
 		handleSpecialCases(move);
@@ -253,7 +256,6 @@ public class Controller {
 				.setHasMoved(true);
 
 		boardController.clearSquare(move.getStartRow(), move.getStartCol());
-		model.getMoveList().add(move);
 	}
 
 	/**
@@ -306,7 +308,8 @@ public class Controller {
 
 		boolean isWhite = true;
 
-		if (isBlackCheckmated() || isWhiteCheckmated() || moveGenerator.isStalemated(isWhite)
+		if (isBlackCheckmated() || isWhiteCheckmated()
+				|| moveGenerator.isStalemated(isWhite)
 				|| moveGenerator.isStalemated(!isWhite))
 			result = true;
 
@@ -341,11 +344,12 @@ public class Controller {
 
 				}
 		}
-		
+
 		result = inCheck && (list.isEmpty());
 		if (result)
-		System.out.println("Controller.isWhiteCheckMated: White is checkmated");
-		
+			System.out
+					.println("Controller.isWhiteCheckMated: White is checkmated");
+
 		return result;
 	}
 
@@ -378,15 +382,13 @@ public class Controller {
 
 				}
 		}
-		
-		
+
 		result = inCheck && (list.isEmpty());
-		
-		
 
 		if (result)
-		System.out.println("Controller.isWhiteCheckMated: Black is checkmated");
-		
+			System.out
+					.println("Controller.isWhiteCheckMated: Black is checkmated");
+
 		return result;
 	}
 
@@ -528,9 +530,11 @@ public class Controller {
 				&& boardController.getPieceByCoords(move.getEndRow(),
 						move.getEndCol()) == null) {
 			int size = model.getMoveList().size();
-			
-			// This method only gets called after the passant move has been added to the move list,
-			// so we need to look 2 moves back to fine the move where the enemy pawn moved 2 squares.
+
+			// This method only gets called after the passant move has been
+			// added to the move list,
+			// so we need to look 2 moves back to fine the move where the enemy
+			// pawn moved 2 squares.
 			Move previousMove = model.getMoveList().get(size - 2);
 
 			removePieceFromList(previousMove);
@@ -549,11 +553,12 @@ public class Controller {
 	 * it's black/white piece list in the model.
 	 * 
 	 * Note: This method gets called eventually when checking to see how many
-	 * moves a player has form a given position. If the player can check their opponent,
-	 * then capturing the enemy king is a legal move from that position (even though it
-	 * is not that player's turn). The end result is that the king might get "captured" 
-	 * by this method, but it's not because it's possible, the engine is just seeing if
-	 * that is a legal move from the position (assuming it were able to move).
+	 * moves a player has form a given position. If the player can check their
+	 * opponent, then capturing the enemy king is a legal move from that
+	 * position (even though it is not that player's turn). The end result is
+	 * that the king might get "captured" by this method, but it's not because
+	 * it's possible, the engine is just seeing if that is a legal move from the
+	 * position (assuming it were able to move).
 	 * 
 	 * @param move
 	 */
@@ -561,10 +566,10 @@ public class Controller {
 
 		Piece piece = boardController.getPieceByCoords(move.getEndRow(),
 				move.getEndCol());
-		
+
 		if (piece == null)
 			log.error("Controller.removePieceFromList: Removing null piece?");
-		
+
 		if (piece.isWhite()) {
 			model.getWhitePieces().remove(piece);
 		} else
@@ -638,10 +643,28 @@ public class Controller {
 				model.resetModel();
 				view.update();
 			}
+		} else if (e.getActionCommand().equals("exportMoveList")) {
+			exportMoveList();
 		} else
 			System.out
 					.println("Controller.handleActionEvent: Action command /'"
 							+ e.getActionCommand() + "/' not recognized");
+
+	}
+
+	private void exportMoveList() {
+
+		ArrayList<Move> moveList = model.getMoveList();
+		String fileName = "Chess Game Move List Export - " + Utils.getTimeNoSpaces() + ".txt";
+		String body = "Game played on " + Utils.getTime() + "\n";
+		for(int i = 0; i < moveList.size(); i++){
+			if (i%2 == 0)
+			body += "\n" + Integer.toString(i/2 +1) + " ";
+			
+			body +=moveList.get(i).algebraicNotationPrint()  + " ";
+		}
+		
+		Utils.writeToFile(fileName, body);
 
 	}
 

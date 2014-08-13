@@ -1,4 +1,7 @@
 // TODO
 
--Game over logic
--Forced turn taking
+-Fix evaluation methods to use a scale of "more positive = better for white," more negative = better for black.  Current implementation depends on the depth and is unstable
+-Finish adding bonuses/penalties in AI
+-Captured Piece view in GUI
+-Consider moves as different positions instead of one move at a time
+-

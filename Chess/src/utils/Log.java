@@ -1,13 +1,7 @@
 package utils;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-
-import model.Node;
 
 /**
  * Log class. Logs to a file if the logLevel of the logging type called is
@@ -19,11 +13,11 @@ import model.Node;
  */
 public class Log {
 
-	private String fileName = "C:/Users/Matthew/Desktop/ChessLog.txt";
+	private String fileName = "ChessLog.txt";
 	private final int debugLogLevel = 1;
 	private final int infoLogLevel = 2;
 	private final int errorLogLevel = 3;
-	private int logLevel = 3;
+	private int logLevel = 5;
 
 	public void info(String msg) {
 		if (logLevel <= infoLogLevel) {
@@ -44,27 +38,10 @@ public class Log {
 	}
 
 	public void write(String msg) {
-		String output = "\n" + getTime() + " " + msg;
-
-		File file = new File(fileName);
-
-		// if file doesnt exists, then create it
+		String output = "\n" + Utils.getTime() + " " + msg;
 		
-			try {
-				//if (!file.exists()) 
-				file.createNewFile();
+		Utils.writeToFile(fileName,output);
 
-				FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
-				BufferedWriter bw = new BufferedWriter(fw);
-
-				bw.append(output);
-
-				bw.flush();
-				bw.close();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
 		}
 	
 
@@ -73,11 +50,4 @@ public class Log {
 
 	}
 
-	public static String getTime() {
-		long yourmilliseconds = System.currentTimeMillis();
-		SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm");
-
-		Date resultdate = new Date(yourmilliseconds);
-		return sdf.format(resultdate);
-	}
 }

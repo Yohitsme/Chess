@@ -30,7 +30,6 @@ public class AI {
 
 		move = chooseMove(legalMoves);
 
-		
 		log.info("AI.move: Move chosen: " + move.algebraicNotationPrint());
 
 		return move;
@@ -46,24 +45,19 @@ public class AI {
 		for (Move move : legalMoves) {
 			Piece capturedPiece = RuleEngine.processMove(move);
 			ArrayList<Move> moveList = controller.getModel().getMoveList();
-			
-			
+
 			DefaultMutableTreeNode node = new DefaultMutableTreeNode();
 			node.setAllowsChildren(true);
-			//score = -Negamax(depth - 1, move, node);
-			
-			score = -Negamax(Constants.getDepth() -1,
+
+			score = -Negamax(Constants.getDepth() - 1,
 					moveList.get(moveList.size() - 1), node);
-			
-			
+
 			node.setUserObject(move.algebraicNotationPrint() + ": " + score);
-			
+
 			parentNode.add(node);
-			
-			
-			
-			//log.writeLine();
-			log.info("AI.chooseMove: score: " + score + ", " + move.algebraicNotationPrint());
+
+			log.info("AI.chooseMove: score: " + score + ", "
+					+ move.algebraicNotationPrint());
 			RuleEngine.undoChanges(capturedPiece, move);
 			if (score > highest) {
 				log.info("AI.chooseMove: New highest: "
@@ -84,11 +78,9 @@ public class AI {
 		return bestMove;
 	}
 
-	public double Negamax(int depth, Move previousMove, DefaultMutableTreeNode parentNode) {
-//		System.out.println(depth);
+	public double Negamax(int depth, Move previousMove,
+			DefaultMutableTreeNode parentNode) {
 		if (depth == 0) {
-			//log.debug("AI.maxi: evaluating white? "
-		//				+ previousMove.getPiece().isWhite());
 			return evaluate(previousMove);
 		}
 		double max = Integer.MIN_VALUE;
@@ -97,27 +89,26 @@ public class AI {
 		boolean isWhite = !previousMove.getPiece().isWhite();
 		ArrayList<Move> legalMoves = controller.getMoveGenerator().findMoves(
 				isWhite);
-int i = 0;
+		int i = 0;
 		for (Move move : legalMoves) {
 			i++;
 			Piece capturedPiece = RuleEngine.processMove(move);
-			
+
 			DefaultMutableTreeNode node = new DefaultMutableTreeNode();
 			node.setAllowsChildren(true);
 			score = -Negamax(depth - 1, move, node);
-			
-			node.setUserObject(i + ", "  + move.algebraicNotationPrint() + ": " + score);
-			
+
+			node.setUserObject(i + ", " + move.algebraicNotationPrint() + ": "
+					+ score);
+
 			parentNode.add(node);
-			
+
 			if (score > max)
 				max = score;
 			RuleEngine.undoChanges(capturedPiece, move);
 		}
 		return max;
 	}
-
-
 
 	/**
 	 * Calls all evaluation methods on a potential move and returns the score of
@@ -128,33 +119,33 @@ int i = 0;
 	public double evaluate(Move move) {
 
 		int positionalScore = computePositionalScore(move);
-//		int positionalScore = 0;
 		int materialScore = computeMaterialScore(move);
 		int bonusScore = computeBonusScore(move);
 
-		//log.debug("-Positional Score: " + positionalScore);
-		//log.debug("-Material Score: " + materialScore);
-		
+		// log.debug("-Positional Score: " + positionalScore);
+		// log.debug("-Material Score: " + materialScore);
 
-		double weightedPositionalScore = positionalScore * 0.1;
-		double weightedMaterialScore = materialScore * 0.75;
-		double weightedBonusScore = bonusScore * 0.15;
+		double weightedPositionalScore = positionalScore
+				* Constants.getPositionalScoreWeight();
+		double weightedMaterialScore = materialScore
+				* Constants.getMaterialScoreWeight();
+		double weightedBonusScore = bonusScore
+				* Constants.getBonusScoreWeight();
 
-		log.info("AI.evaluate: weightdP: "
-					+ weightedPositionalScore + " weighgtedM: "
-					+ weightedMaterialScore + " weightedB: "
-					+ weightedBonusScore);
+		log.info("AI.evaluate: weightdP: " + weightedPositionalScore
+				+ " weighgtedM: " + weightedMaterialScore + " weightedB: "
+				+ weightedBonusScore);
 
 		double totalScore = weightedPositionalScore + weightedMaterialScore
 				+ weightedBonusScore;
-		log.info("AI.evaluate: Considering "
-					+ move.algebraicNotationPrint() + ", score: " + totalScore);
-		
+		log.info("AI.evaluate: Considering " + move.algebraicNotationPrint()
+				+ ", score: " + totalScore);
+
 		ArrayList<Move> moveList = controller.getModel().getMoveList();
-		for (Move pastMove: moveList)
+		for (Move pastMove : moveList)
 			log.info(pastMove.algebraicNotationPrint());
-	//	log.writeLine();
-		
+		// log.writeLine();
+
 		return weightedPositionalScore + weightedMaterialScore
 				+ weightedBonusScore;
 	}
@@ -168,8 +159,7 @@ int i = 0;
 	 */
 	public int computePositionalScore(Move move) {
 
-		// Piece capturedPiece = RuleEngine.processMove(move);
-
+		// TODO: Extra points for center control
 		ArrayList<Move> whiteMoves = controller.getMoveGenerator().findMoves(
 				true);
 
@@ -182,7 +172,6 @@ int i = 0;
 		else
 			difference = blackMoves.size() - whiteMoves.size();
 
-		// RuleEngine.undoChanges(capturedPiece, move);
 		return difference;
 	}
 
@@ -199,8 +188,6 @@ int i = 0;
 		int whiteScore = 0;
 		int blackScore = 0;
 
-		// Piece capturedPiece = RuleEngine.processMove(move);
-
 		ArrayList<Piece> whitePieces = controller.getModel().getWhitePieces();
 		ArrayList<Piece> blackPieces = controller.getModel().getBlackPieces();
 
@@ -210,7 +197,6 @@ int i = 0;
 		for (Piece piece : blackPieces)
 			blackScore += Constants.getPieceWeight(piece);
 
-		// RuleEngine.undoChanges(capturedPiece, move);
 		// TODO account for passant
 		// TODO pawn promotion
 
@@ -245,16 +231,21 @@ int i = 0;
 		result = castlingBonus + centralPawnsPushedBonus + bishopPairBonus
 				+ connectedRooksBonus;
 
-		//log.debug("-bonusScore Score: " + result);
-			/*
-			 * System.out.println("---castling score: " + castlingBonus);
-			 * System.out.println("---central pawns pushed score: " +
-			 * centralPawnsPushedBonus);
-			 * System.out.println("---bishop pair score: " + bishopPairBonus);
-			 * System.out.println("---connected rooks score: " +
-			 * connectedRooksBonus);
-			 */
-		
+		// TODO: Bonus for not moving the queen early on
+		// TODO: Bonus for not moving the same piece twice in the opening
+		// TODO: Bonus for not having a knight on the edge of the board
+		// TODO: Bonus for connected pawns
+		// TODO: Penalty for doubled pawns
+		// TODO: Penalty for isolated pawns
+
+		// log.debug("-bonusScore Score: " + result);
+		/*
+		 * System.out.println("---castling score: " + castlingBonus);
+		 * System.out.println("---central pawns pushed score: " +
+		 * centralPawnsPushedBonus); System.out.println("---bishop pair score: "
+		 * + bishopPairBonus); System.out.println("---connected rooks score: " +
+		 * connectedRooksBonus);
+		 */
 
 		return result;
 	}

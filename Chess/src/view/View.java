@@ -11,7 +11,6 @@ import java.util.ArrayList;
 import java.util.HashMap;
 
 import javax.imageio.ImageIO;
-import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -23,6 +22,8 @@ import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
 import javax.swing.JTree;
+import javax.swing.SwingConstants;
+import javax.swing.table.DefaultTableCellRenderer;
 
 import model.Move;
 import model.Piece;
@@ -84,7 +85,7 @@ public class View {
 		configureSidePanel();
 
 		frame.add(layeredPane, BorderLayout.CENTER);
-		//frame.add(sidePanel,BorderLayout.EAST);
+		frame.add(sidePanel,BorderLayout.EAST);
 		frame.pack();
 
 	}
@@ -101,6 +102,10 @@ public class View {
 		newGame.setActionCommand("newGame");
 		newGame.addActionListener(this.masterListener);
 		
+		JMenuItem exportMoveList = new JMenuItem("Export Move List");
+		exportMoveList.setActionCommand("exportMoveList");
+		exportMoveList.addActionListener(this.masterListener);	
+		
 		JMenuItem changeGameMode = new JMenuItem("Change Game Mode");
 		changeGameMode.setActionCommand("changeGameMode");
 		changeGameMode.addActionListener(this.masterListener);
@@ -111,6 +116,7 @@ public class View {
 		
 		fileMenu.add(newGame);
 		fileMenu.add(changeGameMode);
+		fileMenu.add(exportMoveList);
 		viewMenu.add(flipBoard);
 		menuBar.add(fileMenu);
 		menuBar.add(viewMenu);
@@ -127,10 +133,9 @@ public class View {
 	
 	public void configureSidePanel(){
 		sidePanel = new JPanel();
-		sidePanel.setLayout(new BorderLayout());
-		//sidePanel.setPreferredSize(new Dimension(250,200));
-		sidePanel.add(moveListPanel, BorderLayout.NORTH);
-		sidePanel.add(analysisPanel,BorderLayout.CENTER);
+		sidePanel.setLayout(new GridLayout(2,1));
+		sidePanel.add(moveListPanel);
+		sidePanel.add(analysisPanel);
 	}
 	/**
 	 * Boilerplate highlight panel configuration.  The highlight panel is between the board panel and
@@ -268,32 +273,40 @@ public class View {
 		analysisPanel.removeAll();
 		
 		JScrollPane pane = new JScrollPane(jTree);
-		//pane.setPreferredSize(new Dimension(250,400));
-		analysisPanel.add(pane);
+		JPanel panel = new JPanel(new BorderLayout());
+		panel.add(pane,BorderLayout.CENTER);
+		pane.setPreferredSize(new Dimension(200,310));
+		analysisPanel.add(panel);
+		analysisPanel.repaint();
+		analysisPanel.revalidate();
 	}
 	
 	public void updateMoveListPanel(ArrayList<Move>moveList){
 		moveListPanel.removeAll();
 		
 		int size = moveList.size()/2 + 1;
-		String [] columnNames = {"White","Black"};
-		Object [][] data = new String[20][2];
+		String [] columnNames = {"Move","White","Black"};
+		Object [][] data = new String[size][3];
 		
-		for(int i = 0; i < moveList.size(); i++)
-			data[i/2][i%2] = moveList.get(i).algebraicNotationPrint();
-		
+		for(int i = 0; i < moveList.size(); i++){
+			data[i/2][0] = Integer.toString(i/2 +1);
+			data[i/2][i%2 + 1] = moveList.get(i).algebraicNotationPrint();
+		}
 		JTable table = new JTable(data, columnNames);
-		table.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+		
+		DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+		centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+		for (int i = 0; i < 3; i++)
+		table.getColumnModel().getColumn(i).setCellRenderer(centerRenderer);
 		
 		table.setEnabled(false);
-		
-		table.setPreferredScrollableViewportSize(table.getPreferredSize());
-		table.setFillsViewportHeight(true);
-		
-		JPanel panel = new JPanel();
-		panel.add(new JScrollPane(table));
-		JScrollPane scrollPane = new JScrollPane(panel);
-		moveListPanel.add(scrollPane, BorderLayout.CENTER);
+	
+		JScrollPane scrollPane = new JScrollPane(table);
+		scrollPane.setPreferredSize(moveListPanel.getPreferredSize());
+		moveListPanel.add(new JScrollPane(scrollPane));
+
+		moveListPanel.repaint();
+		moveListPanel.revalidate();
 	}
 
 	/**
@@ -396,6 +409,7 @@ public class View {
 
 		imgMap.put("blank", buildImage("Blank"));
 		imgMap.put("highlight", buildImage("highlight"));
+		imgMap.put("squareHighlight", buildImage("squareHighlight"));
 
 		imgMap.put("whiteSquare", buildImage("whiteSquare"));
 		imgMap.put("blackSquare", buildImage("blackSquare"));
@@ -513,6 +527,20 @@ public class View {
 		
 		highlightArray[row][col].setIcon(imgMap.get("highlight"));
 		
+	}
+
+	public void highlightPreviousMove(ArrayList<Move> moveList) {
+		int row,col;
+		int size = moveList.size();
+		Move move = moveList.get(size-1);
+		
+		row = move.getStartRow();
+		col = move.getStartCol();
+		highlightArray[row][col].setIcon(imgMap.get("squareHighlight"));
+
+		row = move.getEndRow();
+		col = move.getEndCol();
+		highlightArray[row][col].setIcon(imgMap.get("squareHighlight"));
 	}
 
 }

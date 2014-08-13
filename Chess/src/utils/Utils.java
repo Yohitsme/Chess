@@ -1,41 +1,52 @@
 package utils;
 
 import java.awt.event.MouseEvent;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import view.PiecePanel;
 
 /**
  * This class holds static methods that might be useful in numerous places
+ * 
  * @author Matthew
- *
+ * 
  */
 public class Utils {
 
 	/**
-	 * This casts and parses the row of a piece panel that is the source of a mouse event
+	 * This casts and parses the row of a piece panel that is the source of a
+	 * mouse event
+	 * 
 	 * @param e
 	 * @return
 	 */
-	public static int getRowFromMouseEvent(MouseEvent e){
+	public static int getRowFromMouseEvent(MouseEvent e) {
 		return ((PiecePanel) e.getSource()).getRow();
 	}
-	
-	
+
 	/**
-	 * This casts and parses the column of a piece panel that is the source of a mouse event
+	 * This casts and parses the column of a piece panel that is the source of a
+	 * mouse event
+	 * 
 	 * @param e
 	 * @return
 	 */
-	public static int getColFromMouseEvent(MouseEvent e){
+	public static int getColFromMouseEvent(MouseEvent e) {
 		return ((PiecePanel) e.getSource()).getCol();
 	}
-	
+
 	/**
-	 * Returns the proper letter designation for a column. Ex: a for 1, b for 2, ...h for 8
+	 * Returns the proper letter designation for a column. Ex: a for 1, b for 2,
+	 * ...h for 8
 	 */
-	public static char getAlgebraicCharacterFromCol(int col){
+	public static char getAlgebraicCharacterFromCol(int col) {
 		char result;
-		
+
 		if (col == 0)
 			result = 'a';
 		else if (col == 1)
@@ -54,27 +65,66 @@ public class Utils {
 			result = 'h';
 		else
 			result = '?';
-		
-		
+
 		return result;
 	}
-	
-	
+
 	/**
-	 * Returns the letter designation of the piece type passed as a parameter. Knight: n, King: k, Queen q, etc
+	 * Returns the letter designation of the piece type passed as a parameter.
+	 * Knight: n, King: k, Queen q, etc
+	 * 
 	 * @param type
 	 * @return
 	 */
-	public static char getAlgebraicCharacterFromPieceType(String type){
-		
+	public static char getAlgebraicCharacterFromPieceType(String type) {
+
 		char result;
 		if (type.equals("knight"))
-				result = 'n';
+			result = 'n';
 		else
 			result = type.charAt(0);
-		
+
 		return result;
 	}
+
+	public static void writeToFile(String fileName, String msg) {
+
+		String output = msg;
+
+		File file = new File(fileName);
+
+		// if file doesnt exists, then create it
+		try {
+			 if (!file.exists())
+			file.createNewFile();
+
+			FileWriter fw = new FileWriter(file.getAbsoluteFile(), true);
+			BufferedWriter bw = new BufferedWriter(fw);
+
+			bw.append(output);
+
+			bw.flush();
+			bw.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+
+	}
+
+	public static String getTime() {
+		long yourmilliseconds = System.currentTimeMillis();
+		SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm:ss");
+
+		Date resultdate = new Date(yourmilliseconds);
+		return sdf.format(resultdate);
+	}
 	
-	
+	public static String getTimeNoSpaces() {
+		long yourmilliseconds = System.currentTimeMillis();
+		SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy_HH-mm-ss");
+
+		Date resultdate = new Date(yourmilliseconds);
+		return sdf.format(resultdate);
+	}
 }

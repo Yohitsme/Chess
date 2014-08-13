@@ -15,6 +15,11 @@ public class Constants {
 	private final static int connectedRooksBonusWeight = 5;
 	private final static int bishopPairBonusWeight = 3;
 	private final static int centralPawnsPushedBonusWeight = 5;
+	
+	private final static double positionalScoreWeight = .05;
+	private final static double materialScoreWeight = .75;
+	private final static double bonusScoreWeight = .20;
+	
 	private final static int depth = 2;
 	
 	public static int getPieceWeight(Piece piece){
@@ -80,6 +85,41 @@ public class Constants {
 
 	public static int getBishopPairBonusWeight() {
 		return bishopPairBonusWeight;
+	}
+
+
+	public static int getCastlingbonusweight() {
+		return castlingBonusWeight;
+	}
+
+
+	public static int getConnectedrooksbonusweight() {
+		return connectedRooksBonusWeight;
+	}
+
+
+	public static int getBishoppairbonusweight() {
+		return bishopPairBonusWeight;
+	}
+
+
+	public static int getCentralpawnspushedbonusweight() {
+		return centralPawnsPushedBonusWeight;
+	}
+
+
+	public static double getPositionalScoreWeight() {
+		return positionalScoreWeight;
+	}
+
+
+	public static double getMaterialScoreWeight() {
+		return materialScoreWeight;
+	}
+
+
+	public static double getBonusScoreWeight() {
+		return bonusScoreWeight;
 	}
 
 

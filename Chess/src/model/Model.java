@@ -29,8 +29,8 @@ public class Model {
 		gameMode = "pVc";
 
 		board = new Piece[8][8];
-//		initializeBoard();
-		initializeSimpleBoard();
+		initializeBoard();
+//		initializeSimpleBoard();
 		populateLists();
 	}
 
@@ -121,7 +121,7 @@ public class Model {
 	 * Initialize a very simple version of the board for gameTree testing
 	 */
 	public void initializeSimpleBoard() {
-		boolean hasMoved = true;
+		boolean hasMoved = false;
 		boolean white = true;
 		boolean black = false;
 
@@ -137,15 +137,17 @@ public class Model {
 		board[1][0] = new Piece("king", white, hasMoved, 1, 0);
 
 
-		board[7][7] = new Piece("king", black, hasMoved, 7, 7);
-//		board[6][7] = new Piece("pawn", black, hasMoved, 6, 7);
-//		board[7][6] = new Piece("pawn", black, hasMoved, 7, 6);
-//		board[6][6] = new Piece("pawn", black, hasMoved, 6, 6);
-		
-		
-		board[4][4] = new Piece("pawn", black, hasMoved, 4,4);
-		board[3][5] = new Piece("rook", white,hasMoved,3,5);
-		board[1][7] = new Piece("pawn",black,hasMoved,1,7);
+		board[7][4] = new Piece("king", black, hasMoved, 7, 4);
+		board[7][7] = new Piece("rook", black, hasMoved, 7, 7);
+		board[6][5] = new Piece("pawn", black, hasMoved, 6, 5);
+		board[6][6] = new Piece("pawn", black, hasMoved, 6, 6);
+		board[6][7] = new Piece("pawn", black, hasMoved, 6, 7);
+		board[6][4] = new Piece("pawn", black, hasMoved, 6, 4);
+			
+//		
+//		board[4][4] = new Piece("pawn", black, hasMoved, 4,4);
+//		board[3][5] = new Piece("rook", white,hasMoved,3,5);
+//		board[1][7] = new Piece("pawn",black,hasMoved,1,7);
 
 		// Set black piece row
 		

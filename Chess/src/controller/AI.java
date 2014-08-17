@@ -233,10 +233,10 @@ public class AI {
 
 		// Preprocess information that several methods need to find anyway
 		int result = 0;
-		boolean isWhite =!move.getPiece().isWhite();
+		boolean isWhite = !move.getPiece().isWhite();
 		Piece king = findKing(isWhite);
 
-		int castlingBonus = computeCastlingBonus(move, king);
+		int castlingBonus = computeCastlingBonus(king);
 		int centralPawnsPushedBonus = computeCentralPawnsPushedBonus(move,
 				isWhite);
 		int bishopPairBonus = computeBishopPairBonus(move, isWhite);
@@ -346,18 +346,21 @@ public class AI {
 	 * @param move
 	 * @return
 	 */
-	public int computeCastlingBonus(Move move, Piece king) {
+	public int computeCastlingBonus(Piece king) {
 		int result = 0;
 		if (controller.getModel().getMoveList().size() < 20) {
-			int unsignedDeltaCol = RuleEngine.calculateDeltaColUnsigned(move);
+			boolean isWhite = king.isWhite();
 
-			// If the potential move is a castle, assign it weight
-			if (move.getPiece().getType().equals("king")
-					&& unsignedDeltaCol == 2)
-				result = Constants.getCastlingBonusWeight();
+			for (Move move : controller.getModel().getMoveList()) {
+				if (move.getPiece() == king
+						&& RuleEngine.calculateDeltaColUnsigned(move) == 2)
+					result = Constants.getCastlingBonusWeight();
+			}
 
 		}
-
+		
+		if (result != 0)
+			System.out.println("Awarding bonus");
 		return result;
 	}
 

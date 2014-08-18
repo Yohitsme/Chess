@@ -39,17 +39,19 @@ public class AI {
 
 	public Move chooseMove(ArrayList<Move> legalMoves, boolean isWhite) {
 
+//		System.out.println(Double.MAX_VALUE);
+		
 		double score = 0;
 		double highest = -100000000;
 		Move bestMove = null;
 		Random rand = new Random();
 		
+		alpha = -1000000000.0;
+		beta = 10000000000000.1;
+		
 		DefaultMutableTreeNode parentNode = controller.gameTreeController.root;
 		for (Move move : legalMoves) {
 		
-			alpha = Double.MIN_VALUE;
-			beta = Double.MAX_VALUE;
-			
 			Piece capturedPiece = RuleEngine.processMove(move);
 			ArrayList<Move> moveList = controller.getModel().getMoveList();
 
@@ -72,12 +74,12 @@ public class AI {
 
 			// If the considered move is as good as the best so far, there's a
 			// 10% chance the engine will pick it instead
-			else if (score == highest) {
-				if (rand.nextInt(10) == 0) {
-					bestMove = move;
-					highest = score;
-				}
-			}
+//			else if (score == highest) {
+//				if (rand.nextInt(10) == 0) {
+//					bestMove = move;
+//					highest = score;
+//				}
+//			}
 		}
 		return bestMove;
 	}
@@ -91,11 +93,13 @@ public class AI {
 					!isWhite);
 			int i = 0;
 		   for ( Move move: legalMoves) {
+			   boolean tmpHasMoved;
 			   i++;
 				Piece capturedPiece = RuleEngine.processMove(move);   // process
 				DefaultMutableTreeNode node = new DefaultMutableTreeNode();
 				node.setAllowsChildren(true);
-				
+				tmpHasMoved = move.getPiece().isHasMoved();
+				move.getPiece().setHasMoved(true);
 				score = alphaBetaMin(depthleft - 1, !isWhite,node);
 		      
 				node.setUserObject(i + ", " + move.algebraicNotationPrint() + ": "
@@ -104,6 +108,7 @@ public class AI {
 				parentNode.add(node);
 
 				RuleEngine.undoChanges(capturedPiece, move);
+				move.getPiece().setHasMoved(tmpHasMoved);
 				  // undo
 		      if( score >= beta )
 		         return beta;   // fail hard beta-cutoff
@@ -123,17 +128,19 @@ public class AI {
 		   
 		   int i = 0;
 		   for ( Move move: legalMoves) {
+			   boolean tmpHasMoved;
 				i++;
 			   Piece capturedPiece = RuleEngine.processMove(move);  // process
 				DefaultMutableTreeNode node = new DefaultMutableTreeNode();
 				node.setAllowsChildren(true);
-				
+				tmpHasMoved = move.getPiece().isHasMoved();
+				move.getPiece().setHasMoved(true);
 				score = alphaBetaMax(depthleft - 1, !isWhite,node );
 				node.setUserObject(i + ", " + move.algebraicNotationPrint() + ": "
 						+ score);
 
 				parentNode.add(node);
-
+				move.getPiece().setHasMoved(tmpHasMoved);
 				RuleEngine.undoChanges(capturedPiece, move);       // undo
 			   if( score <= alpha )
 		         return alpha; // fail hard alpha-cutoff
@@ -384,6 +391,7 @@ public class AI {
 		piece = controller.getBoardController().getPieceByCoords(pawnRow, col);
 		if ((piece == null) || (!piece.getType().equals("pawn")))
 			result += Constants.getCentralPawnsPushedBonusWeight();
+		
 		
 		return result;
 	}

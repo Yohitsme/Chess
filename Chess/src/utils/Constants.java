@@ -11,6 +11,14 @@ public class Constants {
 	private final static int queenWeight = 9;
 	private final static int bishopWeight = 3;
 	
+	private final static int blackPieceRow = 7;
+	private final static int blackPawnRow = 6;
+	private final static int whitePieceRow = 0;
+	private final static int whitePawnRow = 1;
+	
+	private final static int queenColumn = 3;
+	private final static int kingColumn = 4;
+	
 	private final static int castlingBonusWeight = 10;
 	private final static int connectedRooksBonusWeight = 5;
 	private final static int bishopPairBonusWeight = 3;
@@ -20,7 +28,7 @@ public class Constants {
 	private final static double materialScoreWeight = .75;
 	private final static double bonusScoreWeight = .20;
 	
-	private final static int depth = 2;
+	private final static int depth = 5;
 	
 	public static int getPieceWeight(Piece piece){
 		int result = 0;
@@ -88,26 +96,6 @@ public class Constants {
 	}
 
 
-	public static int getCastlingbonusweight() {
-		return castlingBonusWeight;
-	}
-
-
-	public static int getConnectedrooksbonusweight() {
-		return connectedRooksBonusWeight;
-	}
-
-
-	public static int getBishoppairbonusweight() {
-		return bishopPairBonusWeight;
-	}
-
-
-	public static int getCentralpawnspushedbonusweight() {
-		return centralPawnsPushedBonusWeight;
-	}
-
-
 	public static double getPositionalScoreWeight() {
 		return positionalScoreWeight;
 	}
@@ -130,5 +118,35 @@ public class Constants {
 
 	public static int getCentralPawnsPushedBonusWeight() {
 		return centralPawnsPushedBonusWeight;
+	}
+
+
+	public static int getBlackPieceRow() {
+		return blackPieceRow;
+	}
+
+
+	public static int getBlackPawnRow() {
+		return blackPawnRow;
+	}
+
+
+	public static int getWhitePieceRow() {
+		return whitePieceRow;
+	}
+
+
+	public static int getWhitePawnRow() {
+		return whitePawnRow;
+	}
+
+
+	public static int getQueenColumn() {
+		return queenColumn;
+	}
+
+
+	public static int getKingColumn() {
+		return kingColumn;
 	}
 }

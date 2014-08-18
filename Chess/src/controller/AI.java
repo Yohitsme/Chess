@@ -15,6 +15,8 @@ public class AI {
 	Controller controller;
 	boolean debug = true;
 	Log log = new Log();
+	double alpha;
+	double beta;
 
 	public AI(Controller controllerIn) {
 		this.controller = controllerIn;
@@ -28,40 +30,42 @@ public class AI {
 		ArrayList<Move> legalMoves = controller.getMoveGenerator().findMoves(
 				isWhite);
 
-		move = chooseMove(legalMoves);
+		move = chooseMove(legalMoves, isWhite);
 
 		log.info("AI.move: Move chosen: " + move.algebraicNotationPrint());
 
 		return move;
 	}
 
-	public Move chooseMove(ArrayList<Move> legalMoves) {
+	public Move chooseMove(ArrayList<Move> legalMoves, boolean isWhite) {
 
 		double score = 0;
 		double highest = -100000000;
 		Move bestMove = null;
 		Random rand = new Random();
+		
 		DefaultMutableTreeNode parentNode = controller.gameTreeController.root;
 		for (Move move : legalMoves) {
+		
+			alpha = Double.MIN_VALUE;
+			beta = Double.MAX_VALUE;
+			
 			Piece capturedPiece = RuleEngine.processMove(move);
 			ArrayList<Move> moveList = controller.getModel().getMoveList();
 
 			DefaultMutableTreeNode node = new DefaultMutableTreeNode();
 			node.setAllowsChildren(true);
 
-			score = -Negamax(Constants.getDepth() - 1,
-					moveList.get(moveList.size() - 1), node);
+//			score = -Negamax(Constants.getDepth() - 1,
+//					moveList.get(moveList.size() - 1), node);
 
+			score = alphaBetaMax(Constants.getDepth() -1, isWhite, node);
 			node.setUserObject(move.algebraicNotationPrint() + ": " + score);
 
 			parentNode.add(node);
 
-			log.info("AI.chooseMove: score: " + score + ", "
-					+ move.algebraicNotationPrint());
 			RuleEngine.undoChanges(capturedPiece, move);
 			if (score > highest) {
-				log.info("AI.chooseMove: New highest: "
-						+ move.algebraicNotationPrint());
 				bestMove = move;
 				highest = score;
 			}
@@ -78,10 +82,71 @@ public class AI {
 		return bestMove;
 	}
 
+	double alphaBetaMax(double depthleft, boolean isWhite,DefaultMutableTreeNode parentNode ) {
+		double score = 0.0;  
+		if ( depthleft == 0 ) 
+			   return evaluate(isWhite);
+		   
+			ArrayList<Move> legalMoves = controller.getMoveGenerator().findMoves(
+					!isWhite);
+			int i = 0;
+		   for ( Move move: legalMoves) {
+			   i++;
+				Piece capturedPiece = RuleEngine.processMove(move);   // process
+				DefaultMutableTreeNode node = new DefaultMutableTreeNode();
+				node.setAllowsChildren(true);
+				
+				score = alphaBetaMin(depthleft - 1, !isWhite,node);
+		      
+				node.setUserObject(i + ", " + move.algebraicNotationPrint() + ": "
+						+ score);
+
+				parentNode.add(node);
+
+				RuleEngine.undoChanges(capturedPiece, move);
+				  // undo
+		      if( score >= beta )
+		         return beta;   // fail hard beta-cutoff
+		      if( score > alpha )
+		         alpha = score; // alpha acts like max in MiniMax
+		   }
+		   return alpha;
+		}
+
+	double alphaBetaMin(double depthleft, boolean isWhite,DefaultMutableTreeNode parentNode  ) {
+		  
+		double score = 0.0;
+		if ( depthleft == 0 ) 
+			   return -evaluate(isWhite);
+		   ArrayList<Move> legalMoves = controller.getMoveGenerator().findMoves(
+					!isWhite);
+		   
+		   int i = 0;
+		   for ( Move move: legalMoves) {
+				i++;
+			   Piece capturedPiece = RuleEngine.processMove(move);  // process
+				DefaultMutableTreeNode node = new DefaultMutableTreeNode();
+				node.setAllowsChildren(true);
+				
+				score = alphaBetaMax(depthleft - 1, !isWhite,node );
+				node.setUserObject(i + ", " + move.algebraicNotationPrint() + ": "
+						+ score);
+
+				parentNode.add(node);
+
+				RuleEngine.undoChanges(capturedPiece, move);       // undo
+			   if( score <= alpha )
+		         return alpha; // fail hard alpha-cutoff
+		      if( score < beta )
+		         beta = score; // beta acts like min in MiniMax
+		   }
+		   return beta;
+		}
+	
 	public double Negamax(int depth, Move previousMove,
 			DefaultMutableTreeNode parentNode) {
 		if (depth == 0) {
-			return evaluate(previousMove);
+			return evaluate(!previousMove.getPiece().isWhite());
 		}
 		double max = Integer.MIN_VALUE;
 		double score = 0.0;
@@ -110,17 +175,19 @@ public class AI {
 		return max;
 	}
 
+
+
 	/**
 	 * Calls all evaluation methods on a potential move and returns the score of
 	 * the move.
 	 * 
 	 * @return
 	 */
-	public double evaluate(Move move) {
-
-		int positionalScore = computePositionalScore(move);
-		int materialScore = computeMaterialScore(move);
-		int bonusScore = computeBonusScore(move);
+	public double evaluate(boolean isWhitesTurn) {
+		double result = 0.0;
+		int positionalScore = computePositionalScore();
+		int materialScore = computeMaterialScore();
+		int bonusScore = computeBonusScore();
 
 		// log.debug("-Positional Score: " + positionalScore);
 		// log.debug("-Material Score: " + materialScore);
@@ -138,16 +205,21 @@ public class AI {
 
 		double totalScore = weightedPositionalScore + weightedMaterialScore
 				+ weightedBonusScore;
-		log.info("AI.evaluate: Considering " + move.algebraicNotationPrint()
-				+ ", score: " + totalScore);
+//		log.info("AI.evaluate: Considering " + move.algebraicNotationPrint()
+//				+ ", score: " + totalScore);
 
 		ArrayList<Move> moveList = controller.getModel().getMoveList();
 		for (Move pastMove : moveList)
 			log.info(pastMove.algebraicNotationPrint());
 		// log.writeLine();
 
-		return weightedPositionalScore + weightedMaterialScore
+		 result = weightedPositionalScore + weightedMaterialScore
 				+ weightedBonusScore;
+		 
+		 if (!isWhitesTurn)
+			 result = result * -1.0;
+		 
+		 return result;
 	}
 
 	/**
@@ -157,7 +229,7 @@ public class AI {
 	 * 
 	 * Very computationally expensive, will need to optimize this in the future.
 	 */
-	public int computePositionalScore(Move move) {
+	public int computePositionalScore() {
 
 		// TODO: Extra points for center control
 		ArrayList<Move> whiteMoves = controller.getMoveGenerator().findMoves(
@@ -166,24 +238,19 @@ public class AI {
 		ArrayList<Move> blackMoves = controller.getMoveGenerator().findMoves(
 				false);
 
-		int difference = 0;
-		if (!move.getPiece().isWhite())
-			difference = whiteMoves.size() - blackMoves.size();
-		else
-			difference = blackMoves.size() - whiteMoves.size();
-
+		int	difference = whiteMoves.size() - blackMoves.size();
+		
 		return difference;
 	}
 
 	/**
 	 * Computes the material score of a move. This is the difference between the
-	 * amount of material (in points) for black and white. The sign of the
-	 * result is dependent on who moved (material defecit is always negative,
-	 * having more material than the opponent is positive).
+	 * amount of material (in points) for black and white. Positive means white 
+	 * is ahead in material.
 	 * 
 	 * @return
 	 */
-	public int computeMaterialScore(Move move) {
+	public int computeMaterialScore() {
 		int result = 0;
 		int whiteScore = 0;
 		int blackScore = 0;
@@ -212,12 +279,8 @@ public class AI {
 			}
 		}
 		// TODO account for passant
-		// TODO pawn promotion
 
-		if (!move.getPiece().isWhite())
 			result = whiteScore - blackScore;
-		else
-			result = blackScore - whiteScore;
 
 		return result;
 	}
@@ -229,21 +292,13 @@ public class AI {
 	 * 
 	 * @return
 	 */
-	public int computeBonusScore(Move move) {
+	public int computeBonusScore() {
 
 		// Preprocess information that several methods need to find anyway
-		int result = 0;
-		boolean isWhite = !move.getPiece().isWhite();
-		Piece king = findKing(isWhite);
-
-		int castlingBonus = computeCastlingBonus(king);
-		int centralPawnsPushedBonus = computeCentralPawnsPushedBonus(move,
-				isWhite);
-		int bishopPairBonus = computeBishopPairBonus(move, isWhite);
-		int connectedRooksBonus = computeConnectedRooksBonus(move);
-
-		result = castlingBonus + centralPawnsPushedBonus + bishopPairBonus
-				+ connectedRooksBonus;
+		boolean black = false;
+		boolean white = true;
+		
+		int result = computeOneSidedBonusScore(white) - computeOneSidedBonusScore(black);
 
 		// TODO: Bonus for not moving the queen early on
 		// TODO: Bonus for not moving the same piece twice in the opening
@@ -263,13 +318,27 @@ public class AI {
 
 		return result;
 	}
+	
+	public int computeOneSidedBonusScore(boolean isWhite){
+		int result = 0;
+		Piece king = findKing(isWhite);
 
-	private int computeConnectedRooksBonus(Move move) {
+		int castlingBonus = computeCastlingBonus(king);
+		int centralPawnsPushedBonus = computeCentralPawnsPushedBonus(isWhite);
+		int bishopPairBonus = computeBishopPairBonus(isWhite);
+		int connectedRooksBonus = computeConnectedRooksBonus(isWhite);
+
+		result = castlingBonus + centralPawnsPushedBonus + bishopPairBonus
+				+ connectedRooksBonus;
+		return result;
+	}
+
+	private int computeConnectedRooksBonus(boolean isWhite) {
 		// TODO Auto-generated method stub
 		return 0;
 	}
 
-	private int computeBishopPairBonus(Move move, boolean isWhite) {
+	private int computeBishopPairBonus(boolean isWhite) {
 
 		ArrayList<Piece> pieceList = findPieceList(isWhite);
 		int numBishops = 0;
@@ -293,22 +362,29 @@ public class AI {
 	 * @param move
 	 * @return
 	 */
-	private int computeCentralPawnsPushedBonus(Move move, boolean isWhite) {
+	private int computeCentralPawnsPushedBonus(boolean isWhite) {
 		int result = 0;
-		Piece piece = move.getPiece();
-
-		if (piece.getType().equals("pawn")) {
-			int col = piece.getCol();
-
-			// If it was a central pawn
-			if (col == 3 || col == 4) {
-
-				if ((move.getStartRow() == 1 && isWhite)
-						|| (move.getStartRow() == 6 && !isWhite))
-					result = Constants.getCentralPawnsPushedBonusWeight();
-			}
-		}
-
+		int pawnRow = -1;
+		int col = -1;
+		Piece piece = null;
+		
+		if (isWhite)
+			pawnRow = Constants.getWhitePawnRow();
+		else
+			pawnRow = Constants.getBlackPawnRow();
+		
+		// Check King column pawn
+		col = Constants.getKingColumn();
+		piece = controller.getBoardController().getPieceByCoords(pawnRow, col);
+		if ((piece == null) || (!piece.getType().equals("pawn")))
+			result += Constants.getCentralPawnsPushedBonusWeight();
+		
+		// Check Queen column pawn
+		col = Constants.getQueenColumn();
+		piece = controller.getBoardController().getPieceByCoords(pawnRow, col);
+		if ((piece == null) || (!piece.getType().equals("pawn")))
+			result += Constants.getCentralPawnsPushedBonusWeight();
+		
 		return result;
 	}
 
@@ -358,9 +434,7 @@ public class AI {
 			}
 
 		}
-		
-		if (result != 0)
-			System.out.println("Awarding bonus");
+
 		return result;
 	}
 

@@ -30,7 +30,7 @@ public class Model {
 
 		board = new Piece[8][8];
 		initializeBoard();
-//		initializeSimpleBoard();
+		//initializeSimpleBoard();
 		populateLists();
 	}
 
@@ -138,12 +138,12 @@ public class Model {
 
 
 		board[7][4] = new Piece("king", black, hasMoved, 7, 4);
-		board[7][7] = new Piece("rook", black, hasMoved, 7, 7);
-		board[6][5] = new Piece("pawn", black, hasMoved, 6, 5);
-		board[6][6] = new Piece("pawn", black, hasMoved, 6, 6);
-		board[6][7] = new Piece("pawn", black, hasMoved, 6, 7);
-		board[6][4] = new Piece("pawn", black, hasMoved, 6, 4);
-			
+		board[0][7] = new Piece("queen", black, hasMoved, 0, 7);
+//		board[6][5] = new Piece("pawn", black, hasMoved, 6, 5);
+//		board[6][6] = new Piece("pawn", black, hasMoved, 6, 6);
+//		board[6][7] = new Piece("pawn", black, hasMoved, 6, 7);
+//		board[6][4] = new Piece("pawn", black, hasMoved, 6, 4);
+//			
 //		
 //		board[4][4] = new Piece("pawn", black, hasMoved, 4,4);
 //		board[3][5] = new Piece("rook", white,hasMoved,3,5);

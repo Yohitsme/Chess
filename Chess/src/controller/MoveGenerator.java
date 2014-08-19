@@ -82,6 +82,7 @@ public class MoveGenerator {
 				}
 			}
 		}
+		
 		return legalMoves;
 	}
 

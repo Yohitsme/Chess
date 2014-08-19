@@ -376,6 +376,9 @@ public class RuleEngine {
 
 			String color = move.getPiece().isWhite() ? "black" : "white";
 			kingHasMoved = move.getPiece().isHasMoved();
+			
+			// Only continue if king hasn't moved
+			if (!kingHasMoved){
 			isInCheck = isAttackedSquare(move.getPiece().getRow(), move
 					.getPiece().getCol(), color);
 			// If castling kingside and rook is alive
@@ -422,7 +425,7 @@ else{
 				isCastlingIntoCheck = isAttackedSquare(
 						(move.getPiece().getRow()),
 						move.getPiece().getCol() - 2, color);
-			}
+			}}
 			
 			result = !kingHasMoved && !rookHasMoved && !isInCheck
 					&& !isCastlingThroughCheck && !isCastlingIntoCheck

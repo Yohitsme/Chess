@@ -62,6 +62,24 @@ public class Move {
 
 		return result;
 	}
+	
+	public boolean equals(Move moveIn){
+		boolean result = true;
+		
+		if (this.startCol != moveIn.getStartCol())
+			result = false;
+		if (this.endCol != moveIn.getEndCol())
+			result = false;
+		if (this.startRow != moveIn.getStartRow())
+			result = false;
+		if (this.endRow != moveIn.getEndRow())
+			result = false;
+		if (this.piece.type.equals( moveIn.getPiece().getType()))
+			result = false;
+		
+		return result;
+		
+	}
 
 	public String coloredAlgebraicNotationPrint() {
 

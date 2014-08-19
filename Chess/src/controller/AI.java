@@ -1,8 +1,12 @@
 package controller;
 
+import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Random;
 
+import javax.swing.JFrame;
+import javax.swing.JPanel;
+import javax.swing.JProgressBar;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import model.Move;
@@ -15,8 +19,8 @@ public class AI {
 	Controller controller;
 	boolean debug = true;
 	Log log = new Log();
-	double alpha;
-	double beta;
+
+	// Move bestMove;
 
 	public AI(Controller controllerIn) {
 		this.controller = controllerIn;
@@ -39,117 +43,138 @@ public class AI {
 
 	public Move chooseMove(ArrayList<Move> legalMoves, boolean isWhite) {
 
-//		System.out.println(Double.MAX_VALUE);
-		
 		double score = 0;
-		double highest = -100000000;
+		double highest = 100000000;
 		Move bestMove = null;
 		Random rand = new Random();
-		
-		alpha = -1000000000.0;
-		beta = 10000000000000.1;
-		
+
+		double alpha = -1000000000.0;
+		double beta =   1000000000.0;
+
 		DefaultMutableTreeNode parentNode = controller.gameTreeController.root;
+		long initTime = System.currentTimeMillis(); 
+		int i = 0;
 		for (Move move : legalMoves) {
-		
+			  long startTime = System.currentTimeMillis(); 
 			Piece capturedPiece = RuleEngine.processMove(move);
-			ArrayList<Move> moveList = controller.getModel().getMoveList();
 
 			DefaultMutableTreeNode node = new DefaultMutableTreeNode();
-			node.setAllowsChildren(true);
 
-//			score = -Negamax(Constants.getDepth() - 1,
-//					moveList.get(moveList.size() - 1), node);
-
-			score = alphaBetaMax(Constants.getDepth() -1, isWhite, node);
+			score = alphaBetaMax(alpha, beta, Constants.getDepth() - 1,
+					!isWhite, node);
 			node.setUserObject(move.algebraicNotationPrint() + ": " + score);
 
 			parentNode.add(node);
 
 			RuleEngine.undoChanges(capturedPiece, move);
-			if (score > highest) {
+			if (score < highest || bestMove == null) {
 				bestMove = move;
 				highest = score;
 			}
 
+			long endTime =System.currentTimeMillis(); 
+			System.out.println("AI.ChooseMove: " + i++ + " of " + legalMoves.size() + " branches searched. Time elapsed: " + (endTime-initTime)/1000.0 + " seconds, last branch took " +(endTime-startTime)/1000.0 +" seconds");
+
 			// If the considered move is as good as the best so far, there's a
 			// 10% chance the engine will pick it instead
-//			else if (score == highest) {
-//				if (rand.nextInt(10) == 0) {
-//					bestMove = move;
-//					highest = score;
-//				}
-//			}
+			// else if (score == highest) {
+			// if (rand.nextInt(10) == 0) {
+			// bestMove = move;
+			// highest = score;
+			// }
+			// }
 		}
+		
+		
 		return bestMove;
 	}
 
-	double alphaBetaMax(double depthleft, boolean isWhite,DefaultMutableTreeNode parentNode ) {
-		double score = 0.0;  
-		if ( depthleft == 0 ) 
-			   return evaluate(isWhite);
-		   
-			ArrayList<Move> legalMoves = controller.getMoveGenerator().findMoves(
-					!isWhite);
-			int i = 0;
-		   for ( Move move: legalMoves) {
-			   boolean tmpHasMoved;
-			   i++;
-				Piece capturedPiece = RuleEngine.processMove(move);   // process
-				DefaultMutableTreeNode node = new DefaultMutableTreeNode();
-				node.setAllowsChildren(true);
-				tmpHasMoved = move.getPiece().isHasMoved();
-				move.getPiece().setHasMoved(true);
-				score = alphaBetaMin(depthleft - 1, !isWhite,node);
-		      
-				node.setUserObject(i + ", " + move.algebraicNotationPrint() + ": "
-						+ score);
-
-				parentNode.add(node);
-
-				RuleEngine.undoChanges(capturedPiece, move);
-				move.getPiece().setHasMoved(tmpHasMoved);
-				  // undo
-		      if( score >= beta )
-		         return beta;   // fail hard beta-cutoff
-		      if( score > alpha )
-		         alpha = score; // alpha acts like max in MiniMax
-		   }
-		   return alpha;
-		}
-
-	double alphaBetaMin(double depthleft, boolean isWhite,DefaultMutableTreeNode parentNode  ) {
-		  
+	double alphaBetaMax(double alpha, double beta, double depthleft,
+			boolean isWhite, DefaultMutableTreeNode parentNode) {
 		double score = 0.0;
-		if ( depthleft == 0 ) 
-			   return -evaluate(isWhite);
-		   ArrayList<Move> legalMoves = controller.getMoveGenerator().findMoves(
-					!isWhite);
-		   
-		   int i = 0;
-		   for ( Move move: legalMoves) {
-			   boolean tmpHasMoved;
-				i++;
-			   Piece capturedPiece = RuleEngine.processMove(move);  // process
-				DefaultMutableTreeNode node = new DefaultMutableTreeNode();
-				node.setAllowsChildren(true);
-				tmpHasMoved = move.getPiece().isHasMoved();
-				move.getPiece().setHasMoved(true);
-				score = alphaBetaMax(depthleft - 1, !isWhite,node );
-				node.setUserObject(i + ", " + move.algebraicNotationPrint() + ": "
-						+ score);
-
-				parentNode.add(node);
-				move.getPiece().setHasMoved(tmpHasMoved);
-				RuleEngine.undoChanges(capturedPiece, move);       // undo
-			   if( score <= alpha )
-		         return alpha; // fail hard alpha-cutoff
-		      if( score < beta )
-		         beta = score; // beta acts like min in MiniMax
-		   }
-		   return beta;
+		if (depthleft == 0) {
+			return evaluate(isWhite);
 		}
-	
+		ArrayList<Move> legalMoves = controller.getMoveGenerator().findMoves(
+				isWhite);
+		int i = 0;
+		boolean tmpHasMoved;
+		for (Move move : legalMoves) {
+
+			Piece capturedPiece = RuleEngine.processMove(move);
+			tmpHasMoved = move.getPiece().isHasMoved();
+			move.getPiece().setHasMoved(true);
+			
+			DefaultMutableTreeNode node = new DefaultMutableTreeNode();
+			score = alphaBetaMin(alpha, beta, depthleft - 1, !isWhite, node);
+
+			node.setUserObject(++i + ", " + move.algebraicNotationPrint() + ": "
+					+ score);
+			parentNode.add(node);
+
+			RuleEngine.undoChanges(capturedPiece, move);
+			move.getPiece().setHasMoved(tmpHasMoved);
+		
+			if (score >= beta) {
+				return beta; // fail hard beta-cutoff
+			}
+			if (score > alpha) {
+				alpha = score; // alpha acts like max in MiniMax
+			}
+		}
+
+		if (legalMoves.size() == 0) {
+			// If I have no moves assume I was checkmated and return low alpha
+			// value
+			alpha = -10000000000000.0;
+		}
+
+		return alpha;
+	}
+
+	double alphaBetaMin(double alpha, double beta, double depthleft,
+			boolean isWhite, DefaultMutableTreeNode parentNode) {
+
+		double score = 0.0;
+		if (depthleft == 0) {
+			return -evaluate(isWhite);
+		}
+		ArrayList<Move> legalMoves = controller.getMoveGenerator().findMoves(
+				isWhite);
+
+		int i = 0;
+		boolean tmpHasMoved;
+		for (Move move : legalMoves) {
+			Piece capturedPiece = RuleEngine.processMove(move);
+			tmpHasMoved = move.getPiece().isHasMoved();
+			move.getPiece().setHasMoved(true);
+
+			DefaultMutableTreeNode node = new DefaultMutableTreeNode();
+
+			score = alphaBetaMax(alpha, beta, depthleft - 1, !isWhite, node);
+			
+			parentNode.add(node);
+			node.setUserObject(++i + ", " + move.algebraicNotationPrint() + ": "
+					+ score);
+
+			move.getPiece().setHasMoved(tmpHasMoved);
+			RuleEngine.undoChanges(capturedPiece, move); // undo
+			
+			if (score <= alpha)
+				return alpha; // fail hard alpha-cutoff
+			if (score < beta) {
+				beta = score; // beta acts like min in MiniMax
+
+			}
+		}
+		if (legalMoves.size() == 0) {
+			// If I have no moves assume I was checkmated and return high beta
+			// value
+			alpha = 10000000000000.0;
+		}
+		return beta;
+	}
+
 	public double Negamax(int depth, Move previousMove,
 			DefaultMutableTreeNode parentNode) {
 		if (depth == 0) {
@@ -182,8 +207,6 @@ public class AI {
 		return max;
 	}
 
-
-
 	/**
 	 * Calls all evaluation methods on a potential move and returns the score of
 	 * the move.
@@ -191,6 +214,7 @@ public class AI {
 	 * @return
 	 */
 	public double evaluate(boolean isWhitesTurn) {
+
 		double result = 0.0;
 		int positionalScore = computePositionalScore();
 		int materialScore = computeMaterialScore();
@@ -212,21 +236,21 @@ public class AI {
 
 		double totalScore = weightedPositionalScore + weightedMaterialScore
 				+ weightedBonusScore;
-//		log.info("AI.evaluate: Considering " + move.algebraicNotationPrint()
-//				+ ", score: " + totalScore);
+		// log.info("AI.evaluate: Considering " + move.algebraicNotationPrint()
+		// + ", score: " + totalScore);
 
 		ArrayList<Move> moveList = controller.getModel().getMoveList();
 		for (Move pastMove : moveList)
 			log.info(pastMove.algebraicNotationPrint());
 		// log.writeLine();
 
-		 result = weightedPositionalScore + weightedMaterialScore
+		result = weightedPositionalScore + weightedMaterialScore
 				+ weightedBonusScore;
-		 
-		 if (!isWhitesTurn)
-			 result = result * -1.0;
-		 
-		 return result;
+
+		if (!isWhitesTurn)
+			result = result * -1.0;
+
+		return result;
 	}
 
 	/**
@@ -245,14 +269,14 @@ public class AI {
 		ArrayList<Move> blackMoves = controller.getMoveGenerator().findMoves(
 				false);
 
-		int	difference = whiteMoves.size() - blackMoves.size();
-		
+		int difference = whiteMoves.size() - blackMoves.size();
+
 		return difference;
 	}
 
 	/**
 	 * Computes the material score of a move. This is the difference between the
-	 * amount of material (in points) for black and white. Positive means white 
+	 * amount of material (in points) for black and white. Positive means white
 	 * is ahead in material.
 	 * 
 	 * @return
@@ -287,7 +311,7 @@ public class AI {
 		}
 		// TODO account for passant
 
-			result = whiteScore - blackScore;
+		result = whiteScore - blackScore;
 
 		return result;
 	}
@@ -304,8 +328,9 @@ public class AI {
 		// Preprocess information that several methods need to find anyway
 		boolean black = false;
 		boolean white = true;
-		
-		int result = computeOneSidedBonusScore(white) - computeOneSidedBonusScore(black);
+
+		int result = computeOneSidedBonusScore(white)
+				- computeOneSidedBonusScore(black);
 
 		// TODO: Bonus for not moving the queen early on
 		// TODO: Bonus for not moving the same piece twice in the opening
@@ -325,8 +350,8 @@ public class AI {
 
 		return result;
 	}
-	
-	public int computeOneSidedBonusScore(boolean isWhite){
+
+	public int computeOneSidedBonusScore(boolean isWhite) {
 		int result = 0;
 		Piece king = findKing(isWhite);
 
@@ -374,25 +399,24 @@ public class AI {
 		int pawnRow = -1;
 		int col = -1;
 		Piece piece = null;
-		
+
 		if (isWhite)
 			pawnRow = Constants.getWhitePawnRow();
 		else
 			pawnRow = Constants.getBlackPawnRow();
-		
+
 		// Check King column pawn
 		col = Constants.getKingColumn();
 		piece = controller.getBoardController().getPieceByCoords(pawnRow, col);
 		if ((piece == null) || (!piece.getType().equals("pawn")))
 			result += Constants.getCentralPawnsPushedBonusWeight();
-		
+
 		// Check Queen column pawn
 		col = Constants.getQueenColumn();
 		piece = controller.getBoardController().getPieceByCoords(pawnRow, col);
 		if ((piece == null) || (!piece.getType().equals("pawn")))
 			result += Constants.getCentralPawnsPushedBonusWeight();
-		
-		
+
 		return result;
 	}
 

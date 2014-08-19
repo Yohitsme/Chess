@@ -235,6 +235,9 @@ public class Controller {
 	 * @param move
 	 */
 	public void processMove(Move move) {
+		if (model.getMoveList().size() == 12)
+			System.out.println("Controller.processMove ERROR");
+			
 		model.getMoveList().add(move);
 		// Check for special cases, such as pawn promotes, en
 		// passant captures
@@ -250,6 +253,10 @@ public class Controller {
 		move.getPiece().setCol(move.getEndCol());
 		move.getPiece().setRow(move.getEndRow());
 
+		
+		if (boardController
+				.getPieceByCoords(move.getStartRow(), move.getStartCol()) == null)
+			System.out.println("Controller.processMove ERROR");
 		// Mark the piece has having moved
 		boardController
 				.getPieceByCoords(move.getStartRow(), move.getStartCol())

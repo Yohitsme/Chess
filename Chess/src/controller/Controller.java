@@ -2,19 +2,15 @@ package controller;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
 import javax.swing.JTree;
 
 import model.Model;
 import model.Move;
+import model.Node;
 import model.Piece;
 import utils.Log;
 import utils.Utils;
@@ -192,37 +188,9 @@ public class Controller {
 	public void processMoveAttempt(Move move) {
 
 		if (RuleEngine.validateMove(move, boardController, true)) {
-			model.getMoveList().add(move);
-			// Check for special cases, such as pawn promotes, en
-			// passant captures
-			handleSpecialCases(move);
+			processMove(move);
 
-			// Remove piece from it's list in model if a capture
-			// occurred
-			updatePieceLists(move);
-
-			// Move the piece
-			boardController.setPieceByCoords(move.getEndRow(),
-					move.getEndCol(), move.getPiece());
-			move.getPiece().setCol(move.getEndCol());
-			move.getPiece().setRow(move.getEndRow());
-
-			// Mark the piece has having moved
-			boardController.getPieceByCoords(move.getStartRow(),
-					move.getStartCol()).setHasMoved(true);
-
-			boardController.clearSquare(move.getStartRow(), move.getStartCol());
-
-			System.out.println("Controller.handleMouseRelease: Valid Move: "
-					+ move.algebraicNotationPrint());
-
-			// System.out.println("Controller.processMoveAttempt:---------------------------------------------");
-			// gameTreeController.setRootNode(new Node(move));
-			// // model.getGameTree().setRootNode(new Node(move));
-			// gameTreeController.generateSubtree(Constants.getDepth(), 0,
-			// gameTreeController.getRootNode());
-			// gameTreeController.print(gameTreeController.getRootNode(), 0);
-			// System.out.println("\nController.processMoveAttempt:---------------------------------------------");
+			
 
 		} else
 			System.out
@@ -237,7 +205,7 @@ public class Controller {
 	public void processMove(Move move) {
 		if (model.getMoveList().size() == 12)
 			System.out.println("Controller.processMove ERROR");
-			
+
 		model.getMoveList().add(move);
 		// Check for special cases, such as pawn promotes, en
 		// passant captures
@@ -253,9 +221,8 @@ public class Controller {
 		move.getPiece().setCol(move.getEndCol());
 		move.getPiece().setRow(move.getEndRow());
 
-		
-		if (boardController
-				.getPieceByCoords(move.getStartRow(), move.getStartCol()) == null)
+		if (boardController.getPieceByCoords(move.getStartRow(),
+				move.getStartCol()) == null)
 			System.out.println("Controller.processMove ERROR");
 		// Mark the piece has having moved
 		boardController
@@ -263,6 +230,8 @@ public class Controller {
 				.setHasMoved(true);
 
 		boardController.clearSquare(move.getStartRow(), move.getStartCol());
+		
+		gameTreeController.setRoot(new Node(move));
 	}
 
 	/**
@@ -461,17 +430,17 @@ public class Controller {
 	/**
 	 * If parameter move was a pawn being moved to the first or last rank, this
 	 * method prompts the user for a piece type and turns the pawn into the type
-	 * chosen by the user.  If it's the AI's move, default to a queen.
+	 * chosen by the user. If it's the AI's move, default to a queen.
 	 * 
 	 * @param move
 	 */
 	private void handlePawnPromote(Move move) {
-		
-		
+
 		if (move.getPiece().getType().equals("pawn")
 				&& (move.getEndRow() == 7 || move.getEndRow() == 0)) {
 			String choice = "";
-			if ((move.getPiece().isWhite() && isWhiteAI()) || (!move.getPiece().isWhite() && isBlackAI()))
+			if ((move.getPiece().isWhite() && isWhiteAI())
+					|| (!move.getPiece().isWhite() && isBlackAI()))
 				choice = "queen";
 			else
 				choice = getPawnPromoteChoice();
@@ -668,15 +637,16 @@ public class Controller {
 	private void exportMoveList() {
 
 		ArrayList<Move> moveList = model.getMoveList();
-		String fileName = "Chess Game Move List Export - " + Utils.getTimeNoSpaces() + ".txt";
+		String fileName = "Chess Game Move List Export - "
+				+ Utils.getTimeNoSpaces() + ".txt";
 		String body = "Game played on " + Utils.getTime() + "\n";
-		for(int i = 0; i < moveList.size(); i++){
-			if (i%2 == 0)
-			body += "\n" + Integer.toString(i/2 +1) + " ";
-			
-			body +=moveList.get(i).algebraicNotationPrint()  + " ";
+		for (int i = 0; i < moveList.size(); i++) {
+			if (i % 2 == 0)
+				body += "\n" + Integer.toString(i / 2 + 1) + " ";
+
+			body += moveList.get(i).algebraicNotationPrint() + " ";
 		}
-		
+
 		Utils.writeToFile(fileName, body);
 
 	}

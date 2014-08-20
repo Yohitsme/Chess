@@ -74,7 +74,7 @@ public class Move {
 			result = false;
 		if (this.endRow != moveIn.getEndRow())
 			result = false;
-		if (this.piece.type.equals( moveIn.getPiece().getType()))
+		if (!this.piece.type.equals( moveIn.getPiece().getType()))
 			result = false;
 		
 		return result;

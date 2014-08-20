@@ -1,15 +1,12 @@
 package controller;
 
-import java.awt.Color;
 import java.util.ArrayList;
 import java.util.Random;
 
-import javax.swing.JFrame;
-import javax.swing.JPanel;
-import javax.swing.JProgressBar;
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import model.Move;
+import model.Node;
 import model.Piece;
 import utils.Constants;
 import utils.Log;
@@ -19,6 +16,7 @@ public class AI {
 	Controller controller;
 	boolean debug = true;
 	Log log = new Log();
+	int nodesVisited = 0;
 
 	// Move bestMove;
 
@@ -27,53 +25,59 @@ public class AI {
 	}
 
 	public Move move(String color) {
-		Move move = null;
+		Node node = null;
 
 		boolean isWhite = color.equals("white") ? true : false;
+		node = chooseMove(isWhite);
 
-		ArrayList<Move> legalMoves = controller.getMoveGenerator().findMoves(
-				isWhite);
-
-		move = chooseMove(legalMoves, isWhite);
-
-		log.info("AI.move: Move chosen: " + move.algebraicNotationPrint());
-
-		return move;
+		log.info("AI.move: Move chosen: " + node.getMove().algebraicNotationPrint());
+		System.out.println("Nodes visited: " + nodesVisited);
+		nodesVisited = 0;
+		
+		//controller.gameTreeController.setRoot(node);
+		return node.getMove();
 	}
 
-	public Move chooseMove(ArrayList<Move> legalMoves, boolean isWhite) {
+	public Node chooseMove(boolean isWhite) {
 
 		double score = 0;
 		double highest = 100000000;
-		Move bestMove = null;
+		Node bestMove = null;
 		Random rand = new Random();
 
 		double alpha = -1000000000.0;
-		double beta =   1000000000.0;
+		double beta = 1000000000.0;
 
-		DefaultMutableTreeNode parentNode = controller.gameTreeController.root;
-		long initTime = System.currentTimeMillis(); 
+		Node parentNode = controller.gameTreeController.root;
+		long initTime = System.currentTimeMillis();
 		int i = 0;
-		for (Move move : legalMoves) {
-			  long startTime = System.currentTimeMillis(); 
-			Piece capturedPiece = RuleEngine.processMove(move);
 
-			DefaultMutableTreeNode node = new DefaultMutableTreeNode();
+		if (parentNode.getChildren().size() == 0)
+			populateChildren(parentNode, isWhite);
+
+		for (Node node : parentNode.getChildren()) {
+			Move move = node.getMove();
+
+			long startTime = System.currentTimeMillis();
+			Piece capturedPiece = RuleEngine.processMove(move);
 
 			score = alphaBetaMax(alpha, beta, Constants.getDepth() - 1,
 					!isWhite, node);
 			node.setUserObject(move.algebraicNotationPrint() + ": " + score);
 
-			parentNode.add(node);
-
 			RuleEngine.undoChanges(capturedPiece, move);
 			if (score < highest || bestMove == null) {
-				bestMove = move;
+				bestMove = node;
 				highest = score;
 			}
 
-			long endTime =System.currentTimeMillis(); 
-			System.out.println("AI.ChooseMove: " + i++ + " of " + legalMoves.size() + " branches searched. Time elapsed: " + (endTime-initTime)/1000.0 + " seconds, last branch took " +(endTime-startTime)/1000.0 +" seconds");
+			long endTime = System.currentTimeMillis();
+			System.out.println("AI.ChooseMove: " + i++ + " of "
+					+ parentNode.getChildren().size()
+					+ " branches searched. Time elapsed: "
+					+ (endTime - initTime) / 1000.0
+					+ " seconds, last branch took " + (endTime - startTime)
+					/ 1000.0 + " seconds");
 
 			// If the considered move is as good as the best so far, there's a
 			// 10% chance the engine will pick it instead
@@ -84,42 +88,62 @@ public class AI {
 			// }
 			// }
 		}
-		
-		
+
 		return bestMove;
 	}
 
 	double alphaBetaMax(double alpha, double beta, double depthleft,
-			boolean isWhite, DefaultMutableTreeNode parentNode) {
+			boolean isWhite, Node parentNode) {
 		double score = 0.0;
 		if (depthleft == 0) {
 			return evaluate(isWhite);
 		}
+
 		ArrayList<Move> legalMoves = controller.getMoveGenerator().findMoves(
 				isWhite);
 		int i = 0;
 		boolean tmpHasMoved;
-		for (Move move : legalMoves) {
+
+		if (parentNode.getChildren().size() == 0){
+		//	System.out.println("AI.alphabetamax: No children found, generating....Depth: " + depthleft);
+			populateChildren(parentNode, isWhite);
+		}
+
+		for (int j = 0; j < parentNode.getChildren().size(); j++) {
+			
+			Node node = parentNode.getChildren().get(j);
+			if (j == 0 && parentNode.getPrincipalVariation()!= null)
+				System.out.println("First Node Explored: " + node.getMove().coloredAlgebraicNotationPrint() + ", PV: " + parentNode.getPrincipalVariation().getMove().coloredAlgebraicNotationPrint());
+			Move move = node.getMove();
 
 			Piece capturedPiece = RuleEngine.processMove(move);
 			tmpHasMoved = move.getPiece().isHasMoved();
 			move.getPiece().setHasMoved(true);
-			
-			DefaultMutableTreeNode node = new DefaultMutableTreeNode();
+
 			score = alphaBetaMin(alpha, beta, depthleft - 1, !isWhite, node);
 
-			node.setUserObject(++i + ", " + move.algebraicNotationPrint() + ": "
-					+ score);
-			parentNode.add(node);
+			node.setUserObject(++i + ", " + move.algebraicNotationPrint()
+					+ ": " + score);
 
 			RuleEngine.undoChanges(capturedPiece, move);
 			move.getPiece().setHasMoved(tmpHasMoved);
-		
+
 			if (score >= beta) {
 				return beta; // fail hard beta-cutoff
 			}
 			if (score > alpha) {
 				alpha = score; // alpha acts like max in MiniMax
+
+				
+				// Add the node to the front of the arraylist so 
+				// it gets examined first in subsequent Alpha Beta searches
+				// (Principal Variation)
+				
+				Node tmpNode =parentNode.getChildren().set(0, node); 
+				parentNode.getChildren().add(1,tmpNode);
+
+				parentNode.setPrincipalVariation(node);
+
 			}
 		}
 
@@ -132,8 +156,19 @@ public class AI {
 		return alpha;
 	}
 
+	public void populateChildren(Node parentNode, boolean isWhite) {
+		ArrayList<Move> legalMoves = controller.getMoveGenerator().findMoves(
+				isWhite);
+		int i = 0;
+		for (Move move : legalMoves) {
+			
+			parentNode.add(new DefaultMutableTreeNode(++i + ": " + move.algebraicNotationPrint()));
+			parentNode.getChildren().add(new Node(move));
+		}
+	}
+
 	double alphaBetaMin(double alpha, double beta, double depthleft,
-			boolean isWhite, DefaultMutableTreeNode parentNode) {
+			boolean isWhite, Node parentNode) {
 
 		double score = 0.0;
 		if (depthleft == 0) {
@@ -144,27 +179,43 @@ public class AI {
 
 		int i = 0;
 		boolean tmpHasMoved;
-		for (Move move : legalMoves) {
+		
+		if (parentNode.getChildren().size() == 0)
+			populateChildren(parentNode, isWhite);
+
+		for (int j = 0; j < parentNode.getChildren().size(); j++) {
+			Node node = parentNode.getChildren().get(j);
+			if (j == 0 && parentNode.getPrincipalVariation()!= null)
+				System.out.println("First Node Explored: " + node.getMove().coloredAlgebraicNotationPrint() + ", PV: " + parentNode.getPrincipalVariation().getMove().coloredAlgebraicNotationPrint());
+			
+			Move move = node.getMove();
+			
 			Piece capturedPiece = RuleEngine.processMove(move);
 			tmpHasMoved = move.getPiece().isHasMoved();
 			move.getPiece().setHasMoved(true);
 
-			DefaultMutableTreeNode node = new DefaultMutableTreeNode();
+			
 
 			score = alphaBetaMax(alpha, beta, depthleft - 1, !isWhite, node);
+
 			
-			parentNode.add(node);
-			node.setUserObject(++i + ", " + move.algebraicNotationPrint() + ": "
-					+ score);
+			node.setUserObject(++i + ", " + move.algebraicNotationPrint()
+					+ ": " + score);
 
 			move.getPiece().setHasMoved(tmpHasMoved);
 			RuleEngine.undoChanges(capturedPiece, move); // undo
-			
+
 			if (score <= alpha)
 				return alpha; // fail hard alpha-cutoff
 			if (score < beta) {
 				beta = score; // beta acts like min in MiniMax
-
+				// Add the node to the front of the arraylist so 
+				// it gets examined first in subsequent Alpha Beta searches
+				// (Principal Variation)
+				Node tmpNode =parentNode.getChildren().set(0, node); 
+				parentNode.getChildren().add(1,tmpNode);
+				
+				parentNode.setPrincipalVariation(node);
 			}
 		}
 		if (legalMoves.size() == 0) {
@@ -214,7 +265,7 @@ public class AI {
 	 * @return
 	 */
 	public double evaluate(boolean isWhitesTurn) {
-
+		nodesVisited++;
 		double result = 0.0;
 		int positionalScore = computePositionalScore();
 		int materialScore = computeMaterialScore();

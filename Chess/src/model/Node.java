@@ -2,19 +2,25 @@ package model;
 
 import java.util.ArrayList;
 
-public class Node extends Move{
+import javax.swing.tree.DefaultMutableTreeNode;
+
+public class Node extends DefaultMutableTreeNode{
 
 	Node parent;
 	ArrayList<Node> children;
 	int score;
 	int depth;
+	Node principalVariation;
+	Move move;
 	
+
+
 	public Node(Move move) {
-		super(move);
+		super();
 		score = 0;
 		depth = 0;
 		children = new ArrayList<Node>();
-		
+		this.move = move;
 		// TODO Auto-generated constructor stub
 	}
 
@@ -30,6 +36,13 @@ public class Node extends Move{
 		return children;
 	}
 
+	public Move getMove() {
+		return move;
+	}
+
+	public void setMove(Move move) {
+		this.move = move;
+	}
 	public void setChildren(ArrayList<Node> children) {
 		this.children = children;
 	}
@@ -37,6 +50,14 @@ public class Node extends Move{
 	public void setDepth(int currentDepth) {
 		this.depth = currentDepth;
 		
+	}
+
+	public Node getPrincipalVariation() {
+		return principalVariation;
+	}
+
+	public void setPrincipalVariation(Node principalVariation) {
+		this.principalVariation = principalVariation;
 	}
 
 	public int getDepth() {

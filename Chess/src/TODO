@@ -1,7 +1,15 @@
 // TODO
 
--Fix evaluation methods to use a scale of "more positive = better for white," more negative = better for black.  Current implementation depends on the depth and is unstable
+// A: Affecting ongoing dev, bugs that slow progress and distract, current priority development
+-Move ordering considers more
+-Quiesent Search
+-Game tries moves that are out of bounds
+
+// B: Bugs that really cause big problems with dev. Features that could help a lot
+
+
+// C: Features that would be nice and optimize code for later. 
 -Finish adding bonuses/penalties in AI
+-Multithreading instead of event driven
+-Passive processing
 -Captured Piece view in GUI
--Consider moves as different positions instead of one move at a time
--

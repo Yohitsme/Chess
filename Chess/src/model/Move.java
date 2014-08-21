@@ -23,6 +23,7 @@ public class Move {
 	int endRow;
 	int endCol;
 	Piece piece;
+	int timesEvaluated = 0;
 
 	/**
 	 * Constructor

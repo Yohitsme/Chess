@@ -28,7 +28,7 @@ public class Constants {
 	private final static double materialScoreWeight = .75;
 	private final static double bonusScoreWeight = .20;
 	
-	private final static int depth = 3;
+	private final static int depth = 5;
 	
 	public static int getPieceWeight(Piece piece){
 		int result = 0;

@@ -23,7 +23,15 @@ public class Move {
 	int endRow;
 	int endCol;
 	Piece piece;
-	int timesEvaluated = 0;
+	int score = 0;
+
+	public int getScore() {
+		return score;
+	}
+
+	public void setScore(int score) {
+		this.score = score;
+	}
 
 	/**
 	 * Constructor

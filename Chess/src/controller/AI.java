@@ -1,6 +1,7 @@
 package controller;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Random;
 
 import javax.swing.tree.DefaultMutableTreeNode;
@@ -30,10 +31,11 @@ public class AI {
 		boolean isWhite = color.equals("white") ? true : false;
 		node = chooseMove(isWhite);
 
-		log.info("AI.move: Move chosen: " + node.getMove().algebraicNotationPrint());
+		log.info("AI.move: Move chosen: "
+				+ node.getMove().algebraicNotationPrint());
 		System.out.println("Nodes visited: " + nodesVisited);
 		nodesVisited = 0;
-		
+
 		return node.getMove();
 	}
 
@@ -54,76 +56,69 @@ public class AI {
 		if (parentNode.getChildren().size() == 0)
 			populateChildren(parentNode, isWhite);
 
-		
-		for (int depth = 1; depth < Constants.getDepth() -1; depth++){
-		
-		for (Node node : parentNode.getChildren()) {
-			Move move = node.getMove();
+		for (int depth = 1; depth <= Constants.getDepth(); depth++) {
 
-			long startTime = System.currentTimeMillis();
-			Piece capturedPiece = RuleEngine.processMove(move);
+			for (Node node : parentNode.getChildren()) {
+				Move move = node.getMove();
 
-			score = alphaBetaMax(alpha, beta, depth,
-					!isWhite, node);
-			node.setUserObject(move.algebraicNotationPrint() + ": " + score);
+				long startTime = System.currentTimeMillis();
+				Piece capturedPiece = RuleEngine.processMove(move);
 
-			RuleEngine.undoChanges(capturedPiece, move);
-			if (score < highest || bestMove == null) {
-				bestMove = node;
-				highest = score;
+				score = alphaBeta(alpha, beta, depth, !isWhite, node);
+				node.setUserObject(move.algebraicNotationPrint() + ": " + score);
+
+				RuleEngine.undoChanges(capturedPiece, move);
+				if (score < highest || bestMove == null) {
+					bestMove = node;
+					highest = score;
+				}
+
+				long endTime = System.currentTimeMillis();
+				System.out.println("AI.ChooseMove: " + i++ + " of "
+						+ parentNode.getChildren().size()
+						+ " branches searched. Time elapsed: "
+						+ (endTime - initTime) / 1000.0
+						+ " seconds, last branch took " + (endTime - startTime)
+						/ 1000.0 + " seconds");
+
+				// If the considered move is as good as the best so far, there's
+				// a
+				// 10% chance the engine will pick it instead
+				// else if (score == highest) {
+				// if (rand.nextInt(10) == 0) {
+				// bestMove = move;
+				// highest = score;
+				// }
+				// }
 			}
-
-			long endTime = System.currentTimeMillis();
-			System.out.println("AI.ChooseMove: " + i++ + " of "
-					+ parentNode.getChildren().size()
-					+ " branches searched. Time elapsed: "
-					+ (endTime - initTime) / 1000.0
-					+ " seconds, last branch took " + (endTime - startTime)
-					/ 1000.0 + " seconds");
-
-			// If the considered move is as good as the best so far, there's a
-			// 10% chance the engine will pick it instead
-			// else if (score == highest) {
-			// if (rand.nextInt(10) == 0) {
-			// bestMove = move;
-			// highest = score;
-			// }
-			// }
-		}
 		}
 		return bestMove;
 	}
 
-	double alphaBetaMax(double alpha, double beta, double depthleft,
+	double alphaBeta(double alpha, double beta, double depthleft,
 			boolean isWhite, Node parentNode) {
 		Node pv = null;
 		double score = 0.0;
 		if (depthleft == 0) {
-			return evaluate(isWhite);
+			return evaluate(isWhite, parentNode);
 		}
 
-		ArrayList<Move> legalMoves = controller.getMoveGenerator().findMoves(
-				isWhite);
 		int i = 0;
 		boolean tmpHasMoved;
 
-		if (parentNode.getChildren().size() == 0){
-		//	System.out.println("AI.alphabetamax: No children found, generating....Depth: " + depthleft);
+		if (parentNode.getChildren().size() == 0)
 			populateChildren(parentNode, isWhite);
-		}
 
 		for (int j = 0; j < parentNode.getChildren().size(); j++) {
-			
+
 			Node node = parentNode.getChildren().get(j);
-//			if (j == 0 && parentNode.getPrincipalVariation()!= null)
-//				System.out.println("First Node Explored: " + node.getMove().coloredAlgebraicNotationPrint() + ", PV: " + parentNode.getPrincipalVariation().getMove().coloredAlgebraicNotationPrint());
 			Move move = node.getMove();
 
 			Piece capturedPiece = RuleEngine.processMove(move);
 			tmpHasMoved = move.getPiece().isHasMoved();
 			move.getPiece().setHasMoved(true);
 
-			score = alphaBetaMin(alpha, beta, depthleft - 1, !isWhite, node);
+			score = -alphaBeta(-beta, -alpha, depthleft - 1, !isWhite, node);
 
 			node.setUserObject(++i + ", " + move.algebraicNotationPrint()
 					+ ": " + score);
@@ -132,124 +127,71 @@ public class AI {
 			move.getPiece().setHasMoved(tmpHasMoved);
 
 			if (score >= beta) {
+				if (pv != null)
+					prioritizeNode(parentNode, pv);
+
 				return beta; // fail hard beta-cutoff
 			}
 			if (score > alpha) {
 				alpha = score; // alpha acts like max in MiniMax
-
-				
-				// Add the node to the front of the arraylist so 
-				// it gets examined first in subsequent Alpha Beta searches
-				// (Principal Variation)
-//				parentNode.getChildren().remove(node);
-				
 				pv = node;
-//				Node tmpNode =parentNode.getChildren().set(0, node); 
-//				parentNode.getChildren().add(1,tmpNode);
-//				
-//				parentNode.setPrincipalVariation(node);
-//				
-
 			}
 		}
 
-		if (legalMoves.size() == 0) {
+		if (parentNode.getChildren().size() == 0) {
 			// If I have no moves assume I was checkmated and return low alpha
 			// value
 			alpha = -10000000000000.0;
 		}
-		if (pv != null){
-		parentNode.getChildren().remove(pv);
-		parentNode.getChildren().add(0,pv);
-		}return alpha;
+		if (pv != null)
+			prioritizeNode(parentNode, pv);
+
+		return alpha;
+	}
+
+	public void prioritizeNode(Node parent, Node child) {
+		parent.getChildren().remove(child);
+		parent.getChildren().add(0, child);
 	}
 
 	public void populateChildren(Node parentNode, boolean isWhite) {
 		ArrayList<Move> legalMoves = controller.getMoveGenerator().findMoves(
 				isWhite);
-	
+
 		for (Move move : legalMoves) {
-			
+
 			Node node = new Node(move);
 			node.setUserObject(move.algebraicNotationPrint());
-			
+
 			parentNode.add(node);
 			parentNode.getChildren().add(node);
 		}
-	}
-
-	double alphaBetaMin(double alpha, double beta, double depthleft,
-			boolean isWhite, Node parentNode) {
-Node pv = null;
-		double score = 0.0;
-		if (depthleft == 0) {
-			return -evaluate(isWhite);
-		}
-		ArrayList<Move> legalMoves = controller.getMoveGenerator().findMoves(
-				isWhite);
-
-		int i = 0;
-		boolean tmpHasMoved;
 		
-		if (parentNode.getChildren().size() == 0)
-			populateChildren(parentNode, isWhite);
-
-		for (int j = 0; j < parentNode.getChildren().size(); j++) {
-			Node node = parentNode.getChildren().get(j);
-//			if (j == 0 && parentNode.getPrincipalVariation()!= null)
-//				System.out.println("First Node Explored: " + node.getMove().coloredAlgebraicNotationPrint() + ", PV: " + parentNode.getPrincipalVariation().getMove().coloredAlgebraicNotationPrint());
-//			
-			Move move = node.getMove();
+		orderMoves(parentNode.getChildren());
+	}
+	
+	
+	public void orderMoves(ArrayList<Node> nodes){
+		
+		for (int i = 0; i < nodes.size(); i++){
 			
-			Piece capturedPiece = RuleEngine.processMove(move);
-			tmpHasMoved = move.getPiece().isHasMoved();
-			move.getPiece().setHasMoved(true);
-
-			
-
-			score = alphaBetaMax(alpha, beta, depthleft - 1, !isWhite, node);
-
-			
-			node.setUserObject(++i + ", " + move.algebraicNotationPrint()
-					+ ": " + score);
-
-			move.getPiece().setHasMoved(tmpHasMoved);
-			RuleEngine.undoChanges(capturedPiece, move); // undo
-
-			if (score <= alpha){
-				return alpha; // fail hard alpha-cutoff
-			}
-			if (score < beta) {
-				beta = score; // beta acts like min in MiniMax
-				// Add the node to the front of the arraylist so 
-				// it gets examined first in subsequent Alpha Beta searches
-				// (Principal Variation)
-//				parentNode.getChildren().remove(node);
-				
-				pv = node;
-//				Node tmpNode =parentNode.getChildren().set(0, node); 
-//				parentNode.getChildren().add(1,tmpNode);
-//				
-				parentNode.setPrincipalVariation(node);
+			Node node = nodes.get(i);
+			Piece otherPiece = controller.boardController.getPieceByCoords(node.getMove().getStartRow(), node.getMove().getEndCol());
+			if (otherPiece!=null){
+				int materialDifference = Constants.getPieceWeight(node.getMove().getPiece())-Constants.getPieceWeight(otherPiece);
+				nodes.remove(node);
+				nodes.add(0, node);
 			}
 		}
-		if (legalMoves.size() == 0) {
-			// If I have no moves assume I was checkmated and return high beta
-			// value
-			alpha = 10000000000000.0;
-		}
-		if (pv != null){
-		parentNode.getChildren().remove(pv);
-		parentNode.getChildren().add(0,pv);
-		}
-		return beta;
+		
 	}
 
 	public double Negamax(int depth, Move previousMove,
 			DefaultMutableTreeNode parentNode) {
 		if (depth == 0) {
-//			previousMove.timesEvaluated++;
-			return evaluate(!previousMove.getPiece().isWhite());
+			// previousMove.timesEvaluated++;
+			// return evaluate(!previousMove.getPiece().isWhite(),
+			// previousMove));
 		}
 		double max = Integer.MIN_VALUE;
 		double score = 0.0;
@@ -284,10 +226,10 @@ Node pv = null;
 	 * 
 	 * @return
 	 */
-	public double evaluate(boolean isWhitesTurn) {
+	public double evaluate(boolean isWhitesTurn, Node node) {
 		nodesVisited++;
 		double result = 0.0;
-		int positionalScore = computePositionalScore();
+		int positionalScore = computePositionalScore(isWhitesTurn, node);
 		int materialScore = computeMaterialScore();
 		int bonusScore = computeBonusScore();
 
@@ -331,16 +273,39 @@ Node pv = null;
 	 * 
 	 * Very computationally expensive, will need to optimize this in the future.
 	 */
-	public int computePositionalScore() {
+	public int computePositionalScore(boolean isWhite, Node node) {
 
+		/*
+		 * Note: isWhite is the OPPOSITE color of the piece in node. We have a
+		 * reference to that so we can add legal children nodes to node if they
+		 * don't exist already
+		 */
 		// TODO: Extra points for center control
-		ArrayList<Move> whiteMoves = controller.getMoveGenerator().findMoves(
-				true);
 
-		ArrayList<Move> blackMoves = controller.getMoveGenerator().findMoves(
-				false);
+		int whiteMoves = 0;
+		int blackMoves = 0;
 
-		int difference = whiteMoves.size() - blackMoves.size();
+		if (isWhite) {
+			if (node.getChildren().size() == 0)
+				populateChildren(node, isWhite);
+
+			whiteMoves = node.getChildren().size();
+
+			//
+			blackMoves = controller.getMoveGenerator().findMoves(false).size();
+		}
+
+		else {
+
+			if (node.getChildren().size() == 0)
+				populateChildren(node, isWhite);
+			blackMoves = node.getChildren().size();
+
+			whiteMoves = controller.getMoveGenerator().findMoves(true).size();
+
+		}
+
+		int difference = whiteMoves - blackMoves;
 
 		return difference;
 	}
@@ -542,3 +507,12 @@ Node pv = null;
 	}
 
 }
+
+class NodeComparator implements Comparator{
+
+	@Override
+	public int compare(Object node1, Object node2) {
+		// TODO Auto-generated method stub neg is less than
+		int scoreDifference = ((Node)node1).getMove().getScore() -((Node)node2).getMove().getScore();
+		return scoreDifference;
+	}}

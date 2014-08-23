@@ -12,6 +12,7 @@ import model.Model;
 import model.Move;
 import model.Node;
 import model.Piece;
+import utils.Constants;
 import utils.Log;
 import utils.Utils;
 import view.View;
@@ -190,8 +191,6 @@ public class Controller {
 		if (RuleEngine.validateMove(move, boardController, true)) {
 			processMove(move);
 
-			
-
 		} else
 			System.out
 					.println("Controller.handleMouseRelease: Invalid move. Board not modified.");
@@ -203,8 +202,6 @@ public class Controller {
 	 * @param move
 	 */
 	public void processMove(Move move) {
-		if (model.getMoveList().size() == 12)
-			System.out.println("Controller.processMove ERROR");
 
 		model.getMoveList().add(move);
 		// Check for special cases, such as pawn promotes, en
@@ -223,14 +220,14 @@ public class Controller {
 
 		if (boardController.getPieceByCoords(move.getStartRow(),
 				move.getStartCol()) == null)
-			System.out.println("Controller.processMove ERROR");
+			System.out.println("Controller.processMove ERROR: Trying to move a null piece?");
 		// Mark the piece has having moved
 		boardController
 				.getPieceByCoords(move.getStartRow(), move.getStartCol())
 				.setHasMoved(true);
 
 		boardController.clearSquare(move.getStartRow(), move.getStartCol());
-		
+
 		gameTreeController.setRoot(new Node(move));
 	}
 
@@ -406,7 +403,7 @@ public class Controller {
 	 * 
 	 * @param move
 	 */
-	private void handleCastling(Move move) {
+	public void handleCastling(Move move) {
 		if (move.getPiece().getType().equals("king")
 				&& RuleEngine.calculateDeltaColUnsigned(move) == 2) {
 			if (RuleEngine.calculateDeltaColSigned(move) == 2) {
@@ -627,6 +624,8 @@ public class Controller {
 			}
 		} else if (e.getActionCommand().equals("exportMoveList")) {
 			exportMoveList();
+		} else if (e.getActionCommand().equals("tuneEngine")) {
+			promptUserForNewSettings();
 		} else
 			System.out
 					.println("Controller.handleActionEvent: Action command /'"
@@ -634,12 +633,38 @@ public class Controller {
 
 	}
 
+	private void promptUserForNewSettings() {
+		// TODO Auto-generated method stub
+		JFrame frame = new JFrame();
+		Object[] possibilities = { "1", "2", "3", "4", "5"};
+		String s = (String) JOptionPane.showInputDialog(frame,
+		"Note: Clicking OK to confirm changes will restart the game"
+				 +"\n\nChoose the depth to which the engine will search",
+				"Tune Engine", JOptionPane.PLAIN_MESSAGE, null, possibilities,
+				"4");
+
+		if (s != null && s.length() > 0) {
+			int i = new Integer(s);
+			Constants.setDepth(i);
+			model.resetModel();
+			view.update();
+		}
+	}
+
 	private void exportMoveList() {
 
 		ArrayList<Move> moveList = model.getMoveList();
 		String fileName = "Chess Game Move List Export - "
 				+ Utils.getTimeNoSpaces() + ".txt";
-		String body = "Game played on " + Utils.getTime() + "\n";
+		
+		String body = "Game played on " + Utils.getTime();
+		body += "\n\nEngine stats:\n";
+		body += "\nDepth: " + Constants.getDepth();
+		body += "\nPositional Scoring weight: " + Constants.getPositionalScoreWeight();
+		body += "\nMaterial Scoring weight: " + Constants.getMaterialScoreWeight(); 
+		body += "\nBonus Scoring weight: " + Constants.getBonusScoreWeight();
+		body += "\n";
+		
 		for (int i = 0; i < moveList.size(); i++) {
 			if (i % 2 == 0)
 				body += "\n" + Integer.toString(i / 2 + 1) + " ";

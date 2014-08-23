@@ -6,7 +6,7 @@
 -Game tries moves that are out of bounds
 
 // B: Bugs that really cause big problems with dev. Features that could help a lot
-
+-King safety
 
 // C: Features that would be nice and optimize code for later. 
 -Finish adding bonuses/penalties in AI

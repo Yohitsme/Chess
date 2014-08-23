@@ -8,7 +8,7 @@ public class Node extends DefaultMutableTreeNode{
 
 	Node parent;
 	ArrayList<Node> children;
-	int score;
+	double score;
 	int depth;
 	Node principalVariation;
 	Move move;
@@ -17,7 +17,7 @@ public class Node extends DefaultMutableTreeNode{
 
 	public Node(Move move) {
 		super();
-		score = 0;
+		score = 1000;
 		depth = 0;
 		children = new ArrayList<Node>();
 		this.move = move;
@@ -58,6 +58,14 @@ public class Node extends DefaultMutableTreeNode{
 
 	public void setPrincipalVariation(Node principalVariation) {
 		this.principalVariation = principalVariation;
+	}
+
+	public double getScore() {
+		return score;
+	}
+
+	public void setScore(double d) {
+		this.score = d;
 	}
 
 	public int getDepth() {

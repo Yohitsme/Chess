@@ -1,6 +1,7 @@
 package controller;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.Random;
 
@@ -18,98 +19,90 @@ public class AI {
 	boolean debug = true;
 	Log log = new Log();
 	int nodesVisited = 0;
-
-	// Move bestMove;
+	int depth;
+	long initTime = 0;
+	Node bestNode;
+	ArrayList<ArrayList<Node>> killerMoves = new ArrayList<ArrayList<Node>>(
+			Constants.getDepth()+1);
 
 	public AI(Controller controllerIn) {
 		this.controller = controllerIn;
+		
+		for (int i = 0; i < Constants.getDepth()+1; i++)
+			killerMoves.add(new ArrayList<Node>());
 	}
 
 	public Move move(String color) {
 		Node node = null;
 
 		boolean isWhite = color.equals("white") ? true : false;
-		node = chooseMove(isWhite);
-
+		chooseMove(isWhite);
+		node = bestNode;
 		log.info("AI.move: Move chosen: "
 				+ node.getMove().algebraicNotationPrint());
 		System.out.println("Nodes visited: " + nodesVisited);
 		nodesVisited = 0;
 
+//		for (ArrayList<Node> list : killerMoves)
+//			System.out.println(killerMoves.indexOf(list) + ": "
+//					+ list.toString());
 		return node.getMove();
 	}
 
-	public Node chooseMove(boolean isWhite) {
-
-		double score = 0;
-		double highest = 100000000;
-		Node bestMove = null;
-		Random rand = new Random();
+	public void chooseMove(boolean isWhite) {
 
 		double alpha = -1000000000.0;
 		double beta = 1000000000.0;
 
 		Node parentNode = controller.gameTreeController.root;
-		long initTime = System.currentTimeMillis();
-		int i = 0;
-
-		if (parentNode.getChildren().size() == 0)
-			populateChildren(parentNode, isWhite);
+		initializeKillerMoveArrays();
 
 		for (int depth = 1; depth <= Constants.getDepth(); depth++) {
-
-			for (Node node : parentNode.getChildren()) {
-				Move move = node.getMove();
-
-				long startTime = System.currentTimeMillis();
-				Piece capturedPiece = RuleEngine.processMove(move);
-
-				score = alphaBeta(alpha, beta, depth, !isWhite, node);
-				node.setUserObject(move.algebraicNotationPrint() + ": " + score);
-
-				RuleEngine.undoChanges(capturedPiece, move);
-				if (score < highest || bestMove == null) {
-					bestMove = node;
-					highest = score;
-				}
-
-				long endTime = System.currentTimeMillis();
-				System.out.println("AI.ChooseMove: " + i++ + " of "
-						+ parentNode.getChildren().size()
-						+ " branches searched. Time elapsed: "
-						+ (endTime - initTime) / 1000.0
-						+ " seconds, last branch took " + (endTime - startTime)
-						/ 1000.0 + " seconds");
-
-				// If the considered move is as good as the best so far, there's
-				// a
-				// 10% chance the engine will pick it instead
-				// else if (score == highest) {
-				// if (rand.nextInt(10) == 0) {
-				// bestMove = move;
-				// highest = score;
-				// }
-				// }
-			}
+			this.depth = (int) depth;
+			alphaBeta(alpha, beta, depth, isWhite, parentNode);
 		}
-		return bestMove;
+
 	}
 
-	double alphaBeta(double alpha, double beta, double depthleft,
-			boolean isWhite, Node parentNode) {
+	/**
+	 * Empty the arraylist of arraylists of killer moves
+	 */
+	private void initializeKillerMoveArrays() {
+
+		for (int i = 0; i <= Constants.getDepth(); i++)
+			killerMoves.get(i).removeAll(killerMoves.get(i));
+
+	}
+
+	double alphaBeta(double alpha, double beta, int depthleft, boolean isWhite,
+			Node parentNode) {
 		Node pv = null;
 		double score = 0.0;
+		long startTime = 0;
+		int i = 0;
+		boolean tmpHasMoved;
+
+		// Termination condition
 		if (depthleft == 0) {
 			return evaluate(isWhite, parentNode);
 		}
 
-		int i = 0;
-		boolean tmpHasMoved;
+		// Branch timing housekeeping
+		if (depthleft == Constants.getDepth()) {
+			startTime = System.currentTimeMillis();
+			initTime = startTime;
+		}
 
 		if (parentNode.getChildren().size() == 0)
-			populateChildren(parentNode, isWhite);
+			populateChildren(parentNode, isWhite, depthleft);
 
 		for (int j = 0; j < parentNode.getChildren().size(); j++) {
+
+			// Branch timing housekeeping
+			if (depthleft == Constants.getDepth()) {
+				printTimeStats(i, parentNode, startTime);
+				startTime = System.currentTimeMillis();
+			}
 
 			Node node = parentNode.getChildren().get(j);
 			Move move = node.getMove();
@@ -126,15 +119,35 @@ public class AI {
 			RuleEngine.undoChanges(capturedPiece, move);
 			move.getPiece().setHasMoved(tmpHasMoved);
 
+			// Fail hard beta-cutoff
 			if (score >= beta) {
+
+				// If we're quitting this recursion early because of a
+				// beta cut off, save the PV we've found so far
 				if (pv != null)
 					prioritizeNode(parentNode, pv);
 
-				return beta; // fail hard beta-cutoff
+				// If the current move isn't already a killer move, make it one
+				boolean nodeFound = false;
+				for (Node killerNode : killerMoves.get(depthleft))
+					if (killerNode.getMove().equals(node.getMove()))
+						nodeFound = true;
+				if (!nodeFound)
+					killerMoves.get(depthleft).add(node);
+
+				return beta;
 			}
-			if (score > alpha) {
-				alpha = score; // alpha acts like max in MiniMax
+
+			// Tighten the alpha bound
+			if (score > alpha || bestNode == null) {
+				alpha = score;
 				pv = node;
+
+				// If we are in the first recursive call, save the best move
+				// so we can use it later
+				if (depthleft == Constants.getDepth()) {
+					bestNode = node;
+				}
 			}
 		}
 
@@ -149,12 +162,27 @@ public class AI {
 		return alpha;
 	}
 
+	/**
+	 * Takes the Node child and puts it in the front of the arraylist of children
+	 * of the parent Node.  This makes that child the first one analyzed when
+	 * looping through the parents' children.
+	 * @param parent
+	 * @param child
+	 */
 	public void prioritizeNode(Node parent, Node child) {
 		parent.getChildren().remove(child);
 		parent.getChildren().add(0, child);
 	}
 
-	public void populateChildren(Node parentNode, boolean isWhite) {
+	/**
+	 * Build the subtree of legal moves for the Node parent node passed as a parameter.
+	 * This also populates the DefaultMutableTree object tree, so the GUI reflects the
+	 * real game tree
+	 * @param parentNode
+	 * @param isWhite
+	 * @param depthleft
+	 */
+	public void populateChildren(Node parentNode, boolean isWhite, int depthleft) {
 		ArrayList<Move> legalMoves = controller.getMoveGenerator().findMoves(
 				isWhite);
 
@@ -166,58 +194,65 @@ public class AI {
 			parentNode.add(node);
 			parentNode.getChildren().add(node);
 		}
-		
-		orderMoves(parentNode.getChildren());
+
+		orderMoves(parentNode.getChildren(), depthleft);
 	}
+
 	
-	
-	public void orderMoves(ArrayList<Node> nodes){
-		
-		for (int i = 0; i < nodes.size(); i++){
-			
+	/**
+	 * Takes a list of legal moves and attempts to sort them with the following weight:
+	 * 
+	 * 1. MVV-LVA (pxn before nxp
+	 * 2. Killer Heuristic
+	 * 
+	 * alphaBeta search prioritizes PV nodes as it finds them, and that always
+	 * happens after this method is called, so PV nodes end up in the front of
+	 * the arraylist.
+	 * @param nodes
+	 * @param depthleft
+	 */
+	@SuppressWarnings("unchecked")
+	public void orderMoves(ArrayList<Node> nodes, int depthleft) {
+
+		for (int i = 0; i < nodes.size(); i++) {
+
 			Node node = nodes.get(i);
-			Piece otherPiece = controller.boardController.getPieceByCoords(node.getMove().getStartRow(), node.getMove().getEndCol());
-			if (otherPiece!=null){
-				int materialDifference = Constants.getPieceWeight(node.getMove().getPiece())-Constants.getPieceWeight(otherPiece);
-				nodes.remove(node);
-				nodes.add(0, node);
+			Piece otherPiece = controller.boardController.getPieceByCoords(node
+					.getMove().getEndRow(), node.getMove().getEndCol());
+
+			// If it is a capture, get the material difference and save it
+			// so we can sort (achieves MVV-LVA)
+			if (otherPiece != null) {
+				int materialDifference = Constants.getPieceWeight(node
+						.getMove().getPiece())
+						- Constants.getPieceWeight(otherPiece);
+				node.setScore(materialDifference);
+
+			}
+
+			// If it's not a capture, check to see if it is in the killer moves
+			// array. If so, set the score to -0.1 so it is before the
+			// noncaptures
+			else {
+				boolean nodeFound = false;
+				for (Node killerNode : killerMoves.get(depthleft))
+					if (killerNode.getMove().equals(node.getMove()))
+						nodeFound = true;
+				if (nodeFound) {
+					node.setScore(Constants.getKillerMoveScore());
+				}
 			}
 		}
-		
-	}
+		Collections.sort(nodes, new NodeComparator());
+		// System.out.println("---------");
+		// for (Node node: nodes){
+		// System.out.println(controller.boardController.getPieceByCoords(node
+		// .getMove().getStartRow(),
+		// node.getMove().getStartCol())+" "+controller.boardController.getPieceByCoords(node
+		// .getMove().getEndRow(), node.getMove().getEndCol()) +
+		// node.getScore());
+		// }
 
-	public double Negamax(int depth, Move previousMove,
-			DefaultMutableTreeNode parentNode) {
-		if (depth == 0) {
-			// previousMove.timesEvaluated++;
-			// return evaluate(!previousMove.getPiece().isWhite(),
-			// previousMove));
-		}
-		double max = Integer.MIN_VALUE;
-		double score = 0.0;
-
-		boolean isWhite = !previousMove.getPiece().isWhite();
-		ArrayList<Move> legalMoves = controller.getMoveGenerator().findMoves(
-				isWhite);
-		int i = 0;
-		for (Move move : legalMoves) {
-			i++;
-			Piece capturedPiece = RuleEngine.processMove(move);
-
-			DefaultMutableTreeNode node = new DefaultMutableTreeNode();
-			node.setAllowsChildren(true);
-			score = -Negamax(depth - 1, move, node);
-
-			node.setUserObject(i + ", " + move.algebraicNotationPrint() + ": "
-					+ score);
-
-			parentNode.add(node);
-
-			if (score > max)
-				max = score;
-			RuleEngine.undoChanges(capturedPiece, move);
-		}
-		return max;
 	}
 
 	/**
@@ -227,14 +262,12 @@ public class AI {
 	 * @return
 	 */
 	public double evaluate(boolean isWhitesTurn, Node node) {
-		nodesVisited++;
+		if (this.depth == Constants.getDepth())
+			nodesVisited++;
 		double result = 0.0;
 		int positionalScore = computePositionalScore(isWhitesTurn, node);
 		int materialScore = computeMaterialScore();
 		int bonusScore = computeBonusScore();
-
-		// log.debug("-Positional Score: " + positionalScore);
-		// log.debug("-Material Score: " + materialScore);
 
 		double weightedPositionalScore = positionalScore
 				* Constants.getPositionalScoreWeight();
@@ -243,19 +276,9 @@ public class AI {
 		double weightedBonusScore = bonusScore
 				* Constants.getBonusScoreWeight();
 
-		log.info("AI.evaluate: weightdP: " + weightedPositionalScore
+		/*log.info("AI.evaluate: weightdP: " + weightedPositionalScore
 				+ " weighgtedM: " + weightedMaterialScore + " weightedB: "
-				+ weightedBonusScore);
-
-		double totalScore = weightedPositionalScore + weightedMaterialScore
-				+ weightedBonusScore;
-		// log.info("AI.evaluate: Considering " + move.algebraicNotationPrint()
-		// + ", score: " + totalScore);
-
-		ArrayList<Move> moveList = controller.getModel().getMoveList();
-		for (Move pastMove : moveList)
-			log.info(pastMove.algebraicNotationPrint());
-		// log.writeLine();
+				+ weightedBonusScore);*/
 
 		result = weightedPositionalScore + weightedMaterialScore
 				+ weightedBonusScore;
@@ -285,20 +308,24 @@ public class AI {
 		int whiteMoves = 0;
 		int blackMoves = 0;
 
+		// This method is only called when evaluate is called, which is only
+		// when depth = 0
+		int depth = 0;
+
 		if (isWhite) {
 			if (node.getChildren().size() == 0)
-				populateChildren(node, isWhite);
+				populateChildren(node, isWhite, depth);
 
 			whiteMoves = node.getChildren().size();
 
-			//
+			
 			blackMoves = controller.getMoveGenerator().findMoves(false).size();
 		}
 
 		else {
 
 			if (node.getChildren().size() == 0)
-				populateChildren(node, isWhite);
+				populateChildren(node, isWhite, depth);
 			blackMoves = node.getChildren().size();
 
 			whiteMoves = controller.getMoveGenerator().findMoves(true).size();
@@ -506,13 +533,90 @@ public class AI {
 		return result;
 	}
 
+	/**
+	 * Old version of Negamax, replaced by method AlphaBeta.  
+	 * @param depth
+	 * @param previousMove
+	 * @param parentNode
+	 * @return
+	 */
+	public double Negamax(int depth, Move previousMove,
+			DefaultMutableTreeNode parentNode) {
+		if (depth == 0) {
+			// previousMove.timesEvaluated++;
+			// return evaluate(!previousMove.getPiece().isWhite(),
+			// previousMove));
+		}
+		double max = Integer.MIN_VALUE;
+		double score = 0.0;
+
+		boolean isWhite = !previousMove.getPiece().isWhite();
+		ArrayList<Move> legalMoves = controller.getMoveGenerator().findMoves(
+				isWhite);
+		int i = 0;
+		for (Move move : legalMoves) {
+			i++;
+			Piece capturedPiece = RuleEngine.processMove(move);
+
+			DefaultMutableTreeNode node = new DefaultMutableTreeNode();
+			node.setAllowsChildren(true);
+			score = -Negamax(depth - 1, move, node);
+
+			node.setUserObject(i + ", " + move.algebraicNotationPrint() + ": "
+					+ score);
+
+			parentNode.add(node);
+
+			if (score > max)
+				max = score;
+			RuleEngine.undoChanges(capturedPiece, move);
+		}
+		return max;
+	}
+
+	/**
+	 * Calculate how long the previous branch of the tree took to search
+	 * and print to the console.
+	 * @param i
+	 * @param parentNode
+	 * @param startTime
+	 */
+	public void printTimeStats(int i, Node parentNode, long startTime) {
+		long endTime = System.currentTimeMillis();
+		System.out.println("AI.ChooseMove: " + ++i
+				+ " of "
+				+ parentNode.getChildren().size()
+				// * Constants.getDepth()
+				+ " branches searched. Time elapsed: " + (endTime - initTime)
+				/ 1000.0 + " seconds, last branch took "
+				+ (endTime - startTime) / 1000.0 + " seconds");
+
+		startTime = System.currentTimeMillis();
+	}
 }
 
-class NodeComparator implements Comparator{
+
+/**
+ * Simple comparator implementation so I can use the sort method in the
+ * Collection class. This helps move ordering to get tight alpha/beta
+ * bounds quickly
+ * @author Matthew
+ *
+ */
+class NodeComparator implements Comparator {
 
 	@Override
 	public int compare(Object node1, Object node2) {
 		// TODO Auto-generated method stub neg is less than
-		int scoreDifference = ((Node)node1).getMove().getScore() -((Node)node2).getMove().getScore();
-		return scoreDifference;
-	}}
+
+		double scoreDifference = (((Node) node1).getScore() - ((Node) node2)
+				.getScore());
+
+		if (scoreDifference > 0)
+			return 1;
+		else if (scoreDifference == 0)
+			return 0;
+		else
+			return -1;
+	}
+}

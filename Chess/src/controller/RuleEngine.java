@@ -2,9 +2,9 @@ package controller;
 
 import java.util.ArrayList;
 
-import model.Model;
 import model.Move;
 import model.Piece;
+import utils.Constants;
 
 /**
  * Static class used to check basic chess rules
@@ -786,6 +786,8 @@ else{
 					capturedPiece.getRow(), capturedPiece.getCol(),
 					capturedPiece);
 
+		undoCastleMove(move);
+		
 		// Set the tested move piece back where it was
 		controller.getBoardController().setPieceByCoords(move.getStartRow(),
 				move.getStartCol(), move.getPiece());
@@ -793,6 +795,29 @@ else{
 
 		move.getPiece().setRow(move.getStartRow());
 		move.getPiece().setCol(move.getStartCol());
+	}
+	
+
+
+	private static void undoCastleMove(Move move) {
+		// TODO Auto-generated method stub
+		if (move.getPiece().getType().equals("king")
+				&& RuleEngine.calculateDeltaColUnsigned(move) == 2) {
+			if (RuleEngine.calculateDeltaColSigned(move) == 2) {
+				Piece rook = controller.boardController.getPieceByCoords(
+						move.getStartRow(), Constants.getKingsideCastleRookCol());
+				controller.boardController.setPieceByCoords(move.getStartRow(), Constants.getKingRookCol(), rook);
+				rook.setCol(Constants.getKingRookCol());
+				controller.boardController.clearSquare(move.getStartRow(),Constants.getKingsideCastleRookCol());
+			} else {
+				Piece rook = controller.boardController.getPieceByCoords(
+						move.getStartRow(), Constants.getQueensideCastleRookCol());
+				controller.boardController.setPieceByCoords(move.getStartRow(), Constants.getQueenRookCol(), rook);
+				rook.setCol(Constants.getQueenRookCol());
+				controller.boardController.clearSquare(move.getStartRow(), Constants.getQueensideCastleRookCol());
+			}
+
+		}
 	}
 
 	/**
@@ -824,7 +849,7 @@ else{
 		// en passant capture and we save a reference to the captured
 		// pawn
 		Piece tmpPiece = controller.handleEnPassantCaptures(move);
-
+		controller.handleCastling(move);
 		if (tmpPiece != null)
 			capturedPiece = tmpPiece;
 

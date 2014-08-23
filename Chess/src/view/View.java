@@ -97,6 +97,7 @@ public class View {
 		JMenuBar menuBar = new JMenuBar();
 		JMenu fileMenu = new JMenu("File");
 		JMenu viewMenu = new JMenu("View");
+		JMenu settingsMenu = new JMenu("Settings");
 		
 		JMenuItem newGame = new JMenuItem("New Game");
 		newGame.setActionCommand("newGame");
@@ -114,12 +115,19 @@ public class View {
 		flipBoard.setActionCommand("flipBoard");
 		flipBoard.addActionListener(masterListener);
 		
+		JMenuItem tuneEngine = new JMenuItem("Tune Engine");
+		tuneEngine.setActionCommand("tuneEngine");
+		tuneEngine.addActionListener(masterListener);
+		
 		fileMenu.add(newGame);
 		fileMenu.add(changeGameMode);
 		fileMenu.add(exportMoveList);
 		viewMenu.add(flipBoard);
+		settingsMenu.add(tuneEngine);
+		
 		menuBar.add(fileMenu);
 		menuBar.add(viewMenu);
+		menuBar.add(settingsMenu);
 		frame.setJMenuBar(menuBar);
 	}
 	

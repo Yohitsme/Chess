@@ -24,6 +24,9 @@ public class Move {
 	int endCol;
 	Piece piece;
 	int score = 0;
+	String promotePiece = null;
+
+	
 
 	public int getScore() {
 		return score;
@@ -49,6 +52,7 @@ public class Move {
 		this.startCol = startColIn;
 		this.endRow = endRowIn;
 		this.endCol = endColIn;
+		this.promotePiece = "";
 	}
 
 	public Move(Move move) {
@@ -57,6 +61,7 @@ public class Move {
 		this.startCol = move.getStartCol();
 		this.endRow = move.getEndRow();
 		this.endCol = move.getEndCol();
+		this.promotePiece = move.getPromotePiece();
 	}
 
 	public String algebraicNotationPrint() {
@@ -99,6 +104,14 @@ public class Move {
 
 	public Piece getPiece() {
 		return piece;
+	}
+	
+	public String getPromotePiece() {
+		return this.promotePiece;
+	}
+
+	public void setPromotePiece(String promotePiece) {
+		this.promotePiece= promotePiece;
 	}
 
 	public void setPiece(Piece piece) {

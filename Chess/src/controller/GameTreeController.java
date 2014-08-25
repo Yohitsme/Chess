@@ -188,7 +188,7 @@ public class GameTreeController {
 		
 		if (!isUpdated){
 			
-			System.out.println("GameTreeController.setRoot: Could not find move " + rootIn.getMove().algebraicNotationPrint() + " in children of current root. Replaced anyway. Error? Size: " + root.getChildCount());
+			System.out.println("GameTreeController.setRoot: Could not find move " + rootIn.getMove().algebraicNotationPrint() + " in children of current root. Replaced anyway. Error?");
 			
 			this.root=rootIn;
 		

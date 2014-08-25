@@ -156,15 +156,16 @@ public class Controller {
 			processMove(AI.move(computeTurn()));
 		}
 
-		view.updateAnalysisPanel(new JTree(gameTreeController.getRoot()));
+//		view.updateAnalysisPanel(new JTree(gameTreeController.getRoot()));
 		view.updateMoveListPanel(model.getMoveList());
 		view.update();
 
-		gameTreeController.getRoot().removeAllChildren();
+//		gameTreeController.getRoot().removeAllChildren();
 		if (isGameOver())
 			JOptionPane.showMessageDialog(new JFrame(), "Game over!");
 
-		view.highlightPreviousMove(model.getMoveList());
+		if (model.getMoveList().size() != 0)
+			view.highlightPreviousMove(model.getMoveList());
 		/*
 		 * long startTime = System.currentTimeMillis(); long endTime =
 		 * System.currentTimeMillis(); System.out.println(
@@ -220,7 +221,8 @@ public class Controller {
 
 		if (boardController.getPieceByCoords(move.getStartRow(),
 				move.getStartCol()) == null)
-			System.out.println("Controller.processMove ERROR: Trying to move a null piece?");
+			System.out
+					.println("Controller.processMove ERROR: Trying to move a null piece?");
 		// Mark the piece has having moved
 		boardController
 				.getPieceByCoords(move.getStartRow(), move.getStartCol())
@@ -433,12 +435,13 @@ public class Controller {
 	 */
 	private void handlePawnPromote(Move move) {
 
+		// If it's a user move, the piece type will be a pawn
 		if (move.getPiece().getType().equals("pawn")
 				&& (move.getEndRow() == 7 || move.getEndRow() == 0)) {
 			String choice = "";
-			if ((move.getPiece().isWhite() && isWhiteAI())
-					|| (!move.getPiece().isWhite() && isBlackAI()))
-				choice = "queen";
+
+			if (isAIturn())
+				choice = move.getPromotePiece();
 			else
 				choice = getPawnPromoteChoice();
 			move.getPiece().setType(choice);
@@ -636,18 +639,21 @@ public class Controller {
 	private void promptUserForNewSettings() {
 		// TODO Auto-generated method stub
 		JFrame frame = new JFrame();
-		Object[] possibilities = { "1", "2", "3", "4", "5"};
-		String s = (String) JOptionPane.showInputDialog(frame,
-		"Note: Clicking OK to confirm changes will restart the game"
-				 +"\n\nChoose the depth to which the engine will search",
-				"Tune Engine", JOptionPane.PLAIN_MESSAGE, null, possibilities,
-				"4");
+		Object[] possibilities = { "1", "2", "3", "4", "5" };
+		String s = (String) JOptionPane
+				.showInputDialog(
+						frame,
+						"Note: Clicking OK to confirm changes will restart the game"
+								+ "\n\nChoose the depth to which the engine will search",
+						"Tune Engine", JOptionPane.PLAIN_MESSAGE, null,
+						possibilities, "4");
 
 		if (s != null && s.length() > 0) {
 			int i = new Integer(s);
 			Constants.setDepth(i);
 			model.resetModel();
 			view.update();
+			AI.resizeKillerMoveArrays();
 		}
 	}
 
@@ -656,15 +662,17 @@ public class Controller {
 		ArrayList<Move> moveList = model.getMoveList();
 		String fileName = "Chess Game Move List Export - "
 				+ Utils.getTimeNoSpaces() + ".txt";
-		
+
 		String body = "Game played on " + Utils.getTime();
 		body += "\n\nEngine stats:\n";
 		body += "\nDepth: " + Constants.getDepth();
-		body += "\nPositional Scoring weight: " + Constants.getPositionalScoreWeight();
-		body += "\nMaterial Scoring weight: " + Constants.getMaterialScoreWeight(); 
+		body += "\nPositional Scoring weight: "
+				+ Constants.getPositionalScoreWeight();
+		body += "\nMaterial Scoring weight: "
+				+ Constants.getMaterialScoreWeight();
 		body += "\nBonus Scoring weight: " + Constants.getBonusScoreWeight();
 		body += "\n";
-		
+
 		for (int i = 0; i < moveList.size(); i++) {
 			if (i % 2 == 0)
 				body += "\n" + Integer.toString(i / 2 + 1) + " ";

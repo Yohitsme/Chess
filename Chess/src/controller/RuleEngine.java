@@ -795,9 +795,15 @@ else{
 
 		move.getPiece().setRow(move.getStartRow());
 		move.getPiece().setCol(move.getStartCol());
+		
+		undoPawnPromote(move);
 	}
 	
-
+public static void undoPawnPromote(Move move){
+	if (move.getPromotePiece()!=""){
+		move.getPiece().setType("pawn");
+	}
+}
 
 	private static void undoCastleMove(Move move) {
 		// TODO Auto-generated method stub
@@ -862,10 +868,19 @@ else{
 		move.getPiece().setRow(move.getEndRow());
 		move.getPiece().setCol(move.getEndCol());
 		
+		handlePawnPromotes(move);		
 		
 		return capturedPiece;
 	}
 
+	public static void handlePawnPromotes(Move move){
+		
+		if (move.getPromotePiece()!=""){
+			move.getPiece().setType(move.getPromotePiece());
+		}
+		
+	}
+	
 	public static int calculateDeltaRowUnsigned(Move move) {
 		return Math.abs(move.getStartRow() - move.getEndRow());
 	}

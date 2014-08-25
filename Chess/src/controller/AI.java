@@ -22,14 +22,25 @@ public class AI {
 	int depth;
 	long initTime = 0;
 	Node bestNode;
+	ArrayList<Node> localPV;
+	ArrayList<Node> masterPV = new ArrayList<Node>();
 	ArrayList<ArrayList<Node>> killerMoves = new ArrayList<ArrayList<Node>>(
-			Constants.getDepth()+1);
+			Constants.getDepth() + 1);
+	Node[] PV;
+	int nodesPerLevel[];
+	
 
 	public AI(Controller controllerIn) {
 		this.controller = controllerIn;
-		
-		for (int i = 0; i < Constants.getDepth()+1; i++)
+
+		for (int i = 0; i < Constants.getDepth() + 1; i++)
 			killerMoves.add(new ArrayList<Node>());
+		PV = new Node[10];
+
+		for (int i = 0; i < 10; i++)
+			PV[i] = null;
+		
+		nodesPerLevel = new int[20];
 	}
 
 	public Move move(String color) {
@@ -43,9 +54,15 @@ public class AI {
 		System.out.println("Nodes visited: " + nodesVisited);
 		nodesVisited = 0;
 
-//		for (ArrayList<Node> list : killerMoves)
-//			System.out.println(killerMoves.indexOf(list) + ": "
-//					+ list.toString());
+		// Branching factor calculations
+		if (false)
+		for (int i = 0; i< 15; i++){
+			if (nodesPerLevel[i+1]!=0)
+			System.out.println(i + ": " + (double)nodesPerLevel[i+1]/(double)nodesPerLevel[i]);
+		}
+		// for (ArrayList<Node> list : killerMoves)
+		// System.out.println(killerMoves.indexOf(list) + ": "
+		// + list.toString());
 		return node.getMove();
 	}
 
@@ -58,8 +75,22 @@ public class AI {
 		initializeKillerMoveArrays();
 
 		for (int depth = 1; depth <= Constants.getDepth(); depth++) {
-			this.depth = (int) depth;
-			alphaBeta(alpha, beta, depth, isWhite, parentNode);
+			this.depth = depth;
+			pvSearch(alpha, beta, depth, isWhite, parentNode);
+		
+			masterPV = new ArrayList<Node>();
+			masterPV.addAll(this.localPV);
+			// for (int i = 0; i < 10; i++)
+			// if (PV[i] != null)
+			// System.out.println(PV[i].getMove().algebraicNotationPrint());
+
+}
+//		 this.depth = Constants.getDepth();
+//		 alphaBeta(alpha, beta, depth, isWhite, parentNode);
+//		
+		for (Node node : this.masterPV) {
+			System.out.println("PV: "
+					+ node.getMove().coloredAlgebraicNotationPrint());
 		}
 
 	}
@@ -74,18 +105,30 @@ public class AI {
 
 	}
 
-	double alphaBeta(double alpha, double beta, int depthleft, boolean isWhite,
+	public void resizeKillerMoveArrays() {
+		killerMoves = new ArrayList<ArrayList<Node>>(Constants.getDepth() + 1);
+		for (int i = 0; i < Constants.getDepth() + 1; i++)
+			killerMoves.add(new ArrayList<Node>());
+
+	}
+
+	double pvSearch(double alpha, double beta, int depthleft, boolean isWhite,
 			Node parentNode) {
 		Node pv = null;
 		double score = 0.0;
 		long startTime = 0;
 		int i = 0;
 		boolean tmpHasMoved;
+		boolean bSearchPv = true;
 
 		// Termination condition
 		if (depthleft == 0) {
-			return evaluate(isWhite, parentNode);
+			this.localPV = new ArrayList<Node>();
+			this.localPV.add(parentNode);
+			return quiesce(alpha, beta,isWhite,parentNode,depthleft);
 		}
+
+		ArrayList<Node> localPV = new ArrayList<Node>();
 
 		// Branch timing housekeeping
 		if (depthleft == Constants.getDepth()) {
@@ -96,11 +139,22 @@ public class AI {
 		if (parentNode.getChildren().size() == 0)
 			populateChildren(parentNode, isWhite, depthleft);
 
+		// We should always start with PV if on first ply of search, if it
+		// isn't null
+
+		// If the established PV is longer than the chain we're looking at,
+		// then there's at least one move we might consider
+		boolean isDeepEnough = masterPV.size() > this.depth - depthleft + 1;
+
+		if (isDeepEnough && validatePV(parentNode, depthleft))
+			prioritizeNode(parentNode,
+					this.masterPV.get(this.depth - depthleft + 1));
+
 		for (int j = 0; j < parentNode.getChildren().size(); j++) {
 
 			// Branch timing housekeeping
 			if (depthleft == Constants.getDepth()) {
-				printTimeStats(i, parentNode, startTime);
+				printTimeStats(i++, parentNode, startTime);
 				startTime = System.currentTimeMillis();
 			}
 
@@ -111,21 +165,28 @@ public class AI {
 			tmpHasMoved = move.getPiece().isHasMoved();
 			move.getPiece().setHasMoved(true);
 
-			score = -alphaBeta(-beta, -alpha, depthleft - 1, !isWhite, node);
+			// PV addition
+			if (bSearchPv) {
+				score = -pvSearch(-beta, -alpha, depthleft - 1, !isWhite, node);
+			} else {
+				score = -pvSearch(-alpha - 0.00000001, -alpha, depthleft - 1,
+						!isWhite, node);
+				if (score > alpha) // in fail-soft ... && score < beta ) is
+									// common
+					score = -pvSearch(-beta, -alpha, depthleft - 1, !isWhite,
+							node); // re-search
+			}
 
-			node.setUserObject(++i + ", " + move.algebraicNotationPrint()
-					+ ": " + score);
+			// end PV addition
+
+//			node.setUserObject(++i + ", " + move.algebraicNotationPrint()
+//					+ ": " + score);
 
 			RuleEngine.undoChanges(capturedPiece, move);
 			move.getPiece().setHasMoved(tmpHasMoved);
 
 			// Fail hard beta-cutoff
 			if (score >= beta) {
-
-				// If we're quitting this recursion early because of a
-				// beta cut off, save the PV we've found so far
-				if (pv != null)
-					prioritizeNode(parentNode, pv);
 
 				// If the current move isn't already a killer move, make it one
 				boolean nodeFound = false;
@@ -139,14 +200,121 @@ public class AI {
 			}
 
 			// Tighten the alpha bound
-			if (score > alpha || bestNode == null) {
+			if (score > alpha) {
 				alpha = score;
 				pv = node;
+				localPV = this.localPV;
 
 				// If we are in the first recursive call, save the best move
 				// so we can use it later
 				if (depthleft == Constants.getDepth()) {
 					bestNode = node;
+				}
+			}
+
+			bSearchPv = false;
+		}
+
+		if (parentNode.getChildren().size() == 0) {
+			// If I have no moves assume I was checkmated and return low alpha
+			// value
+			alpha = -10000000000000.0;
+		}
+
+		ArrayList<Node> tmp = new ArrayList<Node>();
+		if (depthleft != Constants.getDepth())
+			tmp.add(parentNode);
+		tmp.addAll(localPV);
+		this.localPV = tmp;
+		return alpha;
+	}
+
+	double alphaBeta(double alpha, double beta, int depthleft, boolean isWhite,
+			Node parentNode) {
+		Node pv = null;
+		double score = 0.0;
+		long startTime = 0;
+		int i = 0;
+		boolean tmpHasMoved;
+
+		// Termination condition
+		if (depthleft == 0) {
+			this.localPV = new ArrayList<Node>();
+			this.localPV.add(parentNode);
+			return quiesce(alpha, beta,isWhite,parentNode,depthleft);
+		}
+
+		ArrayList<Node> localPV = new ArrayList<Node>();
+
+		// Branch timing housekeeping
+		if (depthleft == Constants.getDepth()) {
+			startTime = System.currentTimeMillis();
+			initTime = startTime;
+		}
+
+		if (parentNode.getChildren().size() == 0)
+			populateChildren(parentNode, isWhite, depthleft);
+
+		// We should always start with PV if on first ply of search, if it
+		// isn't null
+
+		// If the established PV is longer than the chain we're looking at,
+		// then there's at least one move we might consider
+		boolean isDeepEnough = masterPV.size() > this.depth - depthleft + 1;
+
+		if (isDeepEnough && validatePV(parentNode, depthleft))
+			prioritizeNode(parentNode,
+					this.masterPV.get(this.depth - depthleft + 1));
+
+		for (int j = 0; j < parentNode.getChildren().size(); j++) {
+
+			// Branch timing housekeeping
+			if (depthleft == Constants.getDepth()) {
+				printTimeStats(++i, parentNode, startTime);
+				startTime = System.currentTimeMillis();
+			}
+
+			Node node = parentNode.getChildren().get(j);
+			Move move = node.getMove();
+
+			Piece capturedPiece = RuleEngine.processMove(move);
+			tmpHasMoved = move.getPiece().isHasMoved();
+			move.getPiece().setHasMoved(true);
+
+			score = -alphaBeta(-beta, -alpha, depthleft - 1, !isWhite, node);
+
+//			node.setUserObject(++i + ", " + move.algebraicNotationPrint()
+//					+ ": " + score);
+
+			RuleEngine.undoChanges(capturedPiece, move);
+			move.getPiece().setHasMoved(tmpHasMoved);
+
+			// Fail hard beta-cutoff
+			if (score >= beta) {
+
+				// If the current move isn't already a killer move, make it one
+				boolean nodeFound = false;
+				for (Node killerNode : killerMoves.get(depthleft))
+					if (killerNode.getMove().equals(node.getMove()))
+						nodeFound = true;
+				if (!nodeFound)
+					killerMoves.get(depthleft).add(node);
+
+				return beta;
+			}
+
+			// Tighten the alpha bound
+			if (score > alpha) {
+				alpha = score;
+				pv = node;
+				localPV = this.localPV;
+
+				// If we are in the first recursive call, save the best move
+				// so we can use it later
+				if (depthleft == Constants.getDepth()) {
+					bestNode = node;
+					System.out.println("AI.AB Choosing "
+							+ node.getMove().algebraicNotationPrint());
 				}
 			}
 		}
@@ -156,28 +324,116 @@ public class AI {
 			// value
 			alpha = -10000000000000.0;
 		}
-		if (pv != null)
-			prioritizeNode(parentNode, pv);
 
+		ArrayList<Node> tmp = new ArrayList<Node>();
+		if (depthleft != Constants.getDepth())
+			tmp.add(parentNode);
+		tmp.addAll(localPV);
+		this.localPV = tmp;
 		return alpha;
 	}
 
+	public double quiesce(double alpha, double beta, boolean isWhite,
+			Node parentNode, int depthleft) {
+		nodesPerLevel[this.depth]++;
+		
+		double stand_pat = evaluate(isWhite, parentNode);
+		double score;
+		boolean tmpHasMoved = true;
+		if (stand_pat >= beta)
+			return beta;
+		if (alpha < stand_pat)
+			alpha = stand_pat;
+		if (parentNode.getChildren().size() == 0)
+			populateChildren(parentNode, isWhite, depthleft);
+
+		for (Node node : parentNode.getChildren()) {
+			Move move = node.getMove();
+			int col = move.getEndCol();
+			int row = move.getEndRow();
+			Piece otherPiece = controller.boardController.getPieceByCoords(row,
+					col);
+			if (otherPiece != null) {
+
+				Piece capturedPiece = RuleEngine.processMove(move);
+				tmpHasMoved = move.getPiece().isHasMoved();
+				move.getPiece().setHasMoved(true);
+				//MakeCapture();
+				
+				score = -quiesce(-beta, -alpha, !isWhite, node, depthleft - 1);
+				
+				RuleEngine.undoChanges(capturedPiece, move);
+				move.getPiece().setHasMoved(tmpHasMoved);
+				//TakeBackMove();
+
+				if (score >= beta)
+					return beta;
+				if (score > alpha)
+					alpha = score;
+			}
+		}
+		return alpha;
+	}
+
+	private boolean validatePV(Node parentNode, int depthleft) {
+
+		int i = this.depth - depthleft; // how deep we are
+		boolean result = true;
+
+		while (i >= 0 && result == true) {
+			if (parentNode == masterPV.get(i)) {
+				
+				parentNode = parentNode.getParent();
+				i--;
+			} else
+				result = false;
+
+		}
+
+		
+		return result;
+	}
+
+	private boolean validatePV_old(Node parentNode, int depth) {
+
+		Node parent = parentNode;
+		int i = this.depth - depth;
+		boolean result = true;
+		// System.out.println(i);
+		while (i != 0 && result == true) {
+			if (PV[i - 1] == parentNode) {
+				i--;
+				parent = parent.getParent();
+				System.out.println("good");
+			} else {
+				result = false;
+
+				// System.out.println("not good");
+			}
+		}
+
+		return result;
+	}
+
 	/**
-	 * Takes the Node child and puts it in the front of the arraylist of children
-	 * of the parent Node.  This makes that child the first one analyzed when
-	 * looping through the parents' children.
+	 * Takes the Node child and puts it in the front of the arraylist of
+	 * children of the parent Node. This makes that child the first one analyzed
+	 * when looping through the parents' children.
+	 * 
 	 * @param parent
 	 * @param child
 	 */
 	public void prioritizeNode(Node parent, Node child) {
 		parent.getChildren().remove(child);
 		parent.getChildren().add(0, child);
+		// child.setScore((-500));
 	}
 
 	/**
-	 * Build the subtree of legal moves for the Node parent node passed as a parameter.
-	 * This also populates the DefaultMutableTree object tree, so the GUI reflects the
-	 * real game tree
+	 * Build the subtree of legal moves for the Node parent node passed as a
+	 * parameter. This also populates the DefaultMutableTree object tree, so the
+	 * GUI reflects the real game tree
+	 * 
 	 * @param parentNode
 	 * @param isWhite
 	 * @param depthleft
@@ -185,29 +441,30 @@ public class AI {
 	public void populateChildren(Node parentNode, boolean isWhite, int depthleft) {
 		ArrayList<Move> legalMoves = controller.getMoveGenerator().findMoves(
 				isWhite);
-
 		for (Move move : legalMoves) {
 
+			
 			Node node = new Node(move);
-			node.setUserObject(move.algebraicNotationPrint());
+//			node.setUserObject(move.algebraicNotationPrint());
 
-			parentNode.add(node);
+//			parentNode.add(node);
 			parentNode.getChildren().add(node);
+			node.setParent(parentNode);
 		}
 
 		orderMoves(parentNode.getChildren(), depthleft);
 	}
 
-	
 	/**
-	 * Takes a list of legal moves and attempts to sort them with the following weight:
+	 * Takes a list of legal moves and attempts to sort them with the following
+	 * weight:
 	 * 
-	 * 1. MVV-LVA (pxn before nxp
-	 * 2. Killer Heuristic
+	 * 1. MVV-LVA (pxn before nxp 2. Killer Heuristic
 	 * 
 	 * alphaBeta search prioritizes PV nodes as it finds them, and that always
 	 * happens after this method is called, so PV nodes end up in the front of
 	 * the arraylist.
+	 * 
 	 * @param nodes
 	 * @param depthleft
 	 */
@@ -244,14 +501,7 @@ public class AI {
 			}
 		}
 		Collections.sort(nodes, new NodeComparator());
-		// System.out.println("---------");
-		// for (Node node: nodes){
-		// System.out.println(controller.boardController.getPieceByCoords(node
-		// .getMove().getStartRow(),
-		// node.getMove().getStartCol())+" "+controller.boardController.getPieceByCoords(node
-		// .getMove().getEndRow(), node.getMove().getEndCol()) +
-		// node.getScore());
-		// }
+
 
 	}
 
@@ -265,24 +515,32 @@ public class AI {
 		if (this.depth == Constants.getDepth())
 			nodesVisited++;
 		double result = 0.0;
-		int positionalScore = computePositionalScore(isWhitesTurn, node);
-		int materialScore = computeMaterialScore();
-		int bonusScore = computeBonusScore();
 
-		double weightedPositionalScore = positionalScore
-				* Constants.getPositionalScoreWeight();
-		double weightedMaterialScore = materialScore
-				* Constants.getMaterialScoreWeight();
-		double weightedBonusScore = bonusScore
-				* Constants.getBonusScoreWeight();
+		// TODO: The below should be more sophisticated
+		// If a king can't be found, assume a completely lost position
+		if (findKing(isWhitesTurn) == null)
+			result = -10000;
+		else {
+			int positionalScore = computePositionalScore(isWhitesTurn, node);
+			int materialScore = computeMaterialScore();
+			int bonusScore = computeBonusScore();
 
-		/*log.info("AI.evaluate: weightdP: " + weightedPositionalScore
-				+ " weighgtedM: " + weightedMaterialScore + " weightedB: "
-				+ weightedBonusScore);*/
+			double weightedPositionalScore = positionalScore
+					* Constants.getPositionalScoreWeight();
+			double weightedMaterialScore = materialScore
+					* Constants.getMaterialScoreWeight();
+			double weightedBonusScore = bonusScore
+					* Constants.getBonusScoreWeight();
 
-		result = weightedPositionalScore + weightedMaterialScore
-				+ weightedBonusScore;
+			/*
+			 * log.info("AI.evaluate: weightdP: " + weightedPositionalScore +
+			 * " weighgtedM: " + weightedMaterialScore + " weightedB: " +
+			 * weightedBonusScore);
+			 */
 
+			result = weightedPositionalScore + weightedMaterialScore
+					+ weightedBonusScore;
+		}
 		if (!isWhitesTurn)
 			result = result * -1.0;
 
@@ -318,7 +576,6 @@ public class AI {
 
 			whiteMoves = node.getChildren().size();
 
-			
 			blackMoves = controller.getMoveGenerator().findMoves(false).size();
 		}
 
@@ -360,8 +617,7 @@ public class AI {
 			// already has 1 for being pawn)
 			if (piece.getType().equals("pawn") && piece.getRow() == 7) {
 				whiteScore += Constants.getQueenweight() - 1;
-				// System.out.println("was " + whiteScore);
-				// System.out.println("now " + whiteScore);
+
 			}
 		}
 		for (Piece piece : blackPieces) {
@@ -395,21 +651,6 @@ public class AI {
 		int result = computeOneSidedBonusScore(white)
 				- computeOneSidedBonusScore(black);
 
-		// TODO: Bonus for not moving the queen early on
-		// TODO: Bonus for not moving the same piece twice in the opening
-		// TODO: Bonus for not having a knight on the edge of the board
-		// TODO: Bonus for connected pawns
-		// TODO: Penalty for doubled pawns
-		// TODO: Penalty for isolated pawns
-
-		// log.debug("-bonusScore Score: " + result);
-		/*
-		 * System.out.println("---castling score: " + castlingBonus);
-		 * System.out.println("---central pawns pushed score: " +
-		 * centralPawnsPushedBonus); System.out.println("---bishop pair score: "
-		 * + bishopPairBonus); System.out.println("---connected rooks score: " +
-		 * connectedRooksBonus);
-		 */
 
 		return result;
 	}
@@ -418,6 +659,13 @@ public class AI {
 		int result = 0;
 		Piece king = findKing(isWhite);
 
+		// TODO: Bonus for not moving the queen early on
+		// TODO: Bonus for not moving the same piece twice in the opening
+		// TODO: Bonus for not having a knight on the edge of the board
+		// TODO: Bonus for connected pawns
+		// TODO: Penalty for doubled pawns
+		// TODO: Penalty for isolated pawns
+		
 		int castlingBonus = computeCastlingBonus(king);
 		int centralPawnsPushedBonus = computeCentralPawnsPushedBonus(isWhite);
 		int bishopPairBonus = computeBishopPairBonus(isWhite);
@@ -534,7 +782,8 @@ public class AI {
 	}
 
 	/**
-	 * Old version of Negamax, replaced by method AlphaBeta.  
+	 * Old version of Negamax, replaced by method AlphaBeta.
+	 * 
 	 * @param depth
 	 * @param previousMove
 	 * @param parentNode
@@ -575,8 +824,9 @@ public class AI {
 	}
 
 	/**
-	 * Calculate how long the previous branch of the tree took to search
-	 * and print to the console.
+	 * Calculate how long the previous branch of the tree took to search and
+	 * print to the console.
+	 * 
 	 * @param i
 	 * @param parentNode
 	 * @param startTime
@@ -586,7 +836,7 @@ public class AI {
 		System.out.println("AI.ChooseMove: " + ++i
 				+ " of "
 				+ parentNode.getChildren().size()
-				// * Constants.getDepth()
+				
 				+ " branches searched. Time elapsed: " + (endTime - initTime)
 				/ 1000.0 + " seconds, last branch took "
 				+ (endTime - startTime) / 1000.0 + " seconds");
@@ -595,13 +845,13 @@ public class AI {
 	}
 }
 
-
 /**
  * Simple comparator implementation so I can use the sort method in the
- * Collection class. This helps move ordering to get tight alpha/beta
- * bounds quickly
+ * Collection class. This helps move ordering to get tight alpha/beta bounds
+ * quickly
+ * 
  * @author Matthew
- *
+ * 
  */
 class NodeComparator implements Comparator {
 

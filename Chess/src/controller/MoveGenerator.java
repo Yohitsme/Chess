@@ -20,7 +20,7 @@ public class MoveGenerator {
 	BoardController boardController;
 	RuleEngine ruleEngine;
 	Controller controller;
-	
+
 	/**
 	 * Constructor
 	 * 
@@ -28,7 +28,7 @@ public class MoveGenerator {
 	 * @param ruleEngineIn
 	 */
 	public MoveGenerator(BoardController boardControllerIn,
-			RuleEngine ruleEngineIn,Controller controllerIn) {
+			RuleEngine ruleEngineIn, Controller controllerIn) {
 		this.boardController = boardControllerIn;
 		this.ruleEngine = ruleEngineIn;
 		this.controller = controllerIn;
@@ -82,7 +82,7 @@ public class MoveGenerator {
 				}
 			}
 		}
-		
+
 		return legalMoves;
 	}
 
@@ -96,35 +96,32 @@ public class MoveGenerator {
 		int numMoves = 0;
 		boolean result = false;
 		Piece king = null;
-		
+
 		while (row < 8 && numMoves == 0) {
 			col = 0;
 			while (col < 8 && numMoves == 0) {
 				piece = boardController.getPieceByCoords(row, col);
 				if (piece != null) {
-					if ((isWhite == piece.isWhite())){
+					if ((isWhite == piece.isWhite())) {
 						numMoves += findMoves(row, col).size();
 					}
 				}
-			col++;
+				col++;
 			}
 			row++;
 		}
-		
-		
-		
-		
-		if (numMoves == 0){
+
+		if (numMoves == 0) {
 			king = controller.getAI().findKing(isWhite);
-			String color = isWhite?"white":"black";
-			
+			String color = isWhite ? "white" : "black";
+
 			// If the king's square is attacked, it's checkmate, not stalemate.
-			if (!RuleEngine.isAttackedSquare(king.getRow(),king.getCol(),color));
+			if (!RuleEngine.isAttackedSquare(king.getRow(), king.getCol(),
+					color))
+				;
 			result = true;
 		}
-		
-		
-		
+
 		if (result)
 			System.out.println("MoveGenerator.isStaleMated: StalemateDetected");
 		return result;
@@ -377,31 +374,71 @@ public class MoveGenerator {
 		// Moving one step forward
 		move = new Move(piece, row, col, row + 1 * rowDirection, col);
 		if (RuleEngine.isLegalPawnMove(move, boardController)
-				&& RuleEngine.isNotSelfCheck(move, boardController))
+				&& RuleEngine.isNotSelfCheck(move, boardController)) {
+			if (move.getEndRow() == 0 || move.getEndRow() == 7) {
+				
+				move.setPromotePiece("queen");
+				
+			}
 			legalMoves.add(move);
+			
+		}
 
 		// Moving two steps forward
-		if (boardController.getPieceByCoords(row + 1 * rowDirection, col) == null) {
+		if (!piece.isHasMoved()
+				&& boardController
+						.getPieceByCoords(row + 1 * rowDirection, col) == null) {
 			move = new Move(piece, row, col, row + 2 * rowDirection, col);
+
 			if (RuleEngine.isLegalPawnMove(move, boardController)
 					&& RuleEngine.isNotSelfCheck(move, boardController))
 				legalMoves.add(move);
 		}
 
 		// Capturing to the right
-		move = new Move(piece, row, col, row + 1 * rowDirection, col + 1);
-		if (isEnemyPieceOrEmpty(piece, row + 1 * rowDirection, col + 1) &&
-				RuleEngine.isLegalPawnMove(move, boardController)
-				&& RuleEngine.isNotSelfCheck(move, boardController))
-			legalMoves.add(move);
+		int newCol = col + 1;
+		int newRow = row + 1 * rowDirection;
+		move = new Move(piece, row, col, newRow, newCol);
+		if (isLegalSquare(newRow, newCol)
+				&& isEnemyPieceOrEmpty(piece, newRow, newCol)
+				&& RuleEngine.isLegalPawnMove(move, boardController)
+				&& RuleEngine.isNotSelfCheck(move, boardController)){
+			// If it is a move to the first or last rank, add a move for each promote
+						if (move.getEndRow() == 0 || move.getEndRow() == 7) {
+							
+							move.setPromotePiece("queen");
+							
+							
+						}
+			legalMoves.add(move);}
 
 		// Capturing to the left
-		move = new Move(piece, row, col, row + 1 * rowDirection, col - 1);
-		if (isEnemyPieceOrEmpty(piece, row + 1 * rowDirection, col - 1) && 
-				RuleEngine.isLegalPawnMove(move, boardController)
-				&& RuleEngine.isNotSelfCheck(move, boardController))
-			legalMoves.add(move);
+		newCol = col - 1;
+
+		move = new Move(piece, row, col, newRow, newCol);
+		if (isLegalSquare(newRow, newCol)
+				&& isEnemyPieceOrEmpty(piece, newRow, newCol)
+				&& RuleEngine.isLegalPawnMove(move, boardController)
+				&& RuleEngine.isNotSelfCheck(move, boardController)){
+			// If it is a move to the first or last rank, add a move for each promote
+						if (move.getEndRow() == 0 || move.getEndRow() == 7) {
+												
+							move.setPromotePiece("queen");
+							
+							
+						}
+						
+			legalMoves.add(move);}
 		return legalMoves;
+	}
+
+	public boolean isLegalSquare(int row, int col) {
+		boolean result = true;
+
+		if (row < 0 || row > 7 || col < 0 || col > 7)
+			result = false;
+
+		return result;
 	}
 
 	/**

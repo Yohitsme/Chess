@@ -4,7 +4,7 @@ import java.util.ArrayList;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
-public class Node extends DefaultMutableTreeNode{
+public class Node {//extends DefaultMutableTreeNode{
 
 	Node parent;
 	ArrayList<Node> children;

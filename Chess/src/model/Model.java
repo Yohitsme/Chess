@@ -30,7 +30,7 @@ public class Model {
 
 		board = new Piece[8][8];
 		initializeBoard();
-		//initializeSimpleBoard();
+//		initializeSimpleBoard();
 		populateLists();
 	}
 

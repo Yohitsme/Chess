@@ -310,7 +310,7 @@ public class View {
 		table.setEnabled(false);
 	
 		JScrollPane scrollPane = new JScrollPane(table);
-		scrollPane.setPreferredSize(moveListPanel.getPreferredSize());
+		scrollPane.setPreferredSize(new Dimension(200,310));
 		moveListPanel.add(new JScrollPane(scrollPane));
 
 		moveListPanel.repaint();

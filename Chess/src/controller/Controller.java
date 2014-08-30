@@ -188,10 +188,19 @@ public class Controller {
 	 * @param move
 	 */
 	public void processMoveAttempt(Move move) {
-
+boolean moveFound = false;
 		if (RuleEngine.validateMove(move, boardController, true)) {
-			processMove(move);
-
+			Node root = gameTreeController.getRoot();
+			if(root.getChildren().size() != 0)
+				for (Node node: root.getChildren())
+					if (node.getMove().equals(move)){
+						moveFound = true;
+						processMove(node);
+					}
+			if (!moveFound){
+				processMove(new Node (move));
+				System.out.println("Controller.processMoveAttempt: couldn't find it");
+			}
 		} else
 			System.out
 					.println("Controller.handleMouseRelease: Invalid move. Board not modified.");
@@ -202,8 +211,8 @@ public class Controller {
 	 * 
 	 * @param move
 	 */
-	public void processMove(Move move) {
-
+	public void processMove(Node node) {
+		Move move = node.getMove();
 		model.getMoveList().add(move);
 		// Check for special cases, such as pawn promotes, en
 		// passant captures
@@ -220,17 +229,20 @@ public class Controller {
 		move.getPiece().setRow(move.getEndRow());
 
 		if (boardController.getPieceByCoords(move.getStartRow(),
-				move.getStartCol()) == null)
+				move.getStartCol()) == null){
 			System.out
-					.println("Controller.processMove ERROR: Trying to move a null piece?");
-		// Mark the piece has having moved
+					.println("Controller.processMove ERROR: Trying to move a null piece? A move probably wasn't selected from the search, so the same move that was picked last time is now being picked.");
+		System.out.println("Controller.processMove: "+ move.toString());
+		}
+			// Mark the piece has having moved
 		boardController
 				.getPieceByCoords(move.getStartRow(), move.getStartCol())
 				.setHasMoved(true);
 
 		boardController.clearSquare(move.getStartRow(), move.getStartCol());
 
-		gameTreeController.setRoot(new Node(move));
+		gameTreeController.setRoot(node);
+		node.setParent(null);
 	}
 
 	/**
@@ -344,6 +356,10 @@ public class Controller {
 				king = piece;
 		}
 
+		if(king == null){
+			model.printMoveList();
+		}
+		
 		if (RuleEngine.isAttackedSquare(king.getRow(), king.getCol(), "white"))
 			inCheck = true;
 

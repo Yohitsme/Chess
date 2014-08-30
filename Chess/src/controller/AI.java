@@ -43,7 +43,7 @@ public class AI {
 		nodesPerLevel = new int[20];
 	}
 
-	public Move move(String color) {
+	public Node move(String color) {
 		Node node = null;
 
 		boolean isWhite = color.equals("white") ? true : false;
@@ -55,15 +55,15 @@ public class AI {
 		nodesVisited = 0;
 
 		// Branching factor calculations
-		if (false)
-		for (int i = 0; i< 15; i++){
-			if (nodesPerLevel[i+1]!=0)
-			System.out.println(i + ": " + (double)nodesPerLevel[i+1]/(double)nodesPerLevel[i]);
-		}
+//		if (false)
+//		for (int i = 0; i< 15; i++){
+//			if (nodesPerLevel[i+1]!=0)
+//			System.out.println(i + ": " + (double)nodesPerLevel[i+1]/(double)nodesPerLevel[i]);
+//		}
 		// for (ArrayList<Node> list : killerMoves)
 		// System.out.println(killerMoves.indexOf(list) + ": "
 		// + list.toString());
-		return node.getMove();
+		return node;
 	}
 
 	public void chooseMove(boolean isWhite) {
@@ -92,6 +92,8 @@ public class AI {
 			System.out.println("PV: "
 					+ node.getMove().coloredAlgebraicNotationPrint());
 		}
+		
+		bestNode = this.masterPV.get(0);
 
 	}
 

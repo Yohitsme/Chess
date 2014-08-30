@@ -30,7 +30,7 @@ public class Model {
 
 		board = new Piece[8][8];
 		initializeBoard();
-//		initializeSimpleBoard();
+		//initializeSimpleBoard();
 		populateLists();
 	}
 
@@ -134,11 +134,11 @@ public class Model {
 			for (int col = 0; col < 8; col++)
 				board[row][col] = null;
 
-		board[1][0] = new Piece("king", white, hasMoved, 1, 0);
+		board[4][7] = new Piece("king", white, hasMoved, 4, 7);
 
 
-		board[7][4] = new Piece("king", black, hasMoved, 7, 4);
-		board[0][7] = new Piece("queen", black, hasMoved, 0, 7);
+		board[4][4] = new Piece("king", black, hasMoved, 4, 4);
+		board[7][1] = new Piece("rook", black, hasMoved, 7, 1);
 //		board[6][5] = new Piece("pawn", black, hasMoved, 6, 5);
 //		board[6][6] = new Piece("pawn", black, hasMoved, 6, 6);
 //		board[6][7] = new Piece("pawn", black, hasMoved, 6, 7);
@@ -159,16 +159,28 @@ public class Model {
 	 * @return
 	 */
 	public void populateLists() {
-		for (int row = 0; row < 2; row++) {
+		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++)
-				if (board[row][col] != null)
+				if (board[row][col] != null && board[row][col].isWhite())
 					whitePieces.add(board[row][col]);
 		}
-		for (int row = 6; row < 8; row++) {
-			for (int col = 0; col < 8; col++)
-				if (board[row][col] != null)
-					blackPieces.add(board[row][col]);
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++){
+				if (board[row][col] != null && !board[row][col].isWhite())
+					blackPieces.add(board[row][col]);}
+			
 		}
+	}
+	
+	public void printMoveList(){
+		String body = "";
+		for (int i = 0; i < moveList.size(); i++) {
+			if (i % 2 == 0)
+				body += "\n" + Integer.toString(i / 2 + 1) + " ";
+
+			body += moveList.get(i).algebraicNotationPrint() + " ";
+		}
+		System.out.println(body);
 	}
 
 	public Piece[][] getBoard() {

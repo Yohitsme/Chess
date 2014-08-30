@@ -721,9 +721,11 @@ else{
 			}
 		}
 		
-		if (king == null)
-			System.out.println("hi");
-
+		if (king == null){
+			System.out.println("RuleEngine.isNotSelfCheck: King not in piece list");
+			if (capturedPiece != null)
+			System.out.println("Captured piece: "+capturedPiece.toString());
+		}
 		// If it is the king that's moving, it is his new position which will
 		// need to be checked if it is being attacked. Otherwise, use his
 		// current location

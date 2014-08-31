@@ -42,20 +42,20 @@ public class Controller {
 	 */
 	public static void main(String[] arg) {
 		Controller controller = null;
-		try {
+	//	try {
 			controller = new Controller();
-		}
+	//	}
 
-		catch (Exception e) {
-			controller.getLog().error(e.toString());
-			controller.getLog().error(e.getStackTrace().toString());
-
-			String moveListDump = "";
-			for (Move move : controller.getModel().getMoveList())
-				moveListDump += move.algebraicNotationPrint() + "\n";
-
-			controller.getLog().error(moveListDump);
-		}
+//		catch (Exception e) {
+//			controller.getLog().error(e.toString());
+//			controller.getLog().error(e.getStackTrace().toString());
+//
+//			String moveListDump = "";
+//			for (Move move : controller.getModel().getMoveList())
+//				moveListDump += move.algebraicNotationPrint() + "\n";
+//
+//			controller.getLog().error(moveListDump);
+//		}
 
 	}
 
@@ -68,7 +68,7 @@ public class Controller {
 		boardController = new BoardController(model);
 		moveGenerator = new MoveGenerator(boardController, ruleEngine, this);
 		masterListener = new MasterListener(this);
-		view = new View(boardController, masterListener);
+		view = new View(boardController, masterListener, model.getCapturedPieces());
 		gameTreeController = new GameTreeController(model.getGameTree(), this);
 		AI = new AI(this);
 		long startTime = System.currentTimeMillis();
@@ -572,6 +572,8 @@ boolean moveFound = false;
 			model.getWhitePieces().remove(piece);
 		} else
 			model.getBlackPieces().remove(piece);
+		
+		model.getCapturedPieces().add(piece);
 
 	}
 

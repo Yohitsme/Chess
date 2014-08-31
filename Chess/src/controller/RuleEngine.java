@@ -768,6 +768,7 @@ else{
 				pieces = controller.getModel().getBlackPieces();
 
 			pieces.add(capturedPiece);
+			controller.getModel().getCapturedPieces().remove(capturedPiece);
 
 			controller.getBoardController().setPieceByCoords(move.getEndRow(),
 					move.getEndCol(), capturedPiece);

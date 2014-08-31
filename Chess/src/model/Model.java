@@ -13,6 +13,9 @@ public class Model {
 	Piece[][] board;
 	ArrayList<Piece> whitePieces;
 	ArrayList<Piece> blackPieces;
+	ArrayList<Piece> capturedPieces;
+	
+
 	ArrayList<Move> moveList;
 	String gameMode; // "pVc,pVp,cVp,cVc"
 	GameTree gameTree;
@@ -24,6 +27,7 @@ public class Model {
 
 		whitePieces = new ArrayList<Piece>();
 		blackPieces = new ArrayList<Piece>();
+		capturedPieces = new ArrayList<Piece>();
 		moveList = new ArrayList<Move>();
 		gameTree = new GameTree();
 		gameMode = "pVc";
@@ -217,6 +221,14 @@ public class Model {
 
 	public String getGameMode() {
 		return gameMode;
+	}
+	
+	public ArrayList<Piece> getCapturedPieces() {
+		return capturedPieces;
+	}
+
+	public void setCapturedPieces(ArrayList<Piece> capturedPieces) {
+		this.capturedPieces = capturedPieces;
 	}
 
 	public void setGameMode(String gameMode) {

@@ -43,8 +43,8 @@ public class Constants {
 	
 	private final static double killerMoveScore = -0.1;
 	
-	private final static double positionalScoreWeight = .25;
-	private final static double materialScoreWeight = .55;
+	private final static double positionalScoreWeight = .05;
+	private final static double materialScoreWeight = .75;
 	private final static double bonusScoreWeight = .20;
 	
 	private static int depth = 4;

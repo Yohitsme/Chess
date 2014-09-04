@@ -139,14 +139,12 @@ public class Model {
 				board[row][col] = null;
 
 		board[0][0] = new Piece("king", white, hasMoved, 0, 0);
-		board[1][5] = new Piece("rook", white, hasMoved, 1, 5);
-		board[4][4] = new Piece("knight", white, hasMoved, 4, 4);
+		board[1][4] = new Piece("rook", white, hasMoved, 1, 4);
+		board[2][5] = new Piece("rook", white, hasMoved, 2, 5);
 		
 
-		board[7][1] = new Piece("king", black, hasMoved, 7, 1);
-		board[7][2] = new Piece("rook", black, hasMoved, 7, 2);
-		board[6][1] = new Piece("pawn", black, hasMoved, 6, 1);
-		board[6][2] = new Piece("pawn", black, hasMoved, 6, 2);
+		board[7][3] = new Piece("king", black, hasMoved, 7, 3);
+	
 //		board[6][6] = new Piece("pawn", black, hasMoved, 6, 6);
 //		board[6][7] = new Piece("pawn", black, hasMoved, 6, 7);
 //		board[6][4] = new Piece("pawn", black, hasMoved, 6, 4);

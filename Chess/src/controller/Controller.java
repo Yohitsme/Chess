@@ -640,7 +640,7 @@ boolean moveFound = false;
 			String choice = promptForGameMode();
 			if (choice != null) {
 				model.setGameMode(choice);
-				model.resetModel();
+//				model.resetModel();
 				view.update();
 			}
 		} else if (e.getActionCommand().equals("exportMoveList")) {
@@ -802,5 +802,27 @@ boolean moveFound = false;
 
 	public void setAI(AI aI) {
 		AI = aI;
+	}
+
+	public boolean isDrawByThreefoldRepitition() {
+		boolean result = false;
+		
+		if (model.getMoveList().size() < 5)
+			result = false;
+		else{
+			int size = model.getMoveList().size();
+			ArrayList<Move>moveList = model.getMoveList();
+			for (int i = 0; i < 3; i++){
+				if (!moveList.get(size-(i)-1).equals(moveList.get(size-1-((i*2)))))
+				result = false;
+				
+			}
+			
+			
+		}
+		
+		if (result)
+			System.out.println("Controller.isDrawByThreeFoldRepition: TRUE");
+		return result;
 	}
 }

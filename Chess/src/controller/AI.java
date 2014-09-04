@@ -517,9 +517,12 @@ public class AI {
 		double result = 0.0;
 
 		// TODO: The below should be more sophisticated
-		// If a king can't be found, assume a completely lost position
-		if (findKing(isWhitesTurn) == null)
-			result = 100000000;
+		if (controller.isWhiteCheckmated())
+			result = 10000000;
+		else if (controller.isBlackCheckmated())
+			result = 10000000;
+		else if (controller.isDrawByThreefoldRepitition())
+			result = 0;
 		else {
 			int positionalScore = computePositionalScore(isWhitesTurn, node);
 			int materialScore = computeMaterialScore();
@@ -544,11 +547,9 @@ public class AI {
 		if (!isWhitesTurn)
 			result = result * -1.0;
 
-		
-		if (controller.isWhiteCheckmated())
-			result = -10000000;
-		if (controller.isBlackCheckmated())
-			result = 10000000;
+		// If no legal moves, it's a stalemate
+		if (node.getChildren().size() == 0)
+			result = 0;
 		
 		return result;
 	}

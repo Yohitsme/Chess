@@ -43,11 +43,11 @@ public class Constants {
 	
 	private final static double killerMoveScore = -0.1;
 	
-	private final static double positionalScoreWeight = .05;
+	private final static double positionalScoreWeight = .15;
 	private final static double materialScoreWeight = .75;
-	private final static double bonusScoreWeight = .20;
+	private final static double bonusScoreWeight = .10;
 	
-	private static int depth = 4;
+	private static int depth = 5;
 	
 	public static int getPieceWeight(Piece piece){
 		int result = 0;

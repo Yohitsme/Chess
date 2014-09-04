@@ -76,6 +76,9 @@ public class AI {
 
 		for (int depth = 1; depth <= Constants.getDepth(); depth++) {
 			this.depth = depth;
+			
+			if (depth == Constants.getDepth())
+				System.out.println();
 			pvSearch(alpha, beta, depth, isWhite, parentNode);
 		
 			masterPV = new ArrayList<Node>();
@@ -167,7 +170,7 @@ public class AI {
 			tmpHasMoved = move.getPiece().isHasMoved();
 			move.getPiece().setHasMoved(true);
 
-			// PV addition
+			// PV backend
 			if (bSearchPv) {
 				score = -pvSearch(-beta, -alpha, depthleft - 1, !isWhite, node);
 			} else {
@@ -179,10 +182,6 @@ public class AI {
 							node); // re-search
 			}
 
-			// end PV addition
-
-//			node.setUserObject(++i + ", " + move.algebraicNotationPrint()
-//					+ ": " + score);
 
 			RuleEngine.undoChanges(capturedPiece, move);
 			move.getPiece().setHasMoved(tmpHasMoved);
@@ -197,7 +196,7 @@ public class AI {
 						nodeFound = true;
 				if (!nodeFound)
 					killerMoves.get(depthleft).add(node);
-
+				
 				return beta;
 			}
 
@@ -220,7 +219,8 @@ public class AI {
 		if (parentNode.getChildren().size() == 0) {
 			// If I have no moves assume I was checkmated and return low alpha
 			// value
-			alpha = -10000000000000.0;
+			
+			alpha = -1000000000.0;
 		}
 
 		ArrayList<Node> tmp = new ArrayList<Node>();
@@ -360,13 +360,11 @@ public class AI {
 				Piece capturedPiece = RuleEngine.processMove(move);
 				tmpHasMoved = move.getPiece().isHasMoved();
 				move.getPiece().setHasMoved(true);
-				//MakeCapture();
 				
 				score = -quiesce(-beta, -alpha, !isWhite, node, depthleft - 1);
 				
 				RuleEngine.undoChanges(capturedPiece, move);
 				move.getPiece().setHasMoved(tmpHasMoved);
-				//TakeBackMove();
 
 				if (score >= beta)
 					return beta;
@@ -521,7 +519,7 @@ public class AI {
 		// TODO: The below should be more sophisticated
 		// If a king can't be found, assume a completely lost position
 		if (findKing(isWhitesTurn) == null)
-			result = -10000;
+			result = 100000000;
 		else {
 			int positionalScore = computePositionalScore(isWhitesTurn, node);
 			int materialScore = computeMaterialScore();
@@ -546,6 +544,12 @@ public class AI {
 		if (!isWhitesTurn)
 			result = result * -1.0;
 
+		
+		if (controller.isWhiteCheckmated())
+			result = -10000000;
+		if (controller.isBlackCheckmated())
+			result = 10000000;
+		
 		return result;
 	}
 
@@ -593,6 +597,8 @@ public class AI {
 
 		int difference = whiteMoves - blackMoves;
 
+		
+		
 		return difference;
 	}
 

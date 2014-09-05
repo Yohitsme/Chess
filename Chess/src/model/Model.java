@@ -139,7 +139,7 @@ public class Model {
 				board[row][col] = null;
 
 		board[0][0] = new Piece("king", white, hasMoved, 0, 0);
-		board[1][4] = new Piece("rook", white, hasMoved, 1, 4);
+//		board[1][4] = new Piece("rook", white, hasMoved, 1, 4);
 		board[2][5] = new Piece("rook", white, hasMoved, 2, 5);
 		
 

@@ -804,25 +804,25 @@ boolean moveFound = false;
 		AI = aI;
 	}
 
+
+	
 	public boolean isDrawByThreefoldRepitition() {
-		boolean result = false;
-		
-		if (model.getMoveList().size() < 5)
-			result = false;
-		else{
-			int size = model.getMoveList().size();
-			ArrayList<Move>moveList = model.getMoveList();
-			for (int i = 0; i < 3; i++){
-				if (!moveList.get(size-(i)-1).equals(moveList.get(size-1-((i*2)))))
-				result = false;
-				
-			}
-			
-			
-		}
-		
-		if (result)
-			System.out.println("Controller.isDrawByThreeFoldRepition: TRUE");
-		return result;
-	}
+        boolean result = true;
+        
+        if (model.getMoveList().size() < 11)
+            result = false;
+        else{
+            int size = model.getMoveList().size();
+            ArrayList<Move>moveList = model.getMoveList();
+            for (int i = 0; i < 5; i++){
+                if (!moveList.get(size-1-i).equals(moveList.get(size-4-1-i)))
+                result = false;
+                
+            }
+            
+            
+        }
+        
+        return result;
+    }
 }

@@ -1,12 +1,19 @@
 package controller;
 
+import java.awt.Component;
+import java.awt.FlowLayout;
+import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
+import javax.swing.BoxLayout;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JTree;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
 
 import model.Model;
 import model.Move;
@@ -42,20 +49,25 @@ public class Controller {
 	 */
 	public static void main(String[] arg) {
 		Controller controller = null;
-	//	try {
-			controller = new Controller();
-	//	}
+		// try {
+		controller = new Controller();
 
-//		catch (Exception e) {
-//			controller.getLog().error(e.toString());
-//			controller.getLog().error(e.getStackTrace().toString());
-//
-//			String moveListDump = "";
-//			for (Move move : controller.getModel().getMoveList())
-//				moveListDump += move.algebraicNotationPrint() + "\n";
-//
-//			controller.getLog().error(moveListDump);
-//		}
+		// for (int depth = 0; depth < 5; depth++){
+		// System.out.println("Peft " + (depth+1) + ": " +
+		// controller.AI.perft(depth,true));
+		// }
+		// }
+
+		// catch (Exception e) {
+		// controller.getLog().error(e.toString());
+		// controller.getLog().error(e.getStackTrace().toString());
+		//
+		// String moveListDump = "";
+		// for (Move move : controller.getModel().getMoveList())
+		// moveListDump += move.algebraicNotationPrint() + "\n";
+		//
+		// controller.getLog().error(moveListDump);
+		// }
 
 	}
 
@@ -68,7 +80,8 @@ public class Controller {
 		boardController = new BoardController(model);
 		moveGenerator = new MoveGenerator(boardController, ruleEngine, this);
 		masterListener = new MasterListener(this);
-		view = new View(boardController, masterListener, model.getCapturedPieces());
+		view = new View(boardController, masterListener,
+				model.getCapturedPieces());
 		gameTreeController = new GameTreeController(model.getGameTree(), this);
 		AI = new AI(this);
 		long startTime = System.currentTimeMillis();
@@ -156,11 +169,11 @@ public class Controller {
 			processMove(AI.move(computeTurn()));
 		}
 
-//		view.updateAnalysisPanel(new JTree(gameTreeController.getRoot()));
+		// view.updateAnalysisPanel(new JTree(gameTreeController.getRoot()));
 		view.updateMoveListPanel(model.getMoveList());
 		view.update();
 
-//		gameTreeController.getRoot().removeAllChildren();
+		// gameTreeController.getRoot().removeAllChildren();
 		if (isGameOver())
 			JOptionPane.showMessageDialog(new JFrame(), "Game over!");
 
@@ -188,18 +201,19 @@ public class Controller {
 	 * @param move
 	 */
 	public void processMoveAttempt(Move move) {
-boolean moveFound = false;
+		boolean moveFound = false;
 		if (RuleEngine.validateMove(move, boardController, true)) {
 			Node root = gameTreeController.getRoot();
-			if(root.getChildren().size() != 0)
-				for (Node node: root.getChildren())
-					if (node.getMove().equals(move)){
+			if (root.getChildren().size() != 0)
+				for (Node node : root.getChildren())
+					if (node.getMove().equals(move)) {
 						moveFound = true;
 						processMove(node);
 					}
-			if (!moveFound){
-				processMove(new Node (move));
-				System.out.println("Controller.processMoveAttempt: couldn't find it");
+			if (!moveFound) {
+				processMove(new Node(move));
+				System.out
+						.println("Controller.processMoveAttempt: couldn't find it");
 			}
 		} else
 			System.out
@@ -229,12 +243,12 @@ boolean moveFound = false;
 		move.getPiece().setRow(move.getEndRow());
 
 		if (boardController.getPieceByCoords(move.getStartRow(),
-				move.getStartCol()) == null){
+				move.getStartCol()) == null) {
 			System.out
 					.println("Controller.processMove ERROR: Trying to move a null piece? A move probably wasn't selected from the search, so the same move that was picked last time is now being picked.");
-		System.out.println("Controller.processMove: "+ move.toString());
+			System.out.println("Controller.processMove: " + move.toString());
 		}
-			// Mark the piece has having moved
+		// Mark the piece has having moved
 		boardController
 				.getPieceByCoords(move.getStartRow(), move.getStartCol())
 				.setHasMoved(true);
@@ -333,9 +347,6 @@ boolean moveFound = false;
 		}
 
 		result = inCheck && (list.isEmpty());
-		if (result)
-			System.out
-					.println("Controller.isWhiteCheckMated: White is checkmated");
 
 		return result;
 	}
@@ -356,10 +367,10 @@ boolean moveFound = false;
 				king = piece;
 		}
 
-		if(king == null){
+		if (king == null) {
 			model.printMoveList();
 		}
-		
+
 		if (RuleEngine.isAttackedSquare(king.getRow(), king.getCol(), "white"))
 			inCheck = true;
 
@@ -375,10 +386,6 @@ boolean moveFound = false;
 		}
 
 		result = inCheck && (list.isEmpty());
-
-		if (result)
-			System.out
-					.println("Controller.isWhiteCheckMated: Black is checkmated");
 
 		return result;
 	}
@@ -572,7 +579,7 @@ boolean moveFound = false;
 			model.getWhitePieces().remove(piece);
 		} else
 			model.getBlackPieces().remove(piece);
-		
+
 		model.getCapturedPieces().add(piece);
 
 	}
@@ -640,21 +647,24 @@ boolean moveFound = false;
 			String choice = promptForGameMode();
 			if (choice != null) {
 				model.setGameMode(choice);
-//				model.resetModel();
+				// model.resetModel();
 				view.update();
 			}
 		} else if (e.getActionCommand().equals("exportMoveList")) {
 			exportMoveList();
 		} else if (e.getActionCommand().equals("tuneEngine")) {
-			promptUserForNewSettings();
-		} else
+			promptUserForNewWeights();
+		} else if(e.getActionCommand().equals("adjustDepth")){
+			promptUserForNewDepth();
+		}
+		else
 			System.out
 					.println("Controller.handleActionEvent: Action command /'"
 							+ e.getActionCommand() + "/' not recognized");
 
 	}
 
-	private void promptUserForNewSettings() {
+	private void promptUserForNewDepth() {
 		// TODO Auto-generated method stub
 		JFrame frame = new JFrame();
 		Object[] possibilities = { "1", "2", "3", "4", "5" };
@@ -673,6 +683,63 @@ boolean moveFound = false;
 			view.update();
 			AI.resizeKillerMoveArrays();
 		}
+	}
+
+	private void promptUserForNewWeights() {
+		JPanel panel = new JPanel();
+		BoxLayout boxLayout = new BoxLayout(panel,BoxLayout.Y_AXIS);
+		panel.setLayout(boxLayout);
+		JTextField materialWeightInput= new JTextField(3);
+		JTextField positionalWeightInput = new JTextField(3);
+		JTextField bonusWeightInput = new JTextField(3);
+		
+		String info = "-Use decimal values to represent percents: 0.8 instead of 80%"+
+					  "\n-Default values: Material 0.8, Positional and Bonus 0.1"+
+					  "\n-Make sure all values add up to 1.0 (aka 100%)"+
+					  "\n-Bonus Weight includes castling, bishop pair, and central pawn pushes\n";
+		JTextArea textArea = new JTextArea(info);
+		textArea.setEditable(false);
+		textArea.setWrapStyleWord(true);
+		textArea.setOpaque(false);
+		panel.add(textArea);
+		
+		JPanel materialPanel = new JPanel((LayoutManager) new FlowLayout(FlowLayout.LEFT));
+		materialPanel.add(new JLabel("Material Weight: "));
+		materialPanel.add(materialWeightInput);
+//		materialPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+		panel.add(materialPanel);
+		
+		
+		JPanel positionalPanel =  new JPanel((LayoutManager) new FlowLayout(FlowLayout.LEFT));
+		positionalPanel.add(new JLabel("Positional Weight: "));
+		positionalPanel.add(positionalWeightInput);
+//		positionalPanel.setAlignmentX(Component.RIGHT_ALIGNMENT);
+		panel.add(positionalPanel);
+		
+		JPanel bonusPanel =  new JPanel((LayoutManager) new FlowLayout(FlowLayout.LEFT));
+		bonusPanel.add(new JLabel("Bonus Weight: "));
+		bonusPanel.add(bonusWeightInput);
+//		bonusPanel.setAlignmentX(Component.RIGHT_ALIGNMENT);
+		panel.add(bonusPanel);
+		panel.revalidate();
+		panel.repaint();
+		
+		JOptionPane.showConfirmDialog(null, panel, "Evaluation Weight Tuning",
+				JOptionPane.OK_CANCEL_OPTION);
+		
+		try{
+		double bonusWeight = new Double(bonusWeightInput.getText());
+		double materialWeight = new Double(materialWeightInput.getText());
+		double positionalWeight = new Double(positionalWeightInput.getText());
+		
+		Constants.setBonusScoreWeight(bonusWeight);
+		Constants.setMaterialScoreWeight(materialWeight);
+		Constants.setPositionalScoreWeight(positionalWeight);
+		}
+		catch (NumberFormatException numberFormatException){
+			JOptionPane.showMessageDialog(new JFrame(), "Invalid input. Weights not modified.");
+		}
+		
 	}
 
 	private void exportMoveList() {
@@ -804,25 +871,23 @@ boolean moveFound = false;
 		AI = aI;
 	}
 
-
-	
 	public boolean isDrawByThreefoldRepitition() {
-        boolean result = true;
-        
-        if (model.getMoveList().size() < 11)
-            result = false;
-        else{
-            int size = model.getMoveList().size();
-            ArrayList<Move>moveList = model.getMoveList();
-            for (int i = 0; i < 5; i++){
-                if (!moveList.get(size-1-i).equals(moveList.get(size-4-1-i)))
-                result = false;
-                
-            }
-            
-            
-        }
-        
-        return result;
-    }
+		boolean result = true;
+
+		if (model.getMoveList().size() < 11)
+			result = false;
+		else {
+			int size = model.getMoveList().size();
+			ArrayList<Move> moveList = model.getMoveList();
+			for (int i = 0; i < 5; i++) {
+				if (!moveList.get(size - 1 - i).equals(
+						moveList.get(size - 4 - 1 - i)))
+					result = false;
+
+			}
+
+		}
+
+		return result;
+	}
 }

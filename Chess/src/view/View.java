@@ -129,6 +129,10 @@ public class View {
 		flipBoard.setActionCommand("flipBoard");
 		flipBoard.addActionListener(masterListener);
 		
+		JMenuItem adjustDepth = new JMenuItem("Adjust Depth");
+		adjustDepth.setActionCommand("adjustDepth");
+		adjustDepth.addActionListener(masterListener);
+		
 		JMenuItem tuneEngine = new JMenuItem("Tune Engine");
 		tuneEngine.setActionCommand("tuneEngine");
 		tuneEngine.addActionListener(masterListener);
@@ -138,6 +142,7 @@ public class View {
 		fileMenu.add(exportMoveList);
 		viewMenu.add(flipBoard);
 		settingsMenu.add(tuneEngine);
+		settingsMenu.add(adjustDepth);
 		
 		menuBar.add(fileMenu);
 		menuBar.add(viewMenu);
@@ -305,8 +310,6 @@ public class View {
 		
 		
 		
-//		whitePanel.add(new JLabel(imgMap.get(getPieceAbbreviation(piece)+"_small")));
-//		blackPanel.add(new JLabel(imgMap.get(getPieceAbbreviation(piece)+"_small")));
 		
 		capturedPiecePanel.removeAll();
 		capturedPiecePanel.add(whitePanel1);
@@ -314,7 +317,8 @@ public class View {
 		capturedPiecePanel.add(blackPanel1);
 		capturedPiecePanel.add(blackPanel2);
 		
-		
+		capturedPiecePanel.repaint();
+		capturedPiecePanel.revalidate();
 	}
 
 	/**

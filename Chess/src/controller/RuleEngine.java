@@ -226,7 +226,6 @@ public class RuleEngine {
 	public static boolean isLegalPawnMove(Move move,
 			BoardController boardController) {
 		boolean result = false;
-
 		// TODO En passant
 		// If it's a not capture move
 		if (move.getStartCol() == move.getEndCol()
@@ -396,13 +395,16 @@ else{
 							move.getStartCol() + i) != null)
 						piecesBetweenRookAndKing = true;
 				}
+				int row = move.getPiece().getRow();
+				int col = move.getPiece().getCol()+1;
+				isCastlingThroughCheck = isKingVulnerableOnThisSquare(boardController, color, move,row,col);
+					
 
-				isCastlingThroughCheck = isAttackedSquare(
-						(move.getPiece().getRow()),
-						move.getPiece().getCol() + 1, color);
-				isCastlingIntoCheck = isAttackedSquare(
-						(move.getPiece().getRow()),
-						move.getPiece().getCol() + 2, color);
+				
+				col = col +1;
+				isCastlingIntoCheck = isKingVulnerableOnThisSquare(boardController, color, move,row,col);
+
+				
 }
 			}
 			// If castling queenside and rook is alive
@@ -412,19 +414,29 @@ else{
 				else{
 				rookHasMoved = boardController.getPieceByCoords(
 						move.getStartRow(), 0).isHasMoved();
-				
 				for (int i = 1; i < 4; i++) {
 					if (boardController.getPieceByCoords(move.getStartRow(),
 							move.getStartCol() - i) != null)
 						piecesBetweenRookAndKing = true;
 				}
+				
+				
+				int row = move.getPiece().getRow();
+				int col = move.getPiece().getCol()-1;
+				isCastlingThroughCheck = isKingVulnerableOnThisSquare(boardController, color, move,row,col);
+					
 
-				isCastlingThroughCheck = isAttackedSquare(
-						(move.getPiece().getRow()),
-						move.getPiece().getCol() - 1, color);
-				isCastlingIntoCheck = isAttackedSquare(
-						(move.getPiece().getRow()),
-						move.getPiece().getCol() - 2, color);
+				
+				col = col -1;
+				isCastlingIntoCheck = isKingVulnerableOnThisSquare(boardController, color, move,row,col);
+
+				
+//				isCastlingThroughCheck = isAttackedSquare(
+//						(move.getPiece().getRow()),
+//						move.getPiece().getCol() - 1, color);
+//				isCastlingIntoCheck = isAttackedSquare(
+//						(move.getPiece().getRow()),
+//						move.getPiece().getCol() - 2, color);
 			}}
 			
 			result = !kingHasMoved && !rookHasMoved && !isInCheck
@@ -433,6 +445,43 @@ else{
 		}
 		
 		return result;
+	}
+	
+	
+	/**
+	 * Helper method for king castling logic. Simulates the king moving to that square
+	 * so that the square can be checked for any piece attacking it (the king has
+	 * to be on the square in question, since a pawn wouldn't be able to move diagonally
+	 * and attack an empty square).  Returns true if king is vulnerable on the square
+	 * designated by parameters row and col.
+	 * @param row
+	 * @param col
+	 * @return
+	 */
+	public static boolean isKingVulnerableOnThisSquare(BoardController boardController, String color, Move move, int newRow, int newCol){
+		Piece piece = move.getPiece();
+		Piece prevPiece=null;
+
+		boolean isVulerable = false;
+		
+		// Simulate the move so pawns know if they can capture diagonally
+		prevPiece = boardController.getPieceByCoords(newRow, newCol);
+		boardController.setPieceByCoords(newRow, newCol, piece);
+		piece.setCol(newCol);
+		
+		isVulerable = isAttackedSquare(
+				newRow,newCol, color);
+
+		if(prevPiece!=null)
+		boardController.setPieceByCoords(newRow,newCol,prevPiece);
+		else
+			boardController.clearSquare(newRow, newCol);
+
+		// Put piece back
+		boardController.setPieceByCoords(move.getStartRow(),move.getStartCol(), piece);
+		piece.setCol(move.getStartCol());
+		
+		return isVulerable;
 	}
 
 	/**

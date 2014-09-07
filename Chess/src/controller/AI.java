@@ -24,22 +24,21 @@ public class AI {
 	Node bestNode;
 	ArrayList<Node> localPV;
 	ArrayList<Node> masterPV = new ArrayList<Node>();
-	ArrayList<ArrayList<Node>> killerMoves = new ArrayList<ArrayList<Node>>(
+	ArrayList<ArrayList<Move>> killerMoves = new ArrayList<ArrayList<Move>>(
 			Constants.getDepth() + 1);
 	Node[] PV;
 	int nodesPerLevel[];
-	
 
 	public AI(Controller controllerIn) {
 		this.controller = controllerIn;
 
 		for (int i = 0; i < Constants.getDepth() + 1; i++)
-			killerMoves.add(new ArrayList<Node>());
+			killerMoves.add(new ArrayList<Move>());
 		PV = new Node[10];
 
 		for (int i = 0; i < 10; i++)
 			PV[i] = null;
-		
+
 		nodesPerLevel = new int[20];
 	}
 
@@ -55,11 +54,12 @@ public class AI {
 		nodesVisited = 0;
 
 		// Branching factor calculations
-//		if (false)
-//		for (int i = 0; i< 15; i++){
-//			if (nodesPerLevel[i+1]!=0)
-//			System.out.println(i + ": " + (double)nodesPerLevel[i+1]/(double)nodesPerLevel[i]);
-//		}
+		// if (false)
+		// for (int i = 0; i< 15; i++){
+		// if (nodesPerLevel[i+1]!=0)
+		// System.out.println(i + ": " +
+		// (double)nodesPerLevel[i+1]/(double)nodesPerLevel[i]);
+		// }
 		// for (ArrayList<Node> list : killerMoves)
 		// System.out.println(killerMoves.indexOf(list) + ": "
 		// + list.toString());
@@ -76,26 +76,26 @@ public class AI {
 
 		for (int depth = 1; depth <= Constants.getDepth(); depth++) {
 			this.depth = depth;
-			
+
 			if (depth == Constants.getDepth())
 				System.out.println();
 			pvSearch(alpha, beta, depth, isWhite, parentNode);
-		
+
 			masterPV = new ArrayList<Node>();
 			masterPV.addAll(this.localPV);
 			// for (int i = 0; i < 10; i++)
 			// if (PV[i] != null)
 			// System.out.println(PV[i].getMove().algebraicNotationPrint());
 
-}
-//		 this.depth = Constants.getDepth();
-//		 alphaBeta(alpha, beta, depth, isWhite, parentNode);
-//		
+		}
+		// this.depth = Constants.getDepth();
+		// alphaBeta(alpha, beta, depth, isWhite, parentNode);
+		//
 		for (Node node : this.masterPV) {
 			System.out.println("PV: "
 					+ node.getMove().coloredAlgebraicNotationPrint());
 		}
-		
+
 		bestNode = this.masterPV.get(0);
 
 	}
@@ -111,9 +111,9 @@ public class AI {
 	}
 
 	public void resizeKillerMoveArrays() {
-		killerMoves = new ArrayList<ArrayList<Node>>(Constants.getDepth() + 1);
+		killerMoves = new ArrayList<ArrayList<Move>>(Constants.getDepth() + 1);
 		for (int i = 0; i < Constants.getDepth() + 1; i++)
-			killerMoves.add(new ArrayList<Node>());
+			killerMoves.add(new ArrayList<Move>());
 
 	}
 
@@ -130,7 +130,7 @@ public class AI {
 		if (depthleft == 0) {
 			this.localPV = new ArrayList<Node>();
 			this.localPV.add(parentNode);
-			return quiesce(alpha, beta,isWhite,parentNode,depthleft);
+			return quiesce(alpha, beta, isWhite, parentNode, depthleft);
 		}
 
 		ArrayList<Node> localPV = new ArrayList<Node>();
@@ -182,7 +182,6 @@ public class AI {
 							node); // re-search
 			}
 
-
 			RuleEngine.undoChanges(capturedPiece, move);
 			move.getPiece().setHasMoved(tmpHasMoved);
 
@@ -191,12 +190,15 @@ public class AI {
 
 				// If the current move isn't already a killer move, make it one
 				boolean nodeFound = false;
-				for (Node killerNode : killerMoves.get(depthleft))
-					if (killerNode.getMove().equals(node.getMove()))
+				for (Move killerNode : killerMoves.get(depthleft))
+					if (killerNode.equals(node.getMove()))
 						nodeFound = true;
 				if (!nodeFound)
-					killerMoves.get(depthleft).add(node);
-				
+					killerMoves.get(depthleft).add(node.getMove());
+
+				// Makes engine play poorly!
+				// parentNode.getChildren().removeAll(parentNode.getChildren());
+
 				return beta;
 			}
 
@@ -219,7 +221,7 @@ public class AI {
 		if (parentNode.getChildren().size() == 0) {
 			// If I have no moves assume I was checkmated and return low alpha
 			// value
-			
+
 			alpha = -1000000000.0;
 		}
 
@@ -229,6 +231,32 @@ public class AI {
 		tmp.addAll(localPV);
 		this.localPV = tmp;
 		return alpha;
+	}
+
+	/**
+	 * Returns the number of legal moves at depth <code>depth</code>
+	 * 
+	 * @param depth
+	 * @return
+	 */
+	public int perft(int depth, boolean isWhite) {
+
+		ArrayList<Move> legalMoves = controller.getMoveGenerator().findMoves(
+				isWhite);
+
+		int numMoves = 0;
+		if (depth == 0)
+			return legalMoves.size();
+		else {
+			for (Move move : legalMoves) {
+				Piece capturedPiece = RuleEngine.processMove(move);
+				numMoves += perft(depth - 1, !isWhite);
+				RuleEngine.undoChanges(capturedPiece, move);
+			}
+
+		}
+
+		return numMoves;
 	}
 
 	double alphaBeta(double alpha, double beta, int depthleft, boolean isWhite,
@@ -243,7 +271,7 @@ public class AI {
 		if (depthleft == 0) {
 			this.localPV = new ArrayList<Node>();
 			this.localPV.add(parentNode);
-			return quiesce(alpha, beta,isWhite,parentNode,depthleft);
+			return quiesce(alpha, beta, isWhite, parentNode, depthleft);
 		}
 
 		ArrayList<Node> localPV = new ArrayList<Node>();
@@ -285,8 +313,8 @@ public class AI {
 
 			score = -alphaBeta(-beta, -alpha, depthleft - 1, !isWhite, node);
 
-//			node.setUserObject(++i + ", " + move.algebraicNotationPrint()
-//					+ ": " + score);
+			// node.setUserObject(++i + ", " + move.algebraicNotationPrint()
+			// + ": " + score);
 
 			RuleEngine.undoChanges(capturedPiece, move);
 			move.getPiece().setHasMoved(tmpHasMoved);
@@ -296,11 +324,11 @@ public class AI {
 
 				// If the current move isn't already a killer move, make it one
 				boolean nodeFound = false;
-				for (Node killerNode : killerMoves.get(depthleft))
-					if (killerNode.getMove().equals(node.getMove()))
+				for (Move killerNode : killerMoves.get(depthleft))
+					if (killerNode.equals(node.getMove()))
 						nodeFound = true;
 				if (!nodeFound)
-					killerMoves.get(depthleft).add(node);
+					killerMoves.get(depthleft).add(node.getMove());
 
 				return beta;
 			}
@@ -338,7 +366,7 @@ public class AI {
 	public double quiesce(double alpha, double beta, boolean isWhite,
 			Node parentNode, int depthleft) {
 		nodesPerLevel[this.depth]++;
-		
+
 		double stand_pat = evaluate(isWhite, parentNode);
 		double score;
 		boolean tmpHasMoved = true;
@@ -360,9 +388,9 @@ public class AI {
 				Piece capturedPiece = RuleEngine.processMove(move);
 				tmpHasMoved = move.getPiece().isHasMoved();
 				move.getPiece().setHasMoved(true);
-				
+
 				score = -quiesce(-beta, -alpha, !isWhite, node, depthleft - 1);
-				
+
 				RuleEngine.undoChanges(capturedPiece, move);
 				move.getPiece().setHasMoved(tmpHasMoved);
 
@@ -382,7 +410,7 @@ public class AI {
 
 		while (i >= 0 && result == true) {
 			if (parentNode == masterPV.get(i)) {
-				
+
 				parentNode = parentNode.getParent();
 				i--;
 			} else
@@ -390,7 +418,6 @@ public class AI {
 
 		}
 
-		
 		return result;
 	}
 
@@ -443,11 +470,10 @@ public class AI {
 				isWhite);
 		for (Move move : legalMoves) {
 
-			
 			Node node = new Node(move);
-//			node.setUserObject(move.algebraicNotationPrint());
+			// node.setUserObject(move.algebraicNotationPrint());
 
-//			parentNode.add(node);
+			// parentNode.add(node);
 			parentNode.getChildren().add(node);
 			node.setParent(parentNode);
 		}
@@ -492,8 +518,8 @@ public class AI {
 			// noncaptures
 			else {
 				boolean nodeFound = false;
-				for (Node killerNode : killerMoves.get(depthleft))
-					if (killerNode.getMove().equals(node.getMove()))
+				for (Move killerNode : killerMoves.get(depthleft))
+					if (killerNode.equals(node.getMove()))
 						nodeFound = true;
 				if (nodeFound) {
 					node.setScore(Constants.getKillerMoveScore());
@@ -501,7 +527,6 @@ public class AI {
 			}
 		}
 		Collections.sort(nodes, new NodeComparator());
-
 
 	}
 
@@ -550,7 +575,7 @@ public class AI {
 		// If no legal moves, it's a stalemate
 		if (node.getChildren().size() == 0)
 			result = 0;
-		
+
 		return result;
 	}
 
@@ -598,8 +623,6 @@ public class AI {
 
 		int difference = whiteMoves - blackMoves;
 
-		
-		
 		return difference;
 	}
 
@@ -660,7 +683,6 @@ public class AI {
 		int result = computeOneSidedBonusScore(white)
 				- computeOneSidedBonusScore(black);
 
-
 		return result;
 	}
 
@@ -674,14 +696,43 @@ public class AI {
 		// TODO: Bonus for connected pawns
 		// TODO: Penalty for doubled pawns
 		// TODO: Penalty for isolated pawns
-		
+
 		int castlingBonus = computeCastlingBonus(king);
 		int centralPawnsPushedBonus = computeCentralPawnsPushedBonus(isWhite);
 		int bishopPairBonus = computeBishopPairBonus(isWhite);
 		int connectedRooksBonus = computeConnectedRooksBonus(isWhite);
-
+		int earlyQueenPenalty = computeEarlyQueenPenalty(isWhite);
 		result = castlingBonus + centralPawnsPushedBonus + bishopPairBonus
-				+ connectedRooksBonus;
+				+ connectedRooksBonus + earlyQueenPenalty;
+		return result;
+	}
+
+	private int computeEarlyQueenPenalty(boolean isWhite) {
+		int result = 0;
+		if (controller.getModel().getMoveList().size() < 6) {
+			ArrayList<Piece> pieceList = findPieceList(isWhite);
+			Piece queen = null;
+			for (Piece piece : pieceList)
+				if (piece.getType().equals("queen"))
+					queen = piece;
+			if (queen != null) {
+				int row = queen.getRow();
+				int col = queen.getCol();
+
+				
+				int homeRow;
+				if (isWhite)
+					homeRow = Constants.getWhitePieceRow();
+				else
+					homeRow = Constants.getBlackPieceRow();
+				
+				if (!(col == Constants.getQueenCol() && row == homeRow))
+					result = -Constants.getEarlyQueenPenaltyWeight();
+				if (result <0)
+					System.out.println("Queen penalty, " + queen.toString());
+			}
+		} else
+			result = 0;
 		return result;
 	}
 
@@ -842,10 +893,9 @@ public class AI {
 	 */
 	public void printTimeStats(int i, Node parentNode, long startTime) {
 		long endTime = System.currentTimeMillis();
-		System.out.println("AI.ChooseMove: " + ++i
-				+ " of "
+		System.out.println("AI.ChooseMove: " + ++i + " of "
 				+ parentNode.getChildren().size()
-				
+
 				+ " branches searched. Time elapsed: " + (endTime - initTime)
 				/ 1000.0 + " seconds, last branch took "
 				+ (endTime - startTime) / 1000.0 + " seconds");

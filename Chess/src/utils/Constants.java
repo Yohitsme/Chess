@@ -23,6 +23,7 @@ public class Constants {
 	private final static int connectedRooksBonusWeight = 5;
 	private final static int bishopPairBonusWeight = 3;
 	private final static int centralPawnsPushedBonusWeight = 5;
+	private final static int earlyQueenPenaltyWeight = 10000000;
 	
 	private final static int kingsideCastleRookCol = 5;
 	private final static int queensideCastleRookCol = 3;
@@ -43,11 +44,11 @@ public class Constants {
 	
 	private final static double killerMoveScore = -0.1;
 	
-	private final static double positionalScoreWeight = .15;
-	private final static double materialScoreWeight = .75;
-	private final static double bonusScoreWeight = .10;
+	private  static double positionalScoreWeight = .1;
+	private  static double materialScoreWeight = .8;
+	private  static double bonusScoreWeight = .10;
 	
-	private static int depth = 5;
+	private static int depth = 4;
 	
 	public static int getPieceWeight(Piece piece){
 		int result = 0;
@@ -75,6 +76,10 @@ public class Constants {
 	}
 
 
+	public static int getEarlyQueenPenaltyWeight(){
+		return earlyQueenPenaltyWeight;
+	}
+	
 	public static int getKingweight() {
 		return kingWeight;
 	}
@@ -243,8 +248,19 @@ public class Constants {
 	public static double getBonusscoreweight() {
 		return bonusScoreWeight;
 	}
+	
+	public static void setBonusScoreWeight(double newBonusWeight){
+		bonusScoreWeight = newBonusWeight;
+	}
 
+	public static void setMaterialScoreWeight(double newMaterialWeight){
+		materialScoreWeight = newMaterialWeight;
+	}
 
+	public static void setPositionalScoreWeight(double newPositionalScoreWeight){
+		positionalScoreWeight = newPositionalScoreWeight;
+	}
+	
 	public static int getWhitePawnRow() {
 		return whitePawnRow;
 	}

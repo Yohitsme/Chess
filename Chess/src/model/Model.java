@@ -33,8 +33,8 @@ public class Model {
 		gameMode = "pVc";
 
 		board = new Piece[8][8];
-//		initializeBoard();
-		initializeSimpleBoard();
+		initializeBoard();
+//		initializeSimpleBoard();
 		populateLists();
 	}
 
@@ -65,6 +65,7 @@ public class Model {
 	public void resetModel() {
 		whitePieces.removeAll(whitePieces);
 		blackPieces.removeAll(blackPieces);
+		capturedPieces.removeAll(capturedPieces);
 		moveList.removeAll(moveList);
 
 		initializeBoard();
@@ -125,13 +126,10 @@ public class Model {
 	 * Initialize a very simple version of the board for gameTree testing
 	 */
 	public void initializeSimpleBoard() {
+		boolean hasNotMoved = false;
 		boolean hasMoved = true;
 		boolean white = true;
 		boolean black = false;
-
-		// Set white piece row
-
-		// Set white pawns
 
 		// Set empty rows
 		for (int row = 0; row < 8; row++)
@@ -140,10 +138,15 @@ public class Model {
 
 		board[0][0] = new Piece("king", white, hasMoved, 0, 0);
 //		board[1][4] = new Piece("rook", white, hasMoved, 1, 4);
-		board[2][5] = new Piece("rook", white, hasMoved, 2, 5);
+		board[5][5] = new Piece("pawn", white, hasMoved, 5, 5);
 		
 
-		board[7][3] = new Piece("king", black, hasMoved, 7, 3);
+		board[7][4] = new Piece("king", black, hasNotMoved, 7, 4);
+		board[7][7] = new Piece("rook", black, hasNotMoved, 7, 7);
+		board[6][7] = new Piece("pawn", black, hasNotMoved, 6, 7);
+		board[6][6] = new Piece("pawn", black, hasNotMoved, 6, 6);
+		board[6][5] = new Piece("pawn", black, hasNotMoved, 6, 5);
+		board[6][4] = new Piece("pawn", black, hasNotMoved, 6, 4);
 	
 //		board[6][6] = new Piece("pawn", black, hasMoved, 6, 6);
 //		board[6][7] = new Piece("pawn", black, hasMoved, 6, 7);
@@ -154,8 +157,6 @@ public class Model {
 //		board[3][5] = new Piece("rook", white,hasMoved,3,5);
 //		board[1][7] = new Piece("pawn",black,hasMoved,1,7);
 
-		// Set black piece row
-		
 	}
 
 	/**

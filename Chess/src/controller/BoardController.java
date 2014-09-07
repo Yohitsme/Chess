@@ -32,14 +32,14 @@ public class BoardController {
 	public Piece getPieceByCoords(int row, int col){
 		Piece piece = null;
 		
-		//piece.isWhite();
-		if (row >=8 || row <0){
-			System.out.println("BoardController.getPieceByCoords: Row value of " + row + " outside range [0,7]. Null value returned.");
-			
-		}else if (col >=8 || col <0){
-			System.out.println("BoardController.getPieceByCoords: Column value of " + col + " outside range [0,7]. Null value returned.");
-			
-		}else
+//		//piece.isWhite();
+//		if (row >=8 || row <0){
+//			System.out.println("BoardController.getPieceByCoords: Row value of " + row + " outside range [0,7]. Null value returned.");
+//			
+//		}else if (col >=8 || col <0){
+//			System.out.println("BoardController.getPieceByCoords: Column value of " + col + " outside range [0,7]. Null value returned.");
+//			
+//		}else
 			piece = model.getBoard()[row][col];
 
 		

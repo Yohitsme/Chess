@@ -28,6 +28,7 @@ public class AI {
 			Constants.getDepth() + 1);
 	Node[] PV;
 	int nodesPerLevel[];
+	boolean isNullMoveBranch = false;
 
 	public AI(Controller controllerIn) {
 		this.controller = controllerIn;
@@ -53,13 +54,13 @@ public class AI {
 		System.out.println("Nodes visited: " + nodesVisited);
 		nodesVisited = 0;
 
-		// Branching factor calculations
-		// if (false)
-		// for (int i = 0; i< 15; i++){
-		// if (nodesPerLevel[i+1]!=0)
-		// System.out.println(i + ": " +
-		// (double)nodesPerLevel[i+1]/(double)nodesPerLevel[i]);
-		// }
+//		 Branching factor calculations
+		 if (true)
+		 for (int i = 0; i< 15; i++){
+		 if (nodesPerLevel[i+1]!=0)
+		 System.out.println("Branching Factor " + i + ": " +
+		 (double)nodesPerLevel[i+1]/(double)nodesPerLevel[i]);
+		 }
 		// for (ArrayList<Node> list : killerMoves)
 		// System.out.println(killerMoves.indexOf(list) + ": "
 		// + list.toString());
@@ -125,7 +126,7 @@ public class AI {
 		int i = 0;
 		boolean tmpHasMoved;
 		boolean bSearchPv = true;
-
+		boolean exploringPV = false;
 		// Termination condition
 		if (depthleft == 0) {
 			this.localPV = new ArrayList<Node>();
@@ -151,10 +152,11 @@ public class AI {
 		// then there's at least one move we might consider
 		boolean isDeepEnough = masterPV.size() > this.depth - depthleft + 1;
 
-		if (isDeepEnough && validatePV(parentNode, depthleft))
+		if (isDeepEnough && validatePV(parentNode, depthleft)){
 			prioritizeNode(parentNode,
 					this.masterPV.get(this.depth - depthleft + 1));
-
+			exploringPV = true;
+		}
 		for (int j = 0; j < parentNode.getChildren().size(); j++) {
 
 			// Branch timing housekeeping
@@ -170,6 +172,20 @@ public class AI {
 			tmpHasMoved = move.getPiece().isHasMoved();
 			move.getPiece().setHasMoved(true);
 
+			// Null move addition BEGIN
+			if ((!(exploringPV && j == 0))&& (depthleft-1-Constants.getNullMoveReduction()>0) ){ // If we're looking at PV and on the first child move, we're continuing PV
+				if (!inCheck(isWhite)){
+					isNullMoveBranch = true;
+//					System.ohjbtS33ut.println(depthleft-1-Constants.getNullMoveReduction());
+					score = -pvSearch(-beta,-alpha, depthleft-1-Constants.getNullMoveReduction(), isWhite,parentNode);
+					isNullMoveBranch = false;
+
+		    if(score >= beta) return score; // Cutoff
+				}
+				
+			}
+			// Null move addition END
+						
 			// PV backend
 			if (bSearchPv) {
 				score = -pvSearch(-beta, -alpha, depthleft - 1, !isWhite, node);
@@ -233,6 +249,15 @@ public class AI {
 		return alpha;
 	}
 
+	private boolean inCheck(boolean isWhite) {
+		boolean result = false;
+		Piece king = findKing(isWhite);
+		if(RuleEngine.isAttackedSquare(king.getRow(),king.getCol(), king.isWhite()==true?"white":"black"))
+		result = true;
+		
+		return result;
+	}
+
 	/**
 	 * Returns the number of legal moves at depth <code>depth</code>
 	 * 
@@ -249,9 +274,14 @@ public class AI {
 			return legalMoves.size();
 		else {
 			for (Move move : legalMoves) {
+				boolean tmpHasMoved = move.getPiece().isHasMoved();
+				move.getPiece().setHasMoved(true);
 				Piece capturedPiece = RuleEngine.processMove(move);
+				
 				numMoves += perft(depth - 1, !isWhite);
+				
 				RuleEngine.undoChanges(capturedPiece, move);
+				move.getPiece().setHasMoved(tmpHasMoved);
 			}
 
 		}
@@ -366,8 +396,10 @@ public class AI {
 	public double quiesce(double alpha, double beta, boolean isWhite,
 			Node parentNode, int depthleft) {
 		nodesPerLevel[this.depth]++;
-
-		double stand_pat = evaluate(isWhite, parentNode);
+		boolean printFlag = false;
+		
+		
+		double stand_pat = evaluate(isWhite, parentNode, printFlag);
 		double score;
 		boolean tmpHasMoved = true;
 		if (stand_pat >= beta)
@@ -536,7 +568,7 @@ public class AI {
 	 * 
 	 * @return
 	 */
-	public double evaluate(boolean isWhitesTurn, Node node) {
+	public double evaluate(boolean isWhitesTurn, Node node, boolean printFlag) {
 		if (this.depth == Constants.getDepth())
 			nodesVisited++;
 		double result = 0.0;
@@ -559,7 +591,7 @@ public class AI {
 					* Constants.getMaterialScoreWeight();
 			double weightedBonusScore = bonusScore
 					* Constants.getBonusScoreWeight();
-
+			
 			/*
 			 * log.info("AI.evaluate: weightdP: " + weightedPositionalScore +
 			 * " weighgtedM: " + weightedMaterialScore + " weightedB: " +
@@ -568,6 +600,14 @@ public class AI {
 
 			result = weightedPositionalScore + weightedMaterialScore
 					+ weightedBonusScore;
+			
+			if (printFlag){
+				System.out.println("Evaluation of current position: " + result);
+				System.out.println("-Material score:" + weightedMaterialScore);
+				System.out.println("-Positional score:" + weightedPositionalScore);
+				System.out.println("-Bonus score:" + weightedBonusScore);
+			}
+
 		}
 		if (!isWhitesTurn)
 			result = result * -1.0;
@@ -728,8 +768,8 @@ public class AI {
 				
 				if (!(col == Constants.getQueenCol() && row == homeRow))
 					result = -Constants.getEarlyQueenPenaltyWeight();
-				if (result <0)
-					System.out.println("Queen penalty, " + queen.toString());
+//				if (result <0)
+//					System.out.println("Queen penalty, " + queen.toString());
 			}
 		} else
 			result = 0;
@@ -901,6 +941,10 @@ public class AI {
 				+ (endTime - startTime) / 1000.0 + " seconds");
 
 		startTime = System.currentTimeMillis();
+	}
+	
+	public boolean isNullMoveBranch(){
+		return isNullMoveBranch;
 	}
 }
 

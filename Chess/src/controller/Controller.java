@@ -52,10 +52,14 @@ public class Controller {
 		// try {
 		controller = new Controller();
 
-		// for (int depth = 0; depth < 5; depth++){
-		// System.out.println("Peft " + (depth+1) + ": " +
-		// controller.AI.perft(depth,true));
-		// }
+//		for (int depth = 0; depth < 9; depth++) {
+//			long startTime = System.currentTimeMillis();
+//			int nodes = controller.AI.perft(depth,true);
+//			long endTime = System.currentTimeMillis();
+//
+//			System.out.println("Peft " + (depth + 1) + ": "
+//					+nodes + ": " + (endTime - startTime) / 1000.0 + " seconds");
+//		}
 		// }
 
 		// catch (Exception e) {
@@ -185,12 +189,9 @@ public class Controller {
 		 * "Controller.Controller(): Done printing. Time elapsed: " +
 		 * (endTime-startTime)/1000.0 +" seconds");
 		 */
-
-		//
-		// JFrame frame = new JFrame();
-		// frame.setVisible(true);
-		// frame.add(new JScrollPane(new JTree(gameTreeController.getRoot())));
-		// frame.pack();
+		boolean printFlag = true;
+		AI.evaluate(computeTurn().equals("white") ? true : false,
+				gameTreeController.getRoot(), printFlag);
 
 	}
 
@@ -333,6 +334,10 @@ public class Controller {
 				king = piece;
 		}
 
+		if (king == null)
+			result = true;
+		else{
+		
 		if (RuleEngine.isAttackedSquare(king.getRow(), king.getCol(), "black"))
 			inCheck = true;
 
@@ -347,7 +352,7 @@ public class Controller {
 		}
 
 		result = inCheck && (list.isEmpty());
-
+		}
 		return result;
 	}
 
@@ -366,11 +371,9 @@ public class Controller {
 			if (piece.getType().equals("king"))
 				king = piece;
 		}
-
-		if (king == null) {
-			model.printMoveList();
-		}
-
+		if (king == null)
+			result = true;
+		else{
 		if (RuleEngine.isAttackedSquare(king.getRow(), king.getCol(), "white"))
 			inCheck = true;
 
@@ -386,7 +389,7 @@ public class Controller {
 		}
 
 		result = inCheck && (list.isEmpty());
-
+		}
 		return result;
 	}
 
@@ -540,9 +543,16 @@ public class Controller {
 			// added to the move list,
 			// so we need to look 2 moves back to fine the move where the enemy
 			// pawn moved 2 squares.
-			Move previousMove = model.getMoveList().get(size - 2);
+			Move previousMove = null;
+			if (AI.isNullMoveBranch())
+			previousMove = model.getMoveList().get(size - 3);
+			else
+			previousMove = model.getMoveList().get(size - 2);
 
-			removePieceFromList(previousMove);
+			if (null == boardController.getPieceByCoords(previousMove.getEndRow(),
+					previousMove.getEndCol()))
+				System.out.println("Error");
+				removePieceFromList(previousMove);
 
 			pawnCaptured = previousMove.getPiece();
 
@@ -654,10 +664,9 @@ public class Controller {
 			exportMoveList();
 		} else if (e.getActionCommand().equals("tuneEngine")) {
 			promptUserForNewWeights();
-		} else if(e.getActionCommand().equals("adjustDepth")){
+		} else if (e.getActionCommand().equals("adjustDepth")) {
 			promptUserForNewDepth();
-		}
-		else
+		} else
 			System.out
 					.println("Controller.handleActionEvent: Action command /'"
 							+ e.getActionCommand() + "/' not recognized");
@@ -687,59 +696,62 @@ public class Controller {
 
 	private void promptUserForNewWeights() {
 		JPanel panel = new JPanel();
-		BoxLayout boxLayout = new BoxLayout(panel,BoxLayout.Y_AXIS);
+		BoxLayout boxLayout = new BoxLayout(panel, BoxLayout.Y_AXIS);
 		panel.setLayout(boxLayout);
-		JTextField materialWeightInput= new JTextField(3);
+		JTextField materialWeightInput = new JTextField(3);
 		JTextField positionalWeightInput = new JTextField(3);
 		JTextField bonusWeightInput = new JTextField(3);
-		
-		String info = "-Use decimal values to represent percents: 0.8 instead of 80%"+
-					  "\n-Default values: Material 0.8, Positional and Bonus 0.1"+
-					  "\n-Make sure all values add up to 1.0 (aka 100%)"+
-					  "\n-Bonus Weight includes castling, bishop pair, and central pawn pushes\n";
+
+		String info = "-Use decimal values to represent percents: 0.8 instead of 80%"
+				+ "\n-Default values: Material 0.8, Positional and Bonus 0.1"
+				+ "\n-Make sure all values add up to 1.0 (aka 100%)"
+				+ "\n-Bonus Weight includes castling, bishop pair, and central pawn pushes\n";
 		JTextArea textArea = new JTextArea(info);
 		textArea.setEditable(false);
 		textArea.setWrapStyleWord(true);
 		textArea.setOpaque(false);
 		panel.add(textArea);
-		
-		JPanel materialPanel = new JPanel((LayoutManager) new FlowLayout(FlowLayout.LEFT));
+
+		JPanel materialPanel = new JPanel((LayoutManager) new FlowLayout(
+				FlowLayout.LEFT));
 		materialPanel.add(new JLabel("Material Weight: "));
 		materialPanel.add(materialWeightInput);
-//		materialPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+		// materialPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
 		panel.add(materialPanel);
-		
-		
-		JPanel positionalPanel =  new JPanel((LayoutManager) new FlowLayout(FlowLayout.LEFT));
+
+		JPanel positionalPanel = new JPanel((LayoutManager) new FlowLayout(
+				FlowLayout.LEFT));
 		positionalPanel.add(new JLabel("Positional Weight: "));
 		positionalPanel.add(positionalWeightInput);
-//		positionalPanel.setAlignmentX(Component.RIGHT_ALIGNMENT);
+		// positionalPanel.setAlignmentX(Component.RIGHT_ALIGNMENT);
 		panel.add(positionalPanel);
-		
-		JPanel bonusPanel =  new JPanel((LayoutManager) new FlowLayout(FlowLayout.LEFT));
+
+		JPanel bonusPanel = new JPanel((LayoutManager) new FlowLayout(
+				FlowLayout.LEFT));
 		bonusPanel.add(new JLabel("Bonus Weight: "));
 		bonusPanel.add(bonusWeightInput);
-//		bonusPanel.setAlignmentX(Component.RIGHT_ALIGNMENT);
+		// bonusPanel.setAlignmentX(Component.RIGHT_ALIGNMENT);
 		panel.add(bonusPanel);
 		panel.revalidate();
 		panel.repaint();
-		
+
 		JOptionPane.showConfirmDialog(null, panel, "Evaluation Weight Tuning",
 				JOptionPane.OK_CANCEL_OPTION);
-		
-		try{
-		double bonusWeight = new Double(bonusWeightInput.getText());
-		double materialWeight = new Double(materialWeightInput.getText());
-		double positionalWeight = new Double(positionalWeightInput.getText());
-		
-		Constants.setBonusScoreWeight(bonusWeight);
-		Constants.setMaterialScoreWeight(materialWeight);
-		Constants.setPositionalScoreWeight(positionalWeight);
+
+		try {
+			double bonusWeight = new Double(bonusWeightInput.getText());
+			double materialWeight = new Double(materialWeightInput.getText());
+			double positionalWeight = new Double(
+					positionalWeightInput.getText());
+
+			Constants.setBonusScoreWeight(bonusWeight);
+			Constants.setMaterialScoreWeight(materialWeight);
+			Constants.setPositionalScoreWeight(positionalWeight);
+		} catch (NumberFormatException numberFormatException) {
+			JOptionPane.showMessageDialog(new JFrame(),
+					"Invalid input. Weights not modified.");
 		}
-		catch (NumberFormatException numberFormatException){
-			JOptionPane.showMessageDialog(new JFrame(), "Invalid input. Weights not modified.");
-		}
-		
+
 	}
 
 	private void exportMoveList() {

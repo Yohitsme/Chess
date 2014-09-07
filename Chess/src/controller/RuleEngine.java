@@ -392,8 +392,11 @@ else{
 
 				for (int i = 1; i < 3; i++) {
 					if (boardController.getPieceByCoords(move.getStartRow(),
-							move.getStartCol() + i) != null)
+							move.getStartCol() + i) != null){
 						piecesBetweenRookAndKing = true;
+						if (move.getStartCol() + i > 7)
+							System.out.print("Out of bounds");
+					}
 				}
 				int row = move.getPiece().getRow();
 				int col = move.getPiece().getCol()+1;
@@ -416,8 +419,11 @@ else{
 						move.getStartRow(), 0).isHasMoved();
 				for (int i = 1; i < 4; i++) {
 					if (boardController.getPieceByCoords(move.getStartRow(),
-							move.getStartCol() - i) != null)
+							move.getStartCol() - i) != null){
 						piecesBetweenRookAndKing = true;
+					if (move.getStartCol() - i < 0)
+						System.out.print("Out of bounds");
+					}
 				}
 				
 				
@@ -763,13 +769,16 @@ else{
 			pieces = controller.getModel().getWhitePieces();
 		else
 			pieces = controller.getModel().getBlackPieces();
-
+//try{
 		for (Piece piece : pieces) {
 			if (piece.getType().equals("king")) {
 				king = piece;
 			}
 		}
-		
+//}
+//catch (NullPointerException nullPointerException){
+//	controller.log.error(nullPointerException.toString());
+//}
 		if (king == null){
 			System.out.println("RuleEngine.isNotSelfCheck: King not in piece list");
 			if (capturedPiece != null)

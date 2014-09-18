@@ -23,7 +23,7 @@ public class RuleEngine {
 	/**
 	 * All-in-one legal move checker. This method calls various checks to ensure
 	 * <li>No pieces were skipped over illegally</li> <li>The move style fit the
-	 * piece</li> <li>The player doesn't result in the moving player putting
+	 * piece</li> <li>The move doesn't result in the moving player putting
 	 * themselves in check</li> <li>The piece doesn't get moved to the same
 	 * square it came from</li> <li>The piece doesn't capture a piece of it's
 	 * own color</li>
@@ -45,7 +45,9 @@ public class RuleEngine {
 
 		if (move.getEndCol() == 2 && move.getEndRow() == 0)
 			printFlag = true;
-
+		
+		// All subsequent methods are only called if result is still true. If we
+		// already found a reason the move is illegal, we can quit looking and return false.
 		if (!isNotSameSquare(move)) {
 			result = false;
 			if (printFlag)
@@ -342,6 +344,7 @@ public class RuleEngine {
 
 	/**
 	 * Returns true if the piece moves less than 2 squares in any direction
+	 * or castled legally.
 	 * 
 	 * @param move
 	 * @param boardController
@@ -437,12 +440,6 @@ else{
 				isCastlingIntoCheck = isKingVulnerableOnThisSquare(boardController, color, move,row,col);
 
 				
-//				isCastlingThroughCheck = isAttackedSquare(
-//						(move.getPiece().getRow()),
-//						move.getPiece().getCol() - 1, color);
-//				isCastlingIntoCheck = isAttackedSquare(
-//						(move.getPiece().getRow()),
-//						move.getPiece().getCol() - 2, color);
 			}}
 			
 			result = !kingHasMoved && !rookHasMoved && !isInCheck
@@ -860,12 +857,20 @@ else{
 		undoPawnPromote(move);
 	}
 	
+	/**
+	 * Sets a piece's pieceType back to pawn if it had been promoted
+	 * @param move
+	 */
 public static void undoPawnPromote(Move move){
 	if (move.getPromotePiece()!=""){
 		move.getPiece().setType("pawn");
 	}
 }
 
+	/**
+	 * Returns a rook and king to their original columns if castling had taken place.
+	 * @param move
+	 */
 	private static void undoCastleMove(Move move) {
 		// TODO Auto-generated method stub
 		if (move.getPiece().getType().equals("king")
@@ -934,6 +939,10 @@ public static void undoPawnPromote(Move move){
 		return capturedPiece;
 	}
 
+	/**
+	 * Changes a piece's type if the move in question is a pawn promote.
+	 * @param move
+	 */
 	public static void handlePawnPromotes(Move move){
 		
 		if (move.getPromotePiece()!=""){

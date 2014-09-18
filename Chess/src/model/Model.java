@@ -34,7 +34,10 @@ public class Model {
 
 		board = new Piece[8][8];
 		initializeBoard();
-//		initializeSimpleBoard();
+		
+		// Easy way to set up nonstandard positions for testing. Just comment out
+		// InitializeBoard and uncomment out the method call below
+		// initializeSimpleBoard();
 		populateLists();
 	}
 
@@ -78,8 +81,14 @@ public class Model {
 	public void initializeBoard() {
 
 		/*
-		 * (row,col) (7,0) ... ... ... (7,7) ... ... ... ... ... ... (2,0) ...
-		 * (1,0) ... (0,0) ... ... ... (0,7)
+		 * How the array coordinates align with the actual chess board
+		 * (row,col) 
+		 * (7,0) ... ... ... 
+		 * (7,7) ... ... ... 
+		 *           ... ... ... 
+		 * (2,0) ...
+		 * (1,0) ... 
+		 * (0,0) ... ... ...          (0,7)
 		 */
 
 		boolean hasMoved = false;
@@ -178,6 +187,9 @@ public class Model {
 		}
 	}
 	
+	/**
+	 * Prints the move list in human readable format
+	 */
 	public void printMoveList(){
 		String body = "";
 		for (int i = 0; i < moveList.size(); i++) {

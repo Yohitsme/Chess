@@ -41,7 +41,8 @@ public class Constants {
 	
 	
 	private final static int nullMoveReduction = 2;
-	
+	private final static int checkMateScore = 10000000;
+	private final static int drawScore = 0;
 	private final static double killerMoveScore = -0.1;
 	
 	private  static double positionalScoreWeight = .09;
@@ -287,6 +288,18 @@ public class Constants {
 	public static void setDepth(int i) {
 		depth = i;
 		
+	}
+
+
+	public static double getCheckMateScore() {
+		// TODO Auto-generated method stub
+		return checkMateScore;
+	}
+
+
+	public static double getDrawScore() {
+		// TODO Auto-generated method stub
+		return drawScore;
 	}
 
 

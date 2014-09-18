@@ -49,9 +49,10 @@ public class Controller {
 	 */
 	public static void main(String[] arg) {
 		Controller controller = null;
-		// try {
+		
 		controller = new Controller();
-
+		
+//      Peformance testing below to ensure move generation correctness
 //		for (int depth = 0; depth < 9; depth++) {
 //			long startTime = System.currentTimeMillis();
 //			int nodes = controller.AI.perft(depth,true);
@@ -60,19 +61,6 @@ public class Controller {
 //			System.out.println("Peft " + (depth + 1) + ": "
 //					+nodes + ": " + (endTime - startTime) / 1000.0 + " seconds");
 //		}
-		// }
-
-		// catch (Exception e) {
-		// controller.getLog().error(e.toString());
-		// controller.getLog().error(e.getStackTrace().toString());
-		//
-		// String moveListDump = "";
-		// for (Move move : controller.getModel().getMoveList())
-		// moveListDump += move.algebraicNotationPrint() + "\n";
-		//
-		// controller.getLog().error(moveListDump);
-		// }
-
 	}
 
 	/**
@@ -214,7 +202,7 @@ public class Controller {
 			if (!moveFound) {
 				processMove(new Node(move));
 				System.out
-						.println("Controller.processMoveAttempt: couldn't find it");
+						.println("Controller.processMoveAttempt: Error: Chosen move not found.");
 			}
 		} else
 			System.out
@@ -393,12 +381,19 @@ public class Controller {
 		return result;
 	}
 
+	/**
+	 * Returns true if a square designated by row = endRow and col = endCol is
+	 * on the board
+	 * @param endRow
+	 * @param endCol
+	 * @return
+	 */
 	private boolean isWithinBounds(int endRow, int endCol) {
 		return (endRow >= 0 && endRow <= 7 && endCol >= 0 && endCol <= 7);
 	}
 
 	/**
-	 * Calls methods to check and handle edge case moves <li>En Passant captures
+	 * Calls methods to process edge case moves <li>En Passant captures
 	 * <li>Pawn promotions <li>Castling
 	 * 
 	 * @param move
@@ -551,7 +546,9 @@ public class Controller {
 
 			if (null == boardController.getPieceByCoords(previousMove.getEndRow(),
 					previousMove.getEndCol()))
-				System.out.println("Error");
+//				System.out.println("Error");
+//			System.out.println(model.getMoveList().get(size-2).coloredAlgebraicNotationPrint());
+//			System.out.println(move.algebraicNotationPrint());
 				removePieceFromList(previousMove);
 
 			pawnCaptured = previousMove.getPiece();
@@ -594,12 +591,22 @@ public class Controller {
 
 	}
 
+	/**
+	 * Returns the column designated by a mouseEvent
+	 * @param e
+	 * @return
+	 */
 	public int computeColFromMouseEvent(MouseEvent e) {
 
 		int result = e.getX() / 80;
 		return result;
 	}
 
+	/**
+	 * Returns the row designated by a mouseEvent
+	 * @param e
+	 * @return
+	 */
 	public int computeRowFromMouseEvent(MouseEvent e) {
 
 		boolean isFlipped;
@@ -617,29 +624,7 @@ public class Controller {
 		return result;
 	}
 
-	public Model getModel() {
-		return model;
-	}
-
-	public BoardController getBoardController() {
-		return boardController;
-	}
-
-	public void setBoardController(BoardController boardController) {
-		this.boardController = boardController;
-	}
-
-	public void setModel(Model model) {
-		this.model = model;
-	}
-
-	public Log getLog() {
-		return log;
-	}
-
-	public void setLog(Log log) {
-		this.log = log;
-	}
+	
 
 	/**
 	 * Processes action events
@@ -842,7 +827,59 @@ public class Controller {
 		return result;
 
 	}
+	
+	
+	/**
+	 * Returns true if the same position has occurred 3 times in a row.
+	 * @return
+	 */
+	public boolean isDrawByThreefoldRepitition() {
+		boolean result = true;
 
+		if (model.getMoveList().size() < 11)
+			result = false;
+		else {
+			int size = model.getMoveList().size();
+			ArrayList<Move> moveList = model.getMoveList();
+			for (int i = 0; i < 5; i++) {
+				if (!moveList.get(size - 1 - i).equals(
+						moveList.get(size - 4 - 1 - i)))
+					result = false;
+
+			}
+
+		}
+
+		return result;
+	}
+	
+	/******************************************************************/
+	/**                      Getters and Setters                     **/
+	/******************************************************************/
+	
+	public Model getModel() {
+		return model;
+	}
+
+	public BoardController getBoardController() {
+		return boardController;
+	}
+
+	public void setBoardController(BoardController boardController) {
+		this.boardController = boardController;
+	}
+
+	public void setModel(Model model) {
+		this.model = model;
+	}
+
+	public Log getLog() {
+		return log;
+	}
+
+	public void setLog(Log log) {
+		this.log = log;
+	}
 	public View getView() {
 		return view;
 	}
@@ -883,23 +920,5 @@ public class Controller {
 		AI = aI;
 	}
 
-	public boolean isDrawByThreefoldRepitition() {
-		boolean result = true;
 
-		if (model.getMoveList().size() < 11)
-			result = false;
-		else {
-			int size = model.getMoveList().size();
-			ArrayList<Move> moveList = model.getMoveList();
-			for (int i = 0; i < 5; i++) {
-				if (!moveList.get(size - 1 - i).equals(
-						moveList.get(size - 4 - 1 - i)))
-					result = false;
-
-			}
-
-		}
-
-		return result;
-	}
 }

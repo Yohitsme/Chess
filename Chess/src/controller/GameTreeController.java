@@ -14,6 +14,12 @@ import model.Move;
 import model.Node;
 import model.Piece;
 
+/**
+ * This has been replaced for the most part by a game tree internal to the AI
+ * to avoid unneccesary references to old moves that were cluttering up memory.
+ * @author Matthew
+ *
+ */
 public class GameTreeController {
 
 	GameTree gameTree;

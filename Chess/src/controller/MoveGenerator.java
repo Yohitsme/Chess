@@ -87,7 +87,8 @@ public class MoveGenerator {
 	}
 
 	/**
-	 * Returns true i
+	 * Returns true if the side designated by isWhite has no moves
+	 * and is not in check.
 	 */
 	public boolean isStalemated(boolean isWhite) {
 		Piece piece = null;
@@ -356,7 +357,7 @@ public class MoveGenerator {
 	}
 
 	/**
-	 * 
+	 * Checks for all legal pawn moves and returns an arrayList of legal moves.
 	 * @param row
 	 * @param col
 	 * @return
@@ -432,6 +433,12 @@ public class MoveGenerator {
 		return legalMoves;
 	}
 
+	/**
+	 * Returns true if the square designated by (row,col) is on the board.
+	 * @param row
+	 * @param col
+	 * @return
+	 */
 	public boolean isLegalSquare(int row, int col) {
 		boolean result = true;
 
@@ -471,6 +478,14 @@ public class MoveGenerator {
 		return legalMoves;
 	}
 
+	
+	/** 
+	 * Returns all moves along a column that a rook has.
+	 * @param row
+	 * @param col
+	 * @param direction
+	 * @return
+	 */
 	public ArrayList<Move> findRookMovesAlongCol(int row, int col, int direction) {
 		ArrayList<Move> legalMoves = new ArrayList<Move>();
 		Piece piece = boardController.getPieceByCoords(row, col);
@@ -499,6 +514,13 @@ public class MoveGenerator {
 		return legalMoves;
 	}
 
+	/**
+	 * Returns all legal moves a rook has along a row.
+	 * @param row
+	 * @param col
+	 * @param direction
+	 * @return
+	 */
 	public ArrayList<Move> findRookMovesAlongRow(int row, int col, int direction) {
 		ArrayList<Move> legalMoves = new ArrayList<Move>();
 		Piece piece = boardController.getPieceByCoords(row, col);

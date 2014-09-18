@@ -12,6 +12,12 @@ import java.awt.event.MouseMotionListener;
 
 import view.PiecePanel;
 
+/**
+ * This is the listener class that catches all events from the GUI and passes
+ * them on to the controller.
+ * @author Matthew
+ *
+ */
 public class MasterListener implements MouseListener, MouseMotionListener, ActionListener,KeyListener {
 
 	Controller controller;

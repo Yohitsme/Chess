@@ -171,19 +171,19 @@ public class AI {
 			Piece capturedPiece = RuleEngine.processMove(move);
 			tmpHasMoved = move.getPiece().isHasMoved();
 			move.getPiece().setHasMoved(true);
-
-			// Null move addition BEGIN
-			if ((!(exploringPV && j == 0))&& (depthleft-1-Constants.getNullMoveReduction()>0) ){ // If we're looking at PV and on the first child move, we're continuing PV
-				if (!inCheck(isWhite)){
-					isNullMoveBranch = true;
-//					System.ohjbtS33ut.println(depthleft-1-Constants.getNullMoveReduction());
-					score = -pvSearch(-beta,-alpha, depthleft-1-Constants.getNullMoveReduction(), isWhite,parentNode);
-					isNullMoveBranch = false;
-
-		    if(score >= beta) return score; // Cutoff
-				}
-				
-			}
+//
+//			// Null move addition BEGIN
+//			if ((!(exploringPV && j == 0))&& (depthleft-1-Constants.getNullMoveReduction()>0) ){ // If we're looking at PV and on the first child move, we're continuing PV
+//				if (!inCheck(isWhite)){
+//					isNullMoveBranch = true;
+////					System.out.println(depthleft-1-Constants.getNullMoveReduction());
+//					score = -pvSearch(-beta,-alpha, depthleft-1-Constants.getNullMoveReduction(), isWhite,parentNode);
+//					isNullMoveBranch = false;
+//
+//		    if(score >= beta) return score; // Cutoff
+//				}
+//				
+//			}
 			// Null move addition END
 						
 			// PV backend
@@ -249,6 +249,12 @@ public class AI {
 		return alpha;
 	}
 
+	
+	/**
+	 * Returns true if the king of color <code>isWhite</code> is in check.
+	 * @param isWhite
+	 * @return
+	 */
 	private boolean inCheck(boolean isWhite) {
 		boolean result = false;
 		Piece king = findKing(isWhite);
@@ -289,6 +295,18 @@ public class AI {
 		return numMoves;
 	}
 
+	
+	/**
+	 * Alpha Beta Search.  This was replaced by pvSearch.  Searches in a very similar
+	 * way but pvSearch has optimizations that help performance significantly.
+	 * @param alpha
+	 * @param beta
+	 * @param depthleft
+	 * @param isWhite
+	 * @param parentNode
+	 * @return
+	 */
+	@Deprecated
 	double alphaBeta(double alpha, double beta, int depthleft, boolean isWhite,
 			Node parentNode) {
 		Node pv = null;
@@ -393,6 +411,18 @@ public class AI {
 		return alpha;
 	}
 
+	/**
+	 * This continues the end of the search until it finds a "quiet" position, or
+	 * one in which no captures can be made.  This helps avoid the horizon effect,
+	 * and is called at the end of pvSearch.  It returns the score of the position 
+	 * found by the eval function.
+	 * @param alpha
+	 * @param beta
+	 * @param isWhite
+	 * @param parentNode
+	 * @param depthleft
+	 * @return
+	 */
 	public double quiesce(double alpha, double beta, boolean isWhite,
 			Node parentNode, int depthleft) {
 		nodesPerLevel[this.depth]++;
@@ -435,6 +465,15 @@ public class AI {
 		return alpha;
 	}
 
+	/**
+	 * Verifies that we have explored a Princpal variation branch up to the node
+	 * parentNode.  This allows us to continue checking the PV.  If we are no longer
+	 * on the PV branch, then we shouldn't assume that the PV node at the current
+	 * depth is a good move.
+	 * @param parentNode
+	 * @param depthleft
+	 * @return
+	 */
 	private boolean validatePV(Node parentNode, int depthleft) {
 
 		int i = this.depth - depthleft; // how deep we are
@@ -453,27 +492,7 @@ public class AI {
 		return result;
 	}
 
-	private boolean validatePV_old(Node parentNode, int depth) {
-
-		Node parent = parentNode;
-		int i = this.depth - depth;
-		boolean result = true;
-		// System.out.println(i);
-		while (i != 0 && result == true) {
-			if (PV[i - 1] == parentNode) {
-				i--;
-				parent = parent.getParent();
-				System.out.println("good");
-			} else {
-				result = false;
-
-				// System.out.println("not good");
-			}
-		}
-
-		return result;
-	}
-
+	
 	/**
 	 * Takes the Node child and puts it in the front of the arraylist of
 	 * children of the parent Node. This makes that child the first one analyzed
@@ -517,9 +536,10 @@ public class AI {
 	 * Takes a list of legal moves and attempts to sort them with the following
 	 * weight:
 	 * 
-	 * 1. MVV-LVA (pxn before nxp 2. Killer Heuristic
+	 * 1. MVV-LVA (pxn before nxp)
+	 * 2. Killer Heuristic
 	 * 
-	 * alphaBeta search prioritizes PV nodes as it finds them, and that always
+	 * pvSearch prioritizes PV nodes as it finds them, and that always
 	 * happens after this method is called, so PV nodes end up in the front of
 	 * the arraylist.
 	 * 
@@ -573,13 +593,12 @@ public class AI {
 			nodesVisited++;
 		double result = 0.0;
 
-		// TODO: The below should be more sophisticated
-		if (controller.isWhiteCheckmated())
-			result = 10000000;
-		else if (controller.isBlackCheckmated())
-			result = 10000000;
+		// If the current position is a checkmate, we can give it the end-game
+		// score without evaluating all the other factors.
+		if (controller.isWhiteCheckmated()||controller.isBlackCheckmated())
+			result = Constants.getCheckMateScore();
 		else if (controller.isDrawByThreefoldRepitition())
-			result = 0;
+			result = Constants.getDrawScore();
 		else {
 			int positionalScore = computePositionalScore(isWhitesTurn, node);
 			int materialScore = computeMaterialScore();
@@ -606,15 +625,23 @@ public class AI {
 				System.out.println("-Material score:" + weightedMaterialScore);
 				System.out.println("-Positional score:" + weightedPositionalScore);
 				System.out.println("-Bonus score:" + weightedBonusScore);
+				
+				for (Piece piece: findPieceList(true))
+					System.out.println(piece.toString());
+				for (Piece piece: findPieceList(false))
+					System.out.println(piece.toString());
 			}
 
 		}
+		
+		// Positive scores mean white is winning, so we negate the calculated score here
+		// if it is black's turn
 		if (!isWhitesTurn)
 			result = result * -1.0;
 
 		// If no legal moves, it's a stalemate
 		if (node.getChildren().size() == 0)
-			result = 0;
+			result = Constants.getDrawScore();
 
 		return result;
 	}
@@ -708,15 +735,12 @@ public class AI {
 	}
 
 	/**
-	 * Computes the integer value of "bonuses". These can be for castling,
-	 * moving the king and queen pawns early, having both bishops, having
-	 * connected rooks, etc.
+	 * Calls the bonus calculation methods for each side and returns the difference.
 	 * 
 	 * @return
 	 */
 	public int computeBonusScore() {
 
-		// Preprocess information that several methods need to find anyway
 		boolean black = false;
 		boolean white = true;
 
@@ -726,6 +750,13 @@ public class AI {
 		return result;
 	}
 
+	/**
+	 * Computes the integer value of "bonuses". These can be for castling,
+	 * moving the king and queen pawns early, having both bishops, having
+	 * connected rooks, etc.
+	 * @param isWhite
+	 * @return
+	 */
 	public int computeOneSidedBonusScore(boolean isWhite) {
 		int result = 0;
 		Piece king = findKing(isWhite);
@@ -747,7 +778,16 @@ public class AI {
 		return result;
 	}
 
+	/**
+	 * Returns the penalty weight of moving a queen from her home square early if
+	 * she is not on her homesquare and we're less than 3 moves in.
+	 * @param isWhite
+	 * @return
+	 */
 	private int computeEarlyQueenPenalty(boolean isWhite) {
+		
+		// TODO: The AI still loves to move the queen out early...not sure this is working 100% right
+		
 		int result = 0;
 		if (controller.getModel().getMoveList().size() < 6) {
 			ArrayList<Piece> pieceList = findPieceList(isWhite);
@@ -776,11 +816,21 @@ public class AI {
 		return result;
 	}
 
+	/**
+	 * Checks to see if both rooks are alive and if they are connected, returning the relevant bonus if so.
+	 * @param isWhite
+	 * @return
+	 */
 	private int computeConnectedRooksBonus(boolean isWhite) {
-		// TODO Auto-generated method stub
+		// TODO Implement this.
 		return 0;
 	}
 
+	/**
+	 * Returns a bonus for having both bishops, if they are both alive.
+	 * @param isWhite
+	 * @return
+	 */
 	private int computeBishopPairBonus(boolean isWhite) {
 
 		ArrayList<Piece> pieceList = findPieceList(isWhite);
@@ -849,6 +899,13 @@ public class AI {
 		return king;
 	}
 
+	
+	/**
+	 * Given a color <code>isWhite</code>, returns the arrayList of pieces associated
+	 * with that color.
+	 * @param isWhite
+	 * @return
+	 */
 	public ArrayList<Piece> findPieceList(boolean isWhite) {
 		ArrayList<Piece> pieceList = null;
 		if (isWhite)
@@ -889,6 +946,7 @@ public class AI {
 	 * @param parentNode
 	 * @return
 	 */
+	@Deprecated
 	public double Negamax(int depth, Move previousMove,
 			DefaultMutableTreeNode parentNode) {
 		if (depth == 0) {
@@ -943,6 +1001,11 @@ public class AI {
 		startTime = System.currentTimeMillis();
 	}
 	
+	/**
+	 * Getter to let outside classes know if we are on a NullMoveBranch,
+	 * since there will be a null move if that's the case.
+	 * @return
+	 */
 	public boolean isNullMoveBranch(){
 		return isNullMoveBranch;
 	}

@@ -406,9 +406,7 @@ else{
 				int row = move.getPiece().getRow();
 				int col = move.getPiece().getCol()+1;
 				isCastlingThroughCheck = isKingVulnerableOnThisSquare(boardController, color, move,row,col);
-					
 
-				
 				col = col +1;
 				isCastlingIntoCheck = isKingVulnerableOnThisSquare(boardController, color, move,row,col);
 
@@ -478,7 +476,7 @@ else{
 				newRow,newCol, color);
 
 		if(prevPiece!=null)
-		boardController.setPieceByCoords(newRow,newCol,prevPiece);
+			boardController.setPieceByCoords(newRow,newCol,prevPiece);
 		else
 			boardController.clearSquare(newRow, newCol);
 
@@ -905,10 +903,6 @@ public static void undoPawnPromote(Move move){
 	 * @return
 	 */
 	public static Piece processMove(Move move) {
-		// Move piece. Need to account for castling and en passant (when more
-		// material
-		// changes place on the board than just the piece moved by the player)
-
 		Piece capturedPiece = controller.getBoardController().getPieceByCoords(
 				move.getEndRow(), move.getEndCol());
 		

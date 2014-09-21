@@ -544,8 +544,8 @@ public class Controller {
 			//else
 			previousMove = model.getMoveList().get(size - 2);
 
-			if (null == boardController.getPieceByCoords(previousMove.getEndRow(),
-					previousMove.getEndCol()))
+//			if (null == boardController.getPieceByCoords(previousMove.getEndRow(),
+//					previousMove.getEndCol()))
 //				System.out.println("Error");
 //			System.out.println(model.getMoveList().get(size-2).coloredAlgebraicNotationPrint());
 //			System.out.println(move.algebraicNotationPrint());

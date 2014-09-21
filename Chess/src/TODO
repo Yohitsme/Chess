@@ -3,7 +3,7 @@
 // A: Affecting ongoing dev, bugs that slow progress and distract, current priority development
 -Null Move Search reductions causing exceptions, as well as en passent checking is not handling the null move well
 -AI still thinks moving queen out early is strong. Need to look into this since there are penalties in place for this behaviour but it persists.
--Piece lists are off...it seems like more pawns get added back after capturing than there should be. This is leading to incorrect material counts and bad scoring overall4
+-Piece lists are off...it seems like more pawns get added back after capturing than there should be. This is leading to incorrect material counts and bad scoring overall
 
 // B: Bugs that really cause big problems with dev. Features that could help a lot
 -The AI doesn't quantify king safety other than castling early

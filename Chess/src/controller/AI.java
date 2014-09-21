@@ -624,12 +624,7 @@ public class AI {
 				System.out.println("Evaluation of current position: " + result);
 				System.out.println("-Material score:" + weightedMaterialScore);
 				System.out.println("-Positional score:" + weightedPositionalScore);
-				System.out.println("-Bonus score:" + weightedBonusScore);
-				
-				for (Piece piece: findPieceList(true))
-					System.out.println(piece.toString());
-				for (Piece piece: findPieceList(false))
-					System.out.println(piece.toString());
+				System.out.println("-Bonus score:" + weightedBonusScore);			
 			}
 
 		}

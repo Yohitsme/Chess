@@ -171,19 +171,30 @@ public class AI {
 			Piece capturedPiece = RuleEngine.processMove(move);
 			tmpHasMoved = move.getPiece().isHasMoved();
 			move.getPiece().setHasMoved(true);
-//
-//			// Null move addition BEGIN
-//			if ((!(exploringPV && j == 0))&& (depthleft-1-Constants.getNullMoveReduction()>0) ){ // If we're looking at PV and on the first child move, we're continuing PV
-//				if (!inCheck(isWhite)){
-//					isNullMoveBranch = true;
-////					System.out.println(depthleft-1-Constants.getNullMoveReduction());
-//					score = -pvSearch(-beta,-alpha, depthleft-1-Constants.getNullMoveReduction(), isWhite,parentNode);
-//					isNullMoveBranch = false;
-//
-//		    if(score >= beta) return score; // Cutoff
-//				}
-//				
-//			}
+
+			// Null move addition BEGIN
+			if ((!(exploringPV && j == 0))&& (depthleft-1-Constants.getNullMoveReduction()>0) ){ // If we're looking at PV and on the first child move, we're continuing PV
+				if (!inCheck(isWhite)){
+					isNullMoveBranch = true;
+//					System.out.println(depthleft-1-Constants.getNullMoveReduction());
+					
+					ArrayList <Node> realChildren = parentNode.getChildren();
+					parentNode.getChildren().removeAll(parentNode.getChildren());
+					populateChildren(parentNode, !isWhite,depthleft-1-Constants.getNullMoveReduction());
+					score = -pvSearch(-beta,-alpha, depthleft-1-Constants.getNullMoveReduction(), isWhite,parentNode);
+					parentNode.getChildren().removeAll(parentNode.getChildren());
+					parentNode.getChildren().addAll(realChildren);
+					
+					isNullMoveBranch = false;
+
+		    if(score >= beta){
+				RuleEngine.undoChanges(capturedPiece, move);
+				move.getPiece().setHasMoved(tmpHasMoved);
+		    	return score; // Cutoff
+		    }
+				}
+				
+			}
 			// Null move addition END
 						
 			// PV backend

@@ -55,12 +55,12 @@ public class AI {
 		nodesVisited = 0;
 
 //		 Branching factor calculations
-		 if (true)
-		 for (int i = 0; i< 15; i++){
-		 if (nodesPerLevel[i+1]!=0)
-		 System.out.println("Branching Factor " + i + ": " +
-		 (double)nodesPerLevel[i+1]/(double)nodesPerLevel[i]);
-		 }
+//		 if (true)
+//		 for (int i = 0; i< 15; i++){
+//		 if (nodesPerLevel[i+1]!=0)
+//		 System.out.println("Branching Factor " + i + ": " +
+//		 (double)nodesPerLevel[i+1]/(double)nodesPerLevel[i]);
+//		 }
 		// for (ArrayList<Node> list : killerMoves)
 		// System.out.println(killerMoves.indexOf(list) + ": "
 		// + list.toString());

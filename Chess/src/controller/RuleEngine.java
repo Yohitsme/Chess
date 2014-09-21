@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import model.Move;
 import model.Piece;
 import utils.Constants;
+import utils.Log;
 
 /**
  * Static class used to check basic chess rules
@@ -15,7 +16,8 @@ import utils.Constants;
 public class RuleEngine {
 	private static boolean printFlag;
 	private static Controller controller;
-
+	static Log log = new Log();
+	
 	public RuleEngine(Controller controllerIn) {
 		RuleEngine.controller = controllerIn;
 	}
@@ -823,6 +825,9 @@ else{
 				pieces = controller.getModel().getBlackPieces();
 
 			pieces.add(capturedPiece);
+			
+			if (capturedPiece.getType().equals("pawn"))
+			log.info("Adding back piece: " + capturedPiece.toString());
 			controller.getModel().getCapturedPieces().remove(capturedPiece);
 
 			controller.getBoardController().setPieceByCoords(move.getEndRow(),
@@ -915,6 +920,8 @@ public static void undoPawnPromote(Move move){
 		// the list
 		if (capturedPiece != null) {
 			controller.removePieceFromList(move);
+			if (capturedPiece.getType().equals("pawn"))    	
+			log.info("Removing piece: " + capturedPiece.toString());
 		}
 
 		// Handle En Passant. If a non-null value is returned, then there was a

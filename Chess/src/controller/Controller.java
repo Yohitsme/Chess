@@ -539,9 +539,9 @@ public class Controller {
 			// so we need to look 2 moves back to fine the move where the enemy
 			// pawn moved 2 squares.
 			Move previousMove = null;
-			if (AI.isNullMoveBranch())
-			previousMove = model.getMoveList().get(size - 3);
-			else
+			//if (AI.isNullMoveBranch())
+//			previousMove = model.getMoveList().get(size - 3);
+			//else
 			previousMove = model.getMoveList().get(size - 2);
 
 			if (null == boardController.getPieceByCoords(previousMove.getEndRow(),

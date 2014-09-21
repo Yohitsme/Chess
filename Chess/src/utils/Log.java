@@ -14,25 +14,25 @@ import java.util.Date;
 public class Log {
 
 	private String fileName = "ChessLog.txt";
-	private final int debugLogLevel = 1;
-	private final int infoLogLevel = 2;
-	private final int errorLogLevel = 3;
-	private int logLevel = 5;
+	private final int DEBUG = 1;
+	private final int INFO = 2;
+	private final int ERROR = 3;
+	private int logLevel = INFO;
 
 	public void info(String msg) {
-		if (logLevel <= infoLogLevel) {
+		if (logLevel <= INFO) {
 			write("[INFO] "+msg);
 		}
 	}
 
 	public void debug(String msg) {
-		if (logLevel <= debugLogLevel) {
+		if (logLevel <= DEBUG) {
 			write("[DEBUG] "+msg);
 		}
 	}
 
 	public void error(String msg) {
-		if (logLevel <= errorLogLevel) {
+		if (logLevel <= ERROR) {
 			write("[ERROR] "+msg);
 		}
 	}

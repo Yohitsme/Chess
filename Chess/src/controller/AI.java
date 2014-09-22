@@ -69,8 +69,8 @@ public class AI {
 
 	public void chooseMove(boolean isWhite) {
 
-		double alpha = -1000000000.0;
-		double beta = 1000000000.0;
+		double alpha = -1000000001.0;
+		double beta = 1000000001.0;
 
 		Node parentNode = controller.gameTreeController.root;
 		initializeKillerMoveArrays();
@@ -133,6 +133,21 @@ public class AI {
 			this.localPV.add(parentNode);
 			return quiesce(alpha, beta, isWhite, parentNode, depthleft);
 		}
+		
+		// If Check mate/draw/king got captured
+		
+		if (controller.isWhiteCheckmated()){
+			score = -Constants.getCheckMateScore() ;
+			System.out.println("FOUND CHECKMATE RETURNING EARLY");
+		}else if (controller.isBlackCheckmated()){
+			System.out.println("FOUND CHECKMATE RETURNING EARLY");
+			score = Constants.getCheckMateScore();
+		}else if (controller.isDrawByThreefoldRepitition())
+			score = Constants.getDrawScore();
+		if (score != 0)
+			return score;
+		// stalemate?
+		
 
 		ArrayList<Node> localPV = new ArrayList<Node>();
 
@@ -177,16 +192,23 @@ public class AI {
 				if (!inCheck(isWhite)){
 					isNullMoveBranch = true;
 //					System.out.println(depthleft-1-Constants.getNullMoveReduction());
-					
+				
+					boolean isParentWhite = parentNode.getMove().getPiece().isWhite();
+					boolean isRealKidWhite = parentNode.getChildren().get(0).getMove().getPiece().isWhite();
 					ArrayList <Node> realChildren = parentNode.getChildren();
 					parentNode.getChildren().removeAll(parentNode.getChildren());
 					populateChildren(parentNode, !isWhite,depthleft-1-Constants.getNullMoveReduction());
+					boolean isFakeKidWhite = parentNode.getChildren().get(0).getMove().getPiece().isWhite();
+				
+					
+					
 					score = -pvSearch(-beta,-alpha, depthleft-1-Constants.getNullMoveReduction(), isWhite,parentNode);
+					
 					parentNode.getChildren().removeAll(parentNode.getChildren());
 					parentNode.getChildren().addAll(realChildren);
 					
 					isNullMoveBranch = false;
-
+ 
 		    if(score >= beta){
 				RuleEngine.undoChanges(capturedPiece, move);
 				move.getPiece().setHasMoved(tmpHasMoved);
@@ -208,7 +230,8 @@ public class AI {
 					score = -pvSearch(-beta, -alpha, depthleft - 1, !isWhite,
 							node); // re-search
 			}
-
+//if (depthleft == 1)
+//	System.out.println("Score: " + score);
 			RuleEngine.undoChanges(capturedPiece, move);
 			move.getPiece().setHasMoved(tmpHasMoved);
 
@@ -222,9 +245,6 @@ public class AI {
 						nodeFound = true;
 				if (!nodeFound)
 					killerMoves.get(depthleft).add(node.getMove());
-
-				// Makes engine play poorly!
-				// parentNode.getChildren().removeAll(parentNode.getChildren());
 
 				return beta;
 			}

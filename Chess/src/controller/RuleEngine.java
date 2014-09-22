@@ -778,6 +778,10 @@ else{
 //}
 		if (king == null){
 			System.out.println("RuleEngine.isNotSelfCheck: King not in piece list");
+			for (Move m: controller.getModel().getMoveList())
+				System.out.println(m.coloredAlgebraicNotationPrint());
+			
+			
 			if (capturedPiece != null)
 			System.out.println("Captured piece: "+capturedPiece.toString());
 		}

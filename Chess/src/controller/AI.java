@@ -195,7 +195,8 @@ public class AI {
 				
 					boolean isParentWhite = parentNode.getMove().getPiece().isWhite();
 					boolean isRealKidWhite = parentNode.getChildren().get(0).getMove().getPiece().isWhite();
-					ArrayList <Node> realChildren = parentNode.getChildren();
+					ArrayList <Node> realChildren = new ArrayList<Node>();
+				    realChildren.addAll(parentNode.getChildren());
 					parentNode.getChildren().removeAll(parentNode.getChildren());
 					populateChildren(parentNode, !isWhite,depthleft-1-Constants.getNullMoveReduction());
 					boolean isFakeKidWhite = parentNode.getChildren().get(0).getMove().getPiece().isWhite();

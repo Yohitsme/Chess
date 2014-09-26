@@ -17,7 +17,7 @@ public class RuleEngine {
 	private static boolean printFlag;
 	private static Controller controller;
 	static Log log = new Log();
-	
+
 	public RuleEngine(Controller controllerIn) {
 		RuleEngine.controller = controllerIn;
 	}
@@ -47,9 +47,10 @@ public class RuleEngine {
 
 		if (move.getEndCol() == 2 && move.getEndRow() == 0)
 			printFlag = true;
-		
+
 		// All subsequent methods are only called if result is still true. If we
-		// already found a reason the move is illegal, we can quit looking and return false.
+		// already found a reason the move is illegal, we can quit looking and
+		// return false.
 		if (!isNotSameSquare(move)) {
 			result = false;
 			if (printFlag)
@@ -92,8 +93,7 @@ public class RuleEngine {
 
 		return result;
 	}
-	
-	
+
 	/**
 	 * Returns true if the start square is different than the end square, false
 	 * otherwise
@@ -127,7 +127,6 @@ public class RuleEngine {
 		Piece endPiece = boardController.getPieceByCoords(move.getEndRow(),
 				move.getEndCol());
 
-		
 		// If the destination square is empty, it can't be a self capture
 		if (endPiece == null)
 			result = true;
@@ -153,17 +152,17 @@ public class RuleEngine {
 	public static boolean isLegalMoveStyle(Move move,
 			BoardController boardController) {
 		boolean result = false;
-		if (move.getPiece().getType().equals("rook"))
+		if (move.getPiece().getType() == Constants.getRookChar())
 			result = isLegalRookMove(move, boardController);
-		else if (move.getPiece().getType().equals("queen"))
+		else if (move.getPiece().getType() == Constants.getQueenChar())
 			result = isLegalQueenMove(move, boardController);
-		else if (move.getPiece().getType().equals("knight"))
+		else if (move.getPiece().getType() == Constants.getKnightChar())
 			result = isLegalKnightMove(move, boardController);
-		else if (move.getPiece().getType().equals("pawn"))
+		else if (move.getPiece().getType() == Constants.getPawnChar())
 			result = isLegalPawnMove(move, boardController);
-		else if (move.getPiece().getType().equals("king"))
+		else if (move.getPiece().getType() == Constants.getKingChar())
 			result = isLegalKingMove(move);
-		else if (move.getPiece().getType().equals("bishop"))
+		else if (move.getPiece().getType() == Constants.getBishopChar())
 			result = isLegalBishopMove(move, boardController);
 
 		else
@@ -173,9 +172,7 @@ public class RuleEngine {
 
 		return result;
 	}
-	
 
-	
 	/**
 	 * Returns true if move was along a column or along a row.
 	 * 
@@ -275,24 +272,27 @@ public class RuleEngine {
 		else if (!controller.getModel().getMoveList().isEmpty()) {
 			Move previousMove = controller.getModel().getMoveList()
 					.get(controller.getModel().getMoveList().size() - 1);
-			boolean previousPieceIsPawn = previousMove.getPiece().getType()
-					.equals("pawn");
+			boolean previousPieceIsPawn = previousMove.getPiece().getType() == Constants
+					.getPawnChar();
 			boolean previousPieceIsDifferentColor = previousMove.getPiece()
 					.isWhite() != move.getPiece().isWhite();
-			boolean correctCol = move.getEndCol() == previousMove.getStartCol() && calculateDeltaColUnsigned(move)==1;
+			boolean correctCol = move.getEndCol() == previousMove.getStartCol()
+					&& calculateDeltaColUnsigned(move) == 1;
 
 			if (previousPieceIsPawn && previousPieceIsDifferentColor
 					&& correctCol) {
 				// If white pawn
 				if (move.getPiece().isWhite()) {
 					if (calculateDeltaRowSigned(previousMove) == -2
-							&& move.getEndRow() == (previousMove.getEndRow() + 1) && move.getStartRow() == (previousMove.getEndRow()))
+							&& move.getEndRow() == (previousMove.getEndRow() + 1)
+							&& move.getStartRow() == (previousMove.getEndRow()))
 						result = true;
 				}
 				// If black pawn
 				else {
 					if (calculateDeltaRowSigned(previousMove) == 2
-							&& move.getEndRow() == (previousMove.getEndRow() - 1)&& move.getStartRow() == (previousMove.getEndRow()))
+							&& move.getEndRow() == (previousMove.getEndRow() - 1)
+							&& move.getStartRow() == (previousMove.getEndRow()))
 						result = true;
 
 				}
@@ -345,8 +345,8 @@ public class RuleEngine {
 	}
 
 	/**
-	 * Returns true if the piece moves less than 2 squares in any direction
-	 * or castled legally.
+	 * Returns true if the piece moves less than 2 squares in any direction or
+	 * castled legally.
 	 * 
 	 * @param move
 	 * @param boardController
@@ -380,110 +380,111 @@ public class RuleEngine {
 
 			String color = move.getPiece().isWhite() ? "black" : "white";
 			kingHasMoved = move.getPiece().isHasMoved();
-			
+
 			// Only continue if king hasn't moved
-			if (!kingHasMoved){
-			isInCheck = isAttackedSquare(move.getPiece().getRow(), move
-					.getPiece().getCol(), color);
-			// If castling kingside and rook is alive
-			if (deltaCol > 0)
-					{
-if (boardController.getPieceByCoords(move.getStartRow(), 7) == null) 
-	isRookDeadOrMissing = true;
-else{
-				
-				rookHasMoved = boardController.getPieceByCoords(
-						move.getStartRow(), 7).isHasMoved();
+			if (!kingHasMoved) {
+				isInCheck = isAttackedSquare(move.getPiece().getRow(), move
+						.getPiece().getCol(), color);
+				// If castling kingside and rook is alive
+				if (deltaCol > 0) {
+					if (boardController.getPieceByCoords(move.getStartRow(), 7) == null)
+						isRookDeadOrMissing = true;
+					else {
 
-				for (int i = 1; i < 3; i++) {
-					if (boardController.getPieceByCoords(move.getStartRow(),
-							move.getStartCol() + i) != null){
-						piecesBetweenRookAndKing = true;
-						if (move.getStartCol() + i > 7)
-							System.out.print("Out of bounds");
+						rookHasMoved = boardController.getPieceByCoords(
+								move.getStartRow(), 7).isHasMoved();
+
+						for (int i = 1; i < 3; i++) {
+							if (boardController.getPieceByCoords(
+									move.getStartRow(), move.getStartCol() + i) != null) {
+								piecesBetweenRookAndKing = true;
+								if (move.getStartCol() + i > 7)
+									System.out.print("Out of bounds");
+							}
+						}
+						int row = move.getPiece().getRow();
+						int col = move.getPiece().getCol() + 1;
+						isCastlingThroughCheck = isKingVulnerableOnThisSquare(
+								boardController, color, move, row, col);
+
+						col = col + 1;
+						isCastlingIntoCheck = isKingVulnerableOnThisSquare(
+								boardController, color, move, row, col);
+
 					}
 				}
-				int row = move.getPiece().getRow();
-				int col = move.getPiece().getCol()+1;
-				isCastlingThroughCheck = isKingVulnerableOnThisSquare(boardController, color, move,row,col);
+				// If castling queenside and rook is alive
+				else if (boardController
+						.getPieceByCoords(move.getStartRow(), 0) == null)
+					isRookDeadOrMissing = true;
+				else {
+					rookHasMoved = boardController.getPieceByCoords(
+							move.getStartRow(), 0).isHasMoved();
+					for (int i = 1; i < 4; i++) {
+						if (boardController.getPieceByCoords(
+								move.getStartRow(), move.getStartCol() - i) != null) {
+							piecesBetweenRookAndKing = true;
+							if (move.getStartCol() - i < 0)
+								System.out.print("Out of bounds");
+						}
+					}
 
-				col = col +1;
-				isCastlingIntoCheck = isKingVulnerableOnThisSquare(boardController, color, move,row,col);
+					int row = move.getPiece().getRow();
+					int col = move.getPiece().getCol() - 1;
+					isCastlingThroughCheck = isKingVulnerableOnThisSquare(
+							boardController, color, move, row, col);
 
-				
-}
+					col = col - 1;
+					isCastlingIntoCheck = isKingVulnerableOnThisSquare(
+							boardController, color, move, row, col);
+
+				}
 			}
-			// If castling queenside and rook is alive
-			else 
-				if (boardController.getPieceByCoords(move.getStartRow(), 0) == null) 
-				isRookDeadOrMissing = true;
-				else{
-				rookHasMoved = boardController.getPieceByCoords(
-						move.getStartRow(), 0).isHasMoved();
-				for (int i = 1; i < 4; i++) {
-					if (boardController.getPieceByCoords(move.getStartRow(),
-							move.getStartCol() - i) != null){
-						piecesBetweenRookAndKing = true;
-					if (move.getStartCol() - i < 0)
-						System.out.print("Out of bounds");
-					}
-				}
-				
-				
-				int row = move.getPiece().getRow();
-				int col = move.getPiece().getCol()-1;
-				isCastlingThroughCheck = isKingVulnerableOnThisSquare(boardController, color, move,row,col);
-					
 
-				
-				col = col -1;
-				isCastlingIntoCheck = isKingVulnerableOnThisSquare(boardController, color, move,row,col);
-
-				
-			}}
-			
 			result = !kingHasMoved && !rookHasMoved && !isInCheck
 					&& !isCastlingThroughCheck && !isCastlingIntoCheck
 					&& !piecesBetweenRookAndKing && !isRookDeadOrMissing;
 		}
-		
+
 		return result;
 	}
-	
-	
+
 	/**
-	 * Helper method for king castling logic. Simulates the king moving to that square
-	 * so that the square can be checked for any piece attacking it (the king has
-	 * to be on the square in question, since a pawn wouldn't be able to move diagonally
-	 * and attack an empty square).  Returns true if king is vulnerable on the square
-	 * designated by parameters row and col.
+	 * Helper method for king castling logic. Simulates the king moving to that
+	 * square so that the square can be checked for any piece attacking it (the
+	 * king has to be on the square in question, since a pawn wouldn't be able
+	 * to move diagonally and attack an empty square). Returns true if king is
+	 * vulnerable on the square designated by parameters row and col.
+	 * 
 	 * @param row
 	 * @param col
 	 * @return
 	 */
-	public static boolean isKingVulnerableOnThisSquare(BoardController boardController, String color, Move move, int newRow, int newCol){
+	public static boolean isKingVulnerableOnThisSquare(
+			BoardController boardController, String color, Move move,
+			int newRow, int newCol) {
 		Piece piece = move.getPiece();
-		Piece prevPiece=null;
+		Piece prevPiece = null;
 
 		boolean isVulerable = false;
-		
+
 		// Simulate the move so pawns know if they can capture diagonally
 		prevPiece = boardController.getPieceByCoords(newRow, newCol);
 		boardController.setPieceByCoords(newRow, newCol, piece);
 		piece.setCol(newCol);
-		
-		isVulerable = isAttackedSquare(
-				newRow,newCol, color);
 
-		if(prevPiece!=null)
-			boardController.setPieceByCoords(newRow,newCol,prevPiece);
+		isVulerable = isAttackedSquare(newRow, newCol, color);
+
+		if (prevPiece != null)
+			boardController.setPieceByCoords(newRow, newCol, prevPiece);
 		else
 			boardController.clearSquare(newRow, newCol);
 
 		// Put piece back
-		boardController.setPieceByCoords(move.getStartRow(),move.getStartCol(), piece);
+		boardController.setPieceByCoords(move.getStartRow(),
+				move.getStartCol(), piece);
 		piece.setCol(move.getStartCol());
-		
+
 		return isVulerable;
 	}
 
@@ -501,10 +502,34 @@ else{
 		else
 			pieces = controller.getModel().getBlackPieces();
 		for (Piece piece : pieces) {
-			
-			if (validateCheck(new Move(piece, piece.getRow(), piece.getCol(),
-					row, col), controller.getBoardController(), false))
-				result = true;
+			boolean seemsValid = false;
+			int unsignedRowDifference = Math.abs(row - piece.getRow());
+			int unsignedColDifference = Math.abs(col - piece.getCol());
+
+			// If it's not the move style of the piece to attack the king's square,
+			// don't bother with the elaborate, expensive validateCheck method
+			if ((piece.getType() == Constants.getRookChar() && (piece.getRow() == row || piece
+					.getCol() == col)))
+				seemsValid = true;
+			 if ((piece.getType() == Constants.getPawnChar()
+					&& (unsignedColDifference == 1) && (unsignedRowDifference == 1)))
+				seemsValid = true;
+			else if ((piece.getType() == Constants.getBishopChar() && unsignedColDifference == unsignedRowDifference))
+				seemsValid = true;
+			else if ((piece.getType() == Constants.getKnightChar()
+					&& (unsignedColDifference == 1 && unsignedRowDifference == 2) || (unsignedColDifference == 2 && unsignedRowDifference == 1)))
+				seemsValid = true;
+			else if ((piece.getType() == Constants.getQueenChar() && (unsignedRowDifference == unsignedColDifference)||(row == piece.getRow() || col == piece.getCol())))
+				seemsValid = true;
+			else if (piece.getType() == Constants.getKingChar() && unsignedRowDifference < 2 && unsignedColDifference < 2)
+				seemsValid = true;
+			if (seemsValid)
+			{
+			if (validateCheck(
+						new Move(piece, piece.getRow(), piece.getCol(), row,
+								col), controller.getBoardController(), false))
+					result = true;
+			}
 		}
 
 		return result;
@@ -530,37 +555,42 @@ else{
 				System.out
 						.println("RuleEngine.validateCheck: Invalid move: You cannot move a piece to the same square it started on.");
 		}
-		
-		// Commented out below 8.9.2014 - This method is called to see if a piece can check the enemy king
-		// so there shouldn't ever be a time when the the move is attacking the color piece.
-//		if (!isNotSelfCapture(move, boardController)) {
-//			result = false;
-//			if (printFlag)
-//				System.out
-//						.println("RuleEngine.validateCheck: Invalid move: You cannot capture your own piece.");
-//		}  
-		if (result){
-		if (!isLegalMoveStyle(move, boardController)) {
-			result = false;
-			if (printFlag)
-				System.out
-						.println("RuleEngine.validateCheck: Invalid move: You cannot move a "
-								+ move.getPiece() + " like that.");
-		}}
-		if (result){
-		if (!isUnblocked(move, boardController)) {
-			result = false;
-			if (printFlag)
-				System.out
-						.println("RuleEngine.validateCheck: Invalid move: The path is blocked.");
+
+		// Commented out below 8.9.2014 - This method is called to see if a
+		// piece can check the enemy king
+		// so there shouldn't ever be a time when the the move is attacking the
+		// color piece.
+		// if (!isNotSelfCapture(move, boardController)) {
+		// result = false;
+		// if (printFlag)
+		// System.out
+		// .println("RuleEngine.validateCheck: Invalid move: You cannot capture your own piece.");
+		// }
+		if (result) {
+			if (!isLegalMoveStyle(move, boardController)) {
+				result = false;
+				if (printFlag)
+					System.out
+							.println("RuleEngine.validateCheck: Invalid move: You cannot move a "
+									+ move.getPiece() + " like that.");
+			}
 		}
+		if (result) {
+			if (!isUnblocked(move, boardController)) {
+				result = false;
+				if (printFlag)
+					System.out
+							.println("RuleEngine.validateCheck: Invalid move: The path is blocked.");
+			}
 		}
 		return result;
 	}
 
 	/**
-	 * Delegates to the appropriate handler to verify the that path of the piece in the move parameter
-	 * is not blocked. Returns true if path is unobstructed, false otherwise.
+	 * Delegates to the appropriate handler to verify the that path of the piece
+	 * in the move parameter is not blocked. Returns true if path is
+	 * unobstructed, false otherwise.
+	 * 
 	 * @param move
 	 * @param boardController
 	 * @return
@@ -568,17 +598,17 @@ else{
 	public static boolean isUnblocked(Move move, BoardController boardController) {
 		boolean result = true;
 
-		if (move.getPiece().getType().equals("rook"))
+		if (move.getPiece().getType() == Constants.getRookChar())
 			result = isUnblockedRookPath(move, boardController);
-		else if (move.getPiece().getType().equals("queen"))
+		else if (move.getPiece().getType() == Constants.getQueenChar())
 			result = isUnblockedQueenPath(move, boardController);
-		else if (move.getPiece().getType().equals("knight"))
+		else if (move.getPiece().getType() == Constants.getKnightChar())
 			result = isUnblockedKnightPath(move, boardController);
-		else if (move.getPiece().getType().equals("pawn"))
+		else if (move.getPiece().getType() == Constants.getPawnChar())
 			result = isUnblockedPawnPath(move, boardController);
-		else if (move.getPiece().getType().equals("king"))
+		else if (move.getPiece().getType() == Constants.getKingChar())
 			result = isUnblockedKingPath(move, boardController);
-		else if (move.getPiece().getType().equals("bishop"))
+		else if (move.getPiece().getType() == Constants.getBishopChar())
 			result = isUnblockedBishopPath(move, boardController);
 		else
 			System.out.println("RuleEngine.isUnblocked: Piece type \'"
@@ -682,7 +712,9 @@ else{
 	}
 
 	/**
-	 * Returns true if the initial movement of a pawn is two squares and is blocked. Returns false otherwise
+	 * Returns true if the initial movement of a pawn is two squares and is
+	 * blocked. Returns false otherwise
+	 * 
 	 * @param move
 	 * @param boardController
 	 * @return
@@ -710,7 +742,9 @@ else{
 	}
 
 	/**
-	 * Returns true if there is an unobstructed path from the queen to her destination square, false otherwise.
+	 * Returns true if there is an unobstructed path from the queen to her
+	 * destination square, false otherwise.
+	 * 
 	 * @param move
 	 * @param boardController
 	 * @return
@@ -732,8 +766,10 @@ else{
 	}
 
 	/**
-	 * Returns true.  The one square movement of a king cannot be blocked, and the error checking for castling
-	 * handles blocking of that type of movement.
+	 * Returns true. The one square movement of a king cannot be blocked, and
+	 * the error checking for castling handles blocking of that type of
+	 * movement.
+	 * 
 	 * @param move
 	 * @param boardController
 	 * @return
@@ -744,8 +780,10 @@ else{
 	}
 
 	/**
-	 * Simulates the move in question, and checks to see if the moving player would be in check afterwards.  If so, false is returned, true otherwise.
+	 * Simulates the move in question, and checks to see if the moving player
+	 * would be in check afterwards. If so, false is returned, true otherwise.
 	 * The board is reverted to it's position before the simulation afterwards.
+	 * 
 	 * @param move
 	 * @param boardController
 	 * @return
@@ -766,55 +804,58 @@ else{
 			pieces = controller.getModel().getWhitePieces();
 		else
 			pieces = controller.getModel().getBlackPieces();
-//try{
+		// try{
 		for (Piece piece : pieces) {
-			if (piece.getType().equals("king")) {
+			if (piece.getType() == Constants.getKingChar()) {
 				king = piece;
 			}
 		}
-//}
-//catch (NullPointerException nullPointerException){
-//	controller.log.error(nullPointerException.toString());
-//}
-		if (king == null){
-			System.out.println("RuleEngine.isNotSelfCheck: King not in piece list");
-			for (Move m: controller.getModel().getMoveList())
+		// }
+		// catch (NullPointerException nullPointerException){
+		// controller.log.error(nullPointerException.toString());
+		// }
+		if (king == null) {
+			System.out
+					.println("RuleEngine.isNotSelfCheck: King not in piece list");
+			for (Move m : controller.getModel().getMoveList())
 				System.out.println(m.coloredAlgebraicNotationPrint());
-			
-			
+
 			if (capturedPiece != null)
-			System.out.println("Captured piece: "+capturedPiece.toString());
+				System.out.println("Captured piece: "
+						+ capturedPiece.toString());
 		}
 		// If it is the king that's moving, it is his new position which will
 		// need to be checked if it is being attacked. Otherwise, use his
 		// current location
-		if (move.getPiece().getType().equals("king")) {
+		if (move.getPiece().getType() == Constants.getKingChar()) {
 			kingRow = move.getEndRow();
 			kingCol = move.getEndCol();
 		} else {
 			kingRow = king.getRow();
 			kingCol = king.getCol();
 		}
-		
-		
+
 		result = !isAttackedSquare(kingRow, kingCol, opponentColor);
 
 		// Revert the board to it's previous state
 		undoChanges(capturedPiece, move);
-		
+
 		// If the king wasnt located in the above logic, all bets are off.
-		if (king == null){
-			System.out.println("RuleEngine.isNotSelfCheck: King was not found on the board, something has gone wrong. King got captured? Returning false.");
+		if (king == null) {
+			System.out
+					.println("RuleEngine.isNotSelfCheck: King was not found on the board, something has gone wrong. King got captured? Returning false.");
 			System.out.println("Move: " + move.algebraicNotationPrint());
 			result = false;
 		}
-		
+
 		return result;
 	}
 
 	/**
-	 * If parameter capturedPiece is a real piece, it is returned to the board and the piece list in the model.
-	 * The piece that was moved via parameter move is returned to it's initial square also.
+	 * If parameter capturedPiece is a real piece, it is returned to the board
+	 * and the piece list in the model. The piece that was moved via parameter
+	 * move is returned to it's initial square also.
+	 * 
 	 * @param capturedPiece
 	 * @param move
 	 */
@@ -827,16 +868,16 @@ else{
 				pieces = controller.getModel().getBlackPieces();
 
 			pieces.add(capturedPiece);
-			
-			if (capturedPiece.getType().equals("pawn"))
-			log.info("Adding back piece: " + capturedPiece.toString());
+
+//			if (capturedPiece.getType() == Constants.getPawnChar())
+//				log.info("Adding back piece: " + capturedPiece.toString());
 			controller.getModel().getCapturedPieces().remove(capturedPiece);
 
 			controller.getBoardController().setPieceByCoords(move.getEndRow(),
 					move.getEndCol(), capturedPiece);
 
 		}
-		
+
 		// Add move to move list
 		ArrayList<Move> moveList = controller.getModel().getMoveList();
 		moveList.remove(move);
@@ -852,48 +893,58 @@ else{
 					capturedPiece);
 
 		undoCastleMove(move);
-		
+
 		// Set the tested move piece back where it was
 		controller.getBoardController().setPieceByCoords(move.getStartRow(),
 				move.getStartCol(), move.getPiece());
 
-
 		move.getPiece().setRow(move.getStartRow());
 		move.getPiece().setCol(move.getStartCol());
-		
+
 		undoPawnPromote(move);
 	}
-	
-	/**
-	 * Sets a piece's pieceType back to pawn if it had been promoted
-	 * @param move
-	 */
-public static void undoPawnPromote(Move move){
-	if (move.getPromotePiece()!=""){
-		move.getPiece().setType("pawn");
-	}
-}
 
 	/**
-	 * Returns a rook and king to their original columns if castling had taken place.
+	 * Sets a piece's pieceType back to pawn if it had been promoted
+	 * 
+	 * @param move
+	 */
+	public static void undoPawnPromote(Move move) {
+
+		// TODO: test this to see if it works
+		if (move.getPromotePiece() != Character.UNASSIGNED) {
+			move.getPiece().setType(Constants.getPawnChar());
+		}
+	}
+
+	/**
+	 * Returns a rook and king to their original columns if castling had taken
+	 * place.
+	 * 
 	 * @param move
 	 */
 	private static void undoCastleMove(Move move) {
 		// TODO Auto-generated method stub
-		if (move.getPiece().getType().equals("king")
+		if (move.getPiece().getType() == Constants.getKingChar()
 				&& RuleEngine.calculateDeltaColUnsigned(move) == 2) {
 			if (RuleEngine.calculateDeltaColSigned(move) == 2) {
 				Piece rook = controller.boardController.getPieceByCoords(
-						move.getStartRow(), Constants.getKingsideCastleRookCol());
-				controller.boardController.setPieceByCoords(move.getStartRow(), Constants.getKingRookCol(), rook);
+						move.getStartRow(),
+						Constants.getKingsideCastleRookCol());
+				controller.boardController.setPieceByCoords(move.getStartRow(),
+						Constants.getKingRookCol(), rook);
 				rook.setCol(Constants.getKingRookCol());
-				controller.boardController.clearSquare(move.getStartRow(),Constants.getKingsideCastleRookCol());
+				controller.boardController.clearSquare(move.getStartRow(),
+						Constants.getKingsideCastleRookCol());
 			} else {
 				Piece rook = controller.boardController.getPieceByCoords(
-						move.getStartRow(), Constants.getQueensideCastleRookCol());
-				controller.boardController.setPieceByCoords(move.getStartRow(), Constants.getQueenRookCol(), rook);
+						move.getStartRow(),
+						Constants.getQueensideCastleRookCol());
+				controller.boardController.setPieceByCoords(move.getStartRow(),
+						Constants.getQueenRookCol(), rook);
 				rook.setCol(Constants.getQueenRookCol());
-				controller.boardController.clearSquare(move.getStartRow(), Constants.getQueensideCastleRookCol());
+				controller.boardController.clearSquare(move.getStartRow(),
+						Constants.getQueensideCastleRookCol());
 			}
 
 		}
@@ -909,17 +960,17 @@ public static void undoPawnPromote(Move move){
 	public static Piece processMove(Move move) {
 		Piece capturedPiece = controller.getBoardController().getPieceByCoords(
 				move.getEndRow(), move.getEndCol());
-		
+
 		// Add move to move list
 		ArrayList<Move> moveList = controller.getModel().getMoveList();
 		moveList.add(move);
-		
+
 		// If the move was a successful capture, remove the captured piece from
 		// the list
 		if (capturedPiece != null) {
 			controller.removePieceFromList(move);
-			if (capturedPiece.getType().equals("pawn"))    	
-			log.info("Removing piece: " + capturedPiece.toString());
+//			if (capturedPiece.getType() == Constants.getPawnChar())
+//				log.info("Removing piece: " + capturedPiece.toString());
 		}
 
 		// Handle En Passant. If a non-null value is returned, then there was a
@@ -938,24 +989,26 @@ public static void undoPawnPromote(Move move){
 
 		move.getPiece().setRow(move.getEndRow());
 		move.getPiece().setCol(move.getEndCol());
-		
-		handlePawnPromotes(move);		
-		
+
+		handlePawnPromotes(move);
+
 		return capturedPiece;
 	}
 
 	/**
 	 * Changes a piece's type if the move in question is a pawn promote.
+	 * 
 	 * @param move
 	 */
-	public static void handlePawnPromotes(Move move){
-		
-		if (move.getPromotePiece()!=""){
+	public static void handlePawnPromotes(Move move) {
+
+		// TODO does this work?
+		if (move.getPromotePiece() != Character.UNASSIGNED) {
 			move.getPiece().setType(move.getPromotePiece());
 		}
-		
+
 	}
-	
+
 	public static int calculateDeltaRowUnsigned(Move move) {
 		return Math.abs(move.getStartRow() - move.getEndRow());
 	}

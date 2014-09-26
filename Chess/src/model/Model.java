@@ -96,18 +96,18 @@ public class Model {
 		boolean black = false;
 
 		// Set white piece row
-		board[0][0] = new Piece("rook", white, hasMoved, 0, 0);
-		board[0][1] = new Piece("knight", white, hasMoved, 0, 1);
-		board[0][2] = new Piece("bishop", white, hasMoved, 0, 2);
-		board[0][3] = new Piece("queen", white, hasMoved, 0, 3);
-		board[0][4] = new Piece("king", white, hasMoved, 0, 4);
-		board[0][5] = new Piece("bishop", white, hasMoved, 0, 5);
-		board[0][6] = new Piece("knight", white, hasMoved, 0, 6);
-		board[0][7] = new Piece("rook", white, hasMoved, 0, 7);
+		board[0][0] = new Piece('r', white, hasMoved, 0, 0);
+		board[0][1] = new Piece('n', white, hasMoved, 0, 1);
+		board[0][2] = new Piece('b', white, hasMoved, 0, 2);
+		board[0][3] = new Piece('q', white, hasMoved, 0, 3);
+		board[0][4] = new Piece('k', white, hasMoved, 0, 4);
+		board[0][5] = new Piece('b', white, hasMoved, 0, 5);
+		board[0][6] = new Piece('n', white, hasMoved, 0, 6);
+		board[0][7] = new Piece('r', white, hasMoved, 0, 7);
 
 		// Set white pawns
 		for (int i = 0; i < 8; i++) {
-			board[1][i] = new Piece("pawn", white, hasMoved, 1, i);
+			board[1][i] = new Piece('p', white, hasMoved, 1, i);
 		}
 
 		// Set empty rows
@@ -117,18 +117,18 @@ public class Model {
 
 		// Set black pawns
 		for (int i = 0; i < 8; i++) {
-			board[6][i] = new Piece("pawn", black, hasMoved, 6, i);
+			board[6][i] = new Piece('p', black, hasMoved, 6, i);
 		}
 
 		// Set black piece row
-		board[7][0] = new Piece("rook", black, hasMoved, 7, 0);
-		board[7][1] = new Piece("knight", black, hasMoved, 7, 1);
-		board[7][2] = new Piece("bishop", black, hasMoved, 7, 2);
-		board[7][3] = new Piece("queen", black, hasMoved, 7, 3);
-		board[7][4] = new Piece("king", black, hasMoved, 7, 4);
-		board[7][5] = new Piece("bishop", black, hasMoved, 7, 5);
-		board[7][6] = new Piece("knight", black, hasMoved, 7, 6);
-		board[7][7] = new Piece("rook", black, hasMoved, 7, 7);
+		board[7][0] = new Piece('r', black, hasMoved, 7, 0);
+		board[7][1] = new Piece('n', black, hasMoved, 7, 1);
+		board[7][2] = new Piece('b', black, hasMoved, 7, 2);
+		board[7][3] = new Piece('q', black, hasMoved, 7, 3);
+		board[7][4] = new Piece('k', black, hasMoved, 7, 4);
+		board[7][5] = new Piece('b', black, hasMoved, 7, 5);
+		board[7][6] = new Piece('n', black, hasMoved, 7, 6);
+		board[7][7] = new Piece('r', black, hasMoved, 7, 7);
 	}
 
 	/**
@@ -145,17 +145,17 @@ public class Model {
 			for (int col = 0; col < 8; col++)
 				board[row][col] = null;
 
-		board[0][0] = new Piece("king", white, hasMoved, 0, 0);
+		board[0][0] = new Piece('k', white, hasMoved, 0, 0);
 //		board[1][4] = new Piece("rook", white, hasMoved, 1, 4);
-		board[5][5] = new Piece("pawn", white, hasMoved, 5, 5);
+		board[5][5] = new Piece('p', white, hasMoved, 5, 5);
 		
 
-		board[7][4] = new Piece("king", black, hasNotMoved, 7, 4);
-		board[7][7] = new Piece("rook", black, hasNotMoved, 7, 7);
-		board[6][7] = new Piece("pawn", black, hasNotMoved, 6, 7);
-		board[6][6] = new Piece("pawn", black, hasNotMoved, 6, 6);
-		board[6][5] = new Piece("pawn", black, hasNotMoved, 6, 5);
-		board[6][4] = new Piece("pawn", black, hasNotMoved, 6, 4);
+		board[7][4] = new Piece('k', black, hasNotMoved, 7, 4);
+		board[7][7] = new Piece('r', black, hasNotMoved, 7, 7);
+		board[6][7] = new Piece('p', black, hasNotMoved, 6, 7);
+		board[6][6] = new Piece('p', black, hasNotMoved, 6, 6);
+		board[6][5] = new Piece('p', black, hasNotMoved, 6, 5);
+		board[6][4] = new Piece('p', black, hasNotMoved, 6, 4);
 	
 //		board[6][6] = new Piece("pawn", black, hasMoved, 6, 6);
 //		board[6][7] = new Piece("pawn", black, hasMoved, 6, 7);

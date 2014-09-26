@@ -39,6 +39,16 @@ public class Constants {
 	private final static int kingKnightCol = 6;
 	private final static int kingRookCol = 7;
 	
+	private final static char king = 'k';
+	private final static char queen = 'q';
+	private final static char knight= 'n';
+	private final static char bishop = 'b';
+	private final static char rook = 'r';
+	private final static char pawn = 'p';
+	
+	
+	
+	
 	
 	private final static int nullMoveReduction = 2;
 	private final static int checkMateScore = 10000000;
@@ -49,21 +59,21 @@ public class Constants {
 	private  static double materialScoreWeight = .9;
 	private  static double bonusScoreWeight = .01;
 	
-	private static int depth = 6;
+	private static int depth = 5;
 	
 	public static int getPieceWeight(Piece piece){
 		int result = 0;
-		if (piece.getType().equals("pawn"))
+		if (piece.getType() == getPawnChar())
 			result = pawnWeight;
-		else if (piece.getType().equals("knight"))
+		else if (piece.getType()==getKnightChar())
 			result = knightWeight;
-		else if (piece.getType().equals("bishop"))
+		else if (piece.getType() == getBishopChar())
 			result = bishopWeight;
-		else if (piece.getType().equals("king"))
+		else if (piece.getType() == getKingChar())
 			result = kingWeight;
-		else if (piece.getType().equals("rook"))
+		else if (piece.getType()==getRookChar())
 			result = rookWeight;
-		else if (piece.getType().equals("queen"))
+		else if (piece.getType()== getQueenChar())
 			result = queenWeight;
 		else {
 			System.out.println("Constants.getPieceWeight: Piece type '"+piece.getType() + "' not recognized. Returning 0.");
@@ -71,10 +81,33 @@ public class Constants {
 		return result;
 	}
 
+	public static char getPawnChar(){
+		return pawn;
+	}
+	public static char getKnightChar(){
+		return knight;
+	}	
 
+	public static char getBishopChar(){
+		return bishop;
+	}
+
+	public static char getRookChar(){
+		return rook;
+	}
+	public static char getQueenChar(){
+		return queen;
+	}
+	
+	public static char getKingChar(){
+		return king;
+	}
+	
 	public static int getPawnweight() {
 		return pawnWeight;
 	}
+	
+	
 
 	public static int getNullMoveReduction (){
 		return nullMoveReduction;

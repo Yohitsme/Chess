@@ -318,7 +318,7 @@ public class Controller {
 		boolean result = false;
 
 		for (Piece piece : white) {
-			if (piece.getType().equals("king"))
+			if (piece.getType()==Constants.getKingChar())
 				king = piece;
 		}
 
@@ -356,7 +356,7 @@ public class Controller {
 		boolean result = false;
 
 		for (Piece piece : black) {
-			if (piece.getType().equals("king"))
+			if (piece.getType()==Constants.getKingChar())
 				king = piece;
 		}
 		if (king == null)
@@ -427,7 +427,7 @@ public class Controller {
 	 * @param move
 	 */
 	public void handleCastling(Move move) {
-		if (move.getPiece().getType().equals("king")
+		if (move.getPiece().getType()==Constants.getKingChar()
 				&& RuleEngine.calculateDeltaColUnsigned(move) == 2) {
 			if (RuleEngine.calculateDeltaColSigned(move) == 2) {
 				Piece rook = boardController.getPieceByCoords(
@@ -457,9 +457,9 @@ public class Controller {
 	private void handlePawnPromote(Move move) {
 
 		// If it's a user move, the piece type will be a pawn
-		if (move.getPiece().getType().equals("pawn")
+		if (move.getPiece().getType()==Constants.getPawnChar()
 				&& (move.getEndRow() == 7 || move.getEndRow() == 0)) {
-			String choice = "";
+			char choice;
 
 			if (isAIturn())
 				choice = move.getPromotePiece();
@@ -476,7 +476,7 @@ public class Controller {
 	 * 
 	 * @return
 	 */
-	private String getPawnPromoteChoice() {
+	private char getPawnPromoteChoice() {
 		// TODO Auto-generated method stub
 		Object[] options = { "queen", "rook", "knight", "bishop" };
 		int selection = -1;
@@ -487,7 +487,9 @@ public class Controller {
 					"Pawn Promotion", JOptionPane.YES_NO_CANCEL_OPTION,
 					JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
 
-		return (String) options[selection];
+		
+		
+		return Utils.getAlgebraicCharacterFromPieceType((String) options[selection]);
 	}
 
 	/**
@@ -528,7 +530,7 @@ public class Controller {
 	public Piece handleEnPassantCaptures(Move move) {
 		Piece pawnCaptured = null;
 
-		if (move.getPiece().getType().equals("pawn")
+		if (move.getPiece().getType()==Constants.getPawnChar()
 				&& move.getStartCol() != move.getEndCol()
 				&& boardController.getPieceByCoords(move.getEndRow(),
 						move.getEndCol()) == null) {

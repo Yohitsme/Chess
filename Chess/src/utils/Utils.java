@@ -116,6 +116,34 @@ public class Utils {
 		}
 
 	}
+	
+	
+	/**
+	 * Takes the memory preservative char representation of a piece and returns
+	 * the string name
+	 * @param piece
+	 * @return
+	 */
+	public String getFullPieceName(char piece){
+		String result = "";
+		
+		if (piece == 'p')
+			result = "pawn";
+		else if (piece == 'q')
+			result = "queen";
+		else if (piece == 'b')
+			result = "bishop";
+		else if (piece == 'r')
+			result = "rook";
+		else if (piece == 'n')
+			result = "knight";
+		else if (piece == 'k')
+			result = "king";		
+		else
+			result = "?";
+		
+		return result;
+	}
 
 	/**
 	 * Returns the current date and time in human readable format (MMM dd, yyyy HH:mm:ss)

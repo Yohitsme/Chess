@@ -9,7 +9,7 @@ import utils.Utils;
  */
 public class Piece {
 
-	String type;
+	char type;
 	boolean isWhite;
 	boolean hasMoved;
 	int row;
@@ -21,7 +21,7 @@ public class Piece {
 	 * @param isWhiteIn
 	 * @param hasMovedIn
 	 */
-	public Piece(String typeIn, boolean isWhiteIn, boolean hasMovedIn, int rowIn, int colIn){
+	public Piece(char typeIn, boolean isWhiteIn, boolean hasMovedIn, int rowIn, int colIn){
 		this.type = typeIn;
 		this.isWhite = isWhiteIn;
 		this.hasMoved = hasMovedIn;
@@ -52,11 +52,11 @@ public class Piece {
 		return str += type;
 	}
 
-	public String getType() {
+	public char getType() {
 		return type;
 	}
 
-	public void setType(String type) {
+	public void setType(char type) {
 		this.type = type;
 	}
 

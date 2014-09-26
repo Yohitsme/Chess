@@ -193,15 +193,12 @@ public class AI {
 					isNullMoveBranch = true;
 //					System.out.println(depthleft-1-Constants.getNullMoveReduction());
 				
-					boolean isParentWhite = parentNode.getMove().getPiece().isWhite();
-					boolean isRealKidWhite = parentNode.getChildren().get(0).getMove().getPiece().isWhite();
-					ArrayList <Node> realChildren = parentNode.getChildren();
+					ArrayList <Node> realChildren = new ArrayList<Node>();
+					realChildren.addAll(parentNode.getChildren());
+					
 					parentNode.getChildren().removeAll(parentNode.getChildren());
 					populateChildren(parentNode, !isWhite,depthleft-1-Constants.getNullMoveReduction());
-					boolean isFakeKidWhite = parentNode.getChildren().get(0).getMove().getPiece().isWhite();
 				
-					
-					
 					score = -pvSearch(-beta,-alpha, depthleft-1-Constants.getNullMoveReduction(), isWhite,parentNode);
 					
 					parentNode.getChildren().removeAll(parentNode.getChildren());
@@ -740,7 +737,7 @@ public class AI {
 			// If it's a pawn that will be promoting, let it have the extra
 			// value it would have if it promotes to a queen (-1 because it
 			// already has 1 for being pawn)
-			if (piece.getType().equals("pawn") && piece.getRow() == 7) {
+			if (piece.getType() == Constants.getPawnChar() && piece.getRow() == 7) {
 				whiteScore += Constants.getQueenweight() - 1;
 
 			}
@@ -748,7 +745,7 @@ public class AI {
 		for (Piece piece : blackPieces) {
 			blackScore += Constants.getPieceWeight(piece);
 
-			if (piece.getType().equals("pawn") && piece.getRow() == 0) {
+			if (piece.getType() == Constants.getPawnChar() && piece.getRow() == 0) {
 				blackScore += Constants.getQueenweight() - 1;
 
 			}
@@ -819,7 +816,7 @@ public class AI {
 			ArrayList<Piece> pieceList = findPieceList(isWhite);
 			Piece queen = null;
 			for (Piece piece : pieceList)
-				if (piece.getType().equals("queen"))
+				if (piece.getType() == Constants.getQueenChar())
 					queen = piece;
 			if (queen != null) {
 				int row = queen.getRow();
@@ -864,7 +861,7 @@ public class AI {
 		int result = 0;
 
 		for (Piece piece : pieceList) {
-			if (piece.getType().equals("bishop"))
+			if (piece.getType()==Constants.getBishopChar())
 				numBishops++;
 		}
 
@@ -895,13 +892,13 @@ public class AI {
 		// Check King column pawn
 		col = Constants.getKingColumn();
 		piece = controller.getBoardController().getPieceByCoords(pawnRow, col);
-		if ((piece == null) || (!piece.getType().equals("pawn")))
+		if ((piece == null) || (piece.getType()!=Constants.getPawnChar()))
 			result += Constants.getCentralPawnsPushedBonusWeight();
 
 		// Check Queen column pawn
 		col = Constants.getQueenColumn();
 		piece = controller.getBoardController().getPieceByCoords(pawnRow, col);
-		if ((piece == null) || (!piece.getType().equals("pawn")))
+		if ((piece == null) || (piece.getType() != Constants.getPawnChar()))
 			result += Constants.getCentralPawnsPushedBonusWeight();
 
 		return result;
@@ -918,7 +915,7 @@ public class AI {
 		Piece king = null;
 
 		for (Piece piece : pieceList) {
-			if (piece.getType().equals("king"))
+			if (piece.getType()==Constants.getKingChar())
 				king = piece;
 		}
 

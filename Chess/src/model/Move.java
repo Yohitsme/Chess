@@ -16,7 +16,7 @@ public class Move {
 	int endCol;
 	Piece piece;
 	int score = 0;
-	String promotePiece = null;
+	char promotePiece;
 
 	/**
 	 * Constructor
@@ -34,7 +34,7 @@ public class Move {
 		this.startCol = startColIn;
 		this.endRow = endRowIn;
 		this.endCol = endColIn;
-		this.promotePiece = "";
+		
 	}
 
 	public Move(Move move) {
@@ -54,8 +54,7 @@ public class Move {
 
 		char startCol = Utils.getAlgebraicCharacterFromCol(this.startCol);
 		char endCol = Utils.getAlgebraicCharacterFromCol(this.endCol);
-		char pieceAbbreviation = Utils
-				.getAlgebraicCharacterFromPieceType(this.piece.getType());
+		char pieceAbbreviation = this.piece.getType();
 
 		String result = "" + pieceAbbreviation + startCol + (this.startRow + 1)
 				+ " " + pieceAbbreviation + endCol + (this.endRow + 1);
@@ -79,7 +78,7 @@ public class Move {
 			result = false;
 		if (this.endRow != moveIn.getEndRow())
 			result = false;
-		if (!this.piece.type.equals( moveIn.getPiece().getType()))
+		if (this.piece.type != moveIn.getPiece().getType())
 			result = false;
 		
 		return result;
@@ -116,11 +115,11 @@ public class Move {
 		return piece;
 	}
 	
-	public String getPromotePiece() {
+	public char getPromotePiece() {
 		return this.promotePiece;
 	}
 
-	public void setPromotePiece(String promotePiece) {
+	public void setPromotePiece(char promotePiece) {
 		this.promotePiece= promotePiece;
 	}
 

@@ -411,32 +411,32 @@ public class View {
 
 		if (piece == null)
 			image = imgMap.get("blank");
-		else if (piece.getType().equals("pawn")) {
+		else if (piece.getType()==Constants.getPawnChar()) {
 			if (piece.isWhite())
 				image = imgMap.get("WP");
 			else
 				image = imgMap.get("BP");
-		} else if (piece.getType().equals("rook")) {
+		} else if (piece.getType()==Constants.getRookChar()) {
 			if (piece.isWhite())
 				image = imgMap.get("WR");
 			else
 				image = imgMap.get("BR");
-		} else if (piece.getType().equals("bishop")) {
+		} else if (piece.getType()==Constants.getBishopChar()) {
 			if (piece.isWhite())
 				image = imgMap.get("WB");
 			else
 				image = imgMap.get("BB");
-		} else if (piece.getType().equals("knight")) {
+		} else if (piece.getType()==Constants.getKnightChar()) {
 			if (piece.isWhite())
 				image = imgMap.get("WN");
 			else
 				image = imgMap.get("BN");
-		} else if (piece.getType().equals("queen")) {
+		} else if (piece.getType()==Constants.getQueenChar()) {
 			if (piece.isWhite())
 				image = imgMap.get("WQ");
 			else
 				image = imgMap.get("BQ");
-		} else if (piece.getType().equals("king")) {
+		} else if (piece.getType()==Constants.getKingChar()) {
 			if (piece.isWhite())
 				image = imgMap.get("WK");
 			else
@@ -635,19 +635,8 @@ public class View {
 			result+="W";
 		else
 			result+="B";
+		result +=Character.toUpperCase(piece.getType());
 		
-		if(piece.getType().equals("pawn"))
-			result+="P";
-		else if (piece.getType().equals("knight"))
-			result+="N";
-		else if (piece.getType().equals("bishop"))
-			result+="B";
-		else if (piece.getType().equals("queen"))
-			result+="Q";
-		else if (piece.getType().equals("king"))
-			result+="K";
-		else if (piece.getType().equals("rook"))
-			result+="R";
 		return result;
 	}
 

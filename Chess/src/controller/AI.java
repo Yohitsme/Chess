@@ -3,13 +3,13 @@ package controller;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.Random;
 
 import javax.swing.tree.DefaultMutableTreeNode;
 
 import model.Move;
 import model.Node;
 import model.Piece;
+import model.PieceArray;
 import utils.Constants;
 import utils.Log;
 
@@ -728,10 +728,12 @@ public class AI {
 		int whiteScore = 0;
 		int blackScore = 0;
 
-		ArrayList<Piece> whitePieces = controller.getModel().getWhitePieces();
-		ArrayList<Piece> blackPieces = controller.getModel().getBlackPieces();
+		PieceArray whitePieces = controller.getModel().getWhitePieces();
+		PieceArray blackPieces = controller.getModel().getBlackPieces();
 
-		for (Piece piece : whitePieces) {
+		for (int i = 0; i < PieceArray.numPieces; i++){
+			Piece piece = whitePieces.getPiece(i);
+			if (piece != null){
 			whiteScore += Constants.getPieceWeight(piece);
 
 			// If it's a pawn that will be promoting, let it have the extra
@@ -739,15 +741,17 @@ public class AI {
 			// already has 1 for being pawn)
 			if (piece.getType() == Constants.getPawnChar() && piece.getRow() == 7) {
 				whiteScore += Constants.getQueenweight() - 1;
-
+			}
 			}
 		}
-		for (Piece piece : blackPieces) {
+		for (int i = 0; i < PieceArray.numPieces; i++){
+			Piece piece = blackPieces.getPiece(i);
+			if (piece != null){
 			blackScore += Constants.getPieceWeight(piece);
 
 			if (piece.getType() == Constants.getPawnChar() && piece.getRow() == 0) {
 				blackScore += Constants.getQueenweight() - 1;
-
+			}
 			}
 		}
 		// TODO account for passant
@@ -813,11 +817,8 @@ public class AI {
 		
 		int result = 0;
 		if (controller.getModel().getMoveList().size() < 6) {
-			ArrayList<Piece> pieceList = findPieceList(isWhite);
-			Piece queen = null;
-			for (Piece piece : pieceList)
-				if (piece.getType() == Constants.getQueenChar())
-					queen = piece;
+			PieceArray pieces = findPieceList(isWhite);
+			Piece queen = pieces.getQueen();
 			if (queen != null) {
 				int row = queen.getRow();
 				int col = queen.getCol();
@@ -856,14 +857,14 @@ public class AI {
 	 */
 	private int computeBishopPairBonus(boolean isWhite) {
 
-		ArrayList<Piece> pieceList = findPieceList(isWhite);
+		PieceArray pieces = findPieceList(isWhite);
 		int numBishops = 0;
 		int result = 0;
 
-		for (Piece piece : pieceList) {
-			if (piece.getType()==Constants.getBishopChar())
-				numBishops++;
-		}
+		if (pieces.getPiece(PieceArray.C_bishopId)!= null)
+			numBishops++;
+		if (pieces.getPiece(PieceArray.F_bishopId)!= null)
+			numBishops++;
 
 		if (numBishops == 2)
 			result = Constants.getBishopPairBonusWeight();
@@ -911,13 +912,10 @@ public class AI {
 	 * @return
 	 */
 	public Piece findKing(boolean isWhite) {
-		ArrayList<Piece> pieceList = findPieceList(isWhite);
+		PieceArray pieceArray = findPieceList(isWhite);
 		Piece king = null;
 
-		for (Piece piece : pieceList) {
-			if (piece.getType()==Constants.getKingChar())
-				king = piece;
-		}
+		king = pieceArray.getKing();
 
 		return king;
 	}
@@ -929,8 +927,8 @@ public class AI {
 	 * @param isWhite
 	 * @return
 	 */
-	public ArrayList<Piece> findPieceList(boolean isWhite) {
-		ArrayList<Piece> pieceList = null;
+	public PieceArray findPieceList(boolean isWhite) {
+		PieceArray pieceList = null;
 		if (isWhite)
 			pieceList = controller.getModel().getWhitePieces();
 		else

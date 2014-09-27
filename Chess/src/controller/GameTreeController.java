@@ -34,7 +34,7 @@ public class GameTreeController {
 	public GameTreeController(GameTree gameTreeIn, Controller controllerIn){
 		this.gameTree = gameTreeIn;
 		this.controller = controllerIn;
-		rootNode = new Node(new Move(new Piece('z',false,false,0,0),0,0,0,0));
+		rootNode = new Node(new Move(new Piece('z',false,false,0,0,0),0,0,0,0));
 		
 	}
 	

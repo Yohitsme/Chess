@@ -120,7 +120,7 @@ public class MoveGenerator {
 			// If the king's square is attacked, it's checkmate, not stalemate.
 			if (!RuleEngine.isAttackedSquare(king.getRow(), king.getCol(),
 					color))
-				;
+				
 			result = true;
 		}
 

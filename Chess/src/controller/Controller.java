@@ -19,6 +19,7 @@ import model.Model;
 import model.Move;
 import model.Node;
 import model.Piece;
+import model.PieceArray;
 import utils.Constants;
 import utils.Log;
 import utils.Utils;
@@ -312,16 +313,13 @@ public class Controller {
 	 * @return
 	 */
 	public boolean isWhiteCheckmated() {
-		ArrayList<Piece> white = model.getWhitePieces();
+		PieceArray white = model.getWhitePieces();
 		Piece king = null;
 		boolean inCheck = false;
 		boolean result = false;
 
-		for (Piece piece : white) {
-			if (piece.getType()==Constants.getKingChar())
-				king = piece;
-		}
-
+		king = white.getKing();
+		
 		if (king == null)
 			result = true;
 		else{
@@ -350,15 +348,13 @@ public class Controller {
 	 * @return
 	 */
 	public boolean isBlackCheckmated() {
-		ArrayList<Piece> black = model.getBlackPieces();
+		PieceArray black = model.getBlackPieces();
 		Piece king = null;
 		boolean inCheck = false;
 		boolean result = false;
 
-		for (Piece piece : black) {
-			if (piece.getType()==Constants.getKingChar())
-				king = piece;
-		}
+		king = black.getKing();
+		
 		if (king == null)
 			result = true;
 		else{
@@ -497,13 +493,18 @@ public class Controller {
 	 */
 	private void printTeams() {
 		System.out.println("Controller.printTeams: White pieces remaining: ");
-		for (Piece piece : model.getWhitePieces())
+		for (int i = 0; i < PieceArray.numPieces; i++){
+			Piece piece = model.getWhitePieces().getPiece(i);
+			if (piece !=null)
 			System.out.println("-" + piece.toString());
-
+		}
 		System.out.println("Controller.printTeams: Black pieces remaining: ");
-		for (Piece piece : model.getBlackPieces())
+		for (int i = 0; i < PieceArray.numPieces; i++){
+			Piece piece = model.getBlackPieces().getPiece(i);
+			if (piece !=null)
+	
 			System.out.println("-" + piece.toString());
-	}
+		}}
 
 	/**
 	 * If the move was a capture, remove the captured piece from it's list

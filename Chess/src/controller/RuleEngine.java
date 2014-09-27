@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import model.Move;
 import model.Piece;
+import model.PieceArray;
 import utils.Constants;
 import utils.Log;
 
@@ -496,12 +497,15 @@ public class RuleEngine {
 	 */
 	public static boolean isAttackedSquare(int row, int col, String color) {
 		boolean result = false;
-		ArrayList<Piece> pieces;
+		PieceArray pieces;
 		if (color.equals("white"))
 			pieces = controller.getModel().getWhitePieces();
 		else
 			pieces = controller.getModel().getBlackPieces();
-		for (Piece piece : pieces) {
+		for (int i = 0; i < PieceArray.numPieces; i++) {
+			Piece piece = pieces.getPiece(i);
+			if (piece != null){
+			
 			boolean seemsValid = false;
 			int unsignedRowDifference = Math.abs(row - piece.getRow());
 			int unsignedColDifference = Math.abs(col - piece.getCol());
@@ -529,7 +533,7 @@ public class RuleEngine {
 						new Move(piece, piece.getRow(), piece.getCol(), row,
 								col), controller.getBoardController(), false))
 					result = true;
-			}
+			}}
 		}
 
 		return result;
@@ -799,17 +803,14 @@ public class RuleEngine {
 
 		Piece capturedPiece = processMove(move);
 
-		ArrayList<Piece> pieces = null;
+		PieceArray pieces = null;
 		if (color.equals("white"))
 			pieces = controller.getModel().getWhitePieces();
 		else
 			pieces = controller.getModel().getBlackPieces();
 		// try{
-		for (Piece piece : pieces) {
-			if (piece.getType() == Constants.getKingChar()) {
-				king = piece;
-			}
-		}
+		king = pieces.getKing();
+				
 		// }
 		// catch (NullPointerException nullPointerException){
 		// controller.log.error(nullPointerException.toString());
@@ -861,7 +862,7 @@ public class RuleEngine {
 	 */
 	public static void undoChanges(Piece capturedPiece, Move move) {
 		if (capturedPiece != null) {
-			ArrayList<Piece> pieces;
+			PieceArray pieces;
 			if (capturedPiece.isWhite())
 				pieces = controller.getModel().getWhitePieces();
 			else

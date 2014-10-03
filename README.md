@@ -1,13 +1,13 @@
 This is a Java chess engine made purely for fun and to get some practice with algorithms/optimizing data structures.
 
 Move search/pruning algorithms used:
-<li>Principal Variation Search
-<li>Null Move Search Extensions
-<li>Alpha Beta Pruning
-<li>Killer Move Heuristic
-<li>MVV/LVA Move ordering
-<li>Iterative deepening
-<li>Quiescence search
+\n-Principal Variation Search
+\n-Null Move Search Extensions
+\n-Alpha Beta Pruning
+\n-Killer Move Heuristic
+\n-MVV/LVA Move ordering
+\n-Iterative deepening
+\n-Quiescence search
 
 Evaluation considerations:
 -Material

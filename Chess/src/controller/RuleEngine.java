@@ -879,7 +879,7 @@ public class RuleEngine {
 
 		}
 
-		// Add move to move list
+		// Remove move from move list
 		ArrayList<Move> moveList = controller.getModel().getMoveList();
 		moveList.remove(move);
 
@@ -962,6 +962,9 @@ public class RuleEngine {
 		Piece capturedPiece = controller.getBoardController().getPieceByCoords(
 				move.getEndRow(), move.getEndCol());
 
+		if (controller.getBoardController().getPieceByCoords(move.getStartRow(), move.getStartCol())== null)
+			System.out.println("RuleEngine.process move: Moving null piece ERROR");
+		
 		// Add move to move list
 		ArrayList<Move> moveList = controller.getModel().getMoveList();
 		moveList.add(move);

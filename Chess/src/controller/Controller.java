@@ -585,6 +585,8 @@ public class Controller {
 		if (piece == null)
 			log.error("Controller.removePieceFromList: Removing null piece?");
 
+		
+		
 		if (piece.isWhite()) {
 			model.getWhitePieces().remove(piece);
 		} else

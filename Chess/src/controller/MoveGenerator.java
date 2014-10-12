@@ -39,13 +39,10 @@ public class MoveGenerator {
 	 * Given a square designated by coordinates (row,col), returns an arrayList
 	 * of legal moves for the piece on that square.
 	 */
-	public ArrayList<Move> findMoves(int row, int col) {
-		ArrayList<Move> legalMoves = new ArrayList<Move>();
+	public ArrayList<Move> findMoves(ArrayList<Move> legalMoves, int row, int col) {
+//		ArrayList<Move> legalMoves = new ArrayList<Move>();
 
 		Piece piece = boardController.getPieceByCoords(row, col);
-		if(piece.getRow() != row || piece.getCol() != col)
-;
-		//			System.out.println("MoveGen.findMoves: Board and Piece out of sync ERROR");
 		if (piece != null) {
 			if (piece.getType()==Constants.getRookChar())
 				findRookMoves(legalMoves, row, col);
@@ -57,9 +54,9 @@ public class MoveGenerator {
 			} else if (piece.getType()==Constants.getKnightChar())
 				findKnightMoves(legalMoves, row, col);
 			else if (piece.getType()==Constants.getKingChar())
-				legalMoves.addAll(findKingMoves(row, col));
+				findKingMoves(legalMoves,row, col);
 			else if (piece.getType()==Constants.getPawnChar())
-				legalMoves.addAll(findPawnMoves(row, col));
+				findPawnMoves(legalMoves,row, col);
 
 		}
 		
@@ -82,7 +79,7 @@ public class MoveGenerator {
 				if (piece != null) {
 					if (isWhite == piece.isWhite()){
 						
-						legalMoves.addAll(findMoves(row, col));
+						findMoves(legalMoves, row, col);
 					}
 				}
 			}
@@ -102,14 +99,14 @@ public class MoveGenerator {
 		int numMoves = 0;
 		boolean result = false;
 		Piece king = null;
-
+		ArrayList<Move>legalMoves = new ArrayList<Move>();
 		while (row < 8 && numMoves == 0) {
 			col = 0;
 			while (col < 8 && numMoves == 0) {
 				piece = boardController.getPieceByCoords(row, col);
 				if (piece != null) {
 					if ((isWhite == piece.isWhite())) {
-						numMoves += findMoves(row, col).size();
+						numMoves += findMoves(legalMoves, row, col).size();
 					}
 				}
 				col++;
@@ -141,8 +138,7 @@ public class MoveGenerator {
 	 * @param col
 	 * @return
 	 */
-	public ArrayList<Move> findKingMoves(int row, int col) {
-		ArrayList<Move> legalMoves = new ArrayList<Move>();
+	public ArrayList<Move> findKingMoves(ArrayList<Move> legalMoves,int row, int col) {
 		Piece piece = boardController.getPieceByCoords(row, col);
 		Move move = null;
 		int newRow = 0;
@@ -346,10 +342,6 @@ public class MoveGenerator {
 
 			if (move != null
 					&& RuleEngine.isNotSelfCheck(move, boardController)) {
-				
-				
-//			if (move.getStartCol() == 5 && move.getStartRow() == 5 && move.getEndRow() == 2 && move.getEndCol() == 2  &&move.getPiece().getType() == 'q')
-//						System.out.println("MoveGenerator.findBishopMovesAlongDiagonal: Found queen move");
 				legalMoves.add(move);
 			}
 			i++;
@@ -366,8 +358,8 @@ public class MoveGenerator {
 	 * @param col
 	 * @return
 	 */
-	public ArrayList<Move> findPawnMoves(int row, int col) {
-		ArrayList<Move> legalMoves = new ArrayList<Move>();
+	public ArrayList<Move> findPawnMoves(ArrayList<Move> legalMoves, int row, int col) {
+	
 		Piece piece = boardController.getPieceByCoords(row, col);
 		Move move;
 		int rowDirection;

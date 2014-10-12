@@ -29,14 +29,15 @@ public class AI {
 	Node[] PV;
 	int nodesPerLevel[];
 	boolean isNullMoveBranch = false;
-
+    static NodeComparator nodeComparator;
+	
 	public AI(Controller controllerIn) {
 		this.controller = controllerIn;
 
 		for (int i = 0; i < Constants.getDepth() + 1; i++)
 			killerMoves.add(new ArrayList<Move>());
 		PV = new Node[10];
-
+		this.nodeComparator = new NodeComparator();
 		for (int i = 0; i < 10; i++)
 			PV[i] = null;
 
@@ -609,7 +610,7 @@ public class AI {
 				}
 			}
 		}
-		Collections.sort(nodes, new NodeComparator());
+		Collections.sort(nodes, this.nodeComparator);
 
 	}
 
@@ -819,7 +820,7 @@ public class AI {
 		// TODO: The AI still loves to move the queen out early...not sure this is working 100% right
 		
 		int result = 0;
-		if (controller.getModel().getMoveList().size() < 6) {
+		if (controller.getModel().getMoveList().size() < 16) {
 			PieceArray pieces = findPieceList(isWhite);
 			Piece queen = pieces.getQueen();
 			if (queen != null) {
@@ -840,6 +841,8 @@ public class AI {
 			}
 		} else
 			result = 0;
+		
+		
 		return result;
 	}
 

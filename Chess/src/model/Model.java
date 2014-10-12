@@ -33,7 +33,7 @@ public class Model {
 		capturedPieces = new ArrayList<Piece>();
 		moveList = new ArrayList<Move>();
 		gameTree = new GameTree();
-		gameMode = "pVc";//"pVc";
+		gameMode = "cVc";//"pVc";
 
 		board = new Piece[8][8];
 

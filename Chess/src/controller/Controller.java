@@ -110,7 +110,8 @@ public class Controller {
 		int row = computeRowFromMouseEvent(e);
 		int col = computeColFromMouseEvent(e);
 
-		ArrayList<Move> legalMoves = moveGenerator.findMoves(row, col);
+		ArrayList<Move> legalMoves = new ArrayList<Move>();
+		moveGenerator.findMoves(legalMoves, row, col);
 
 		for (Move move : legalMoves)
 			view.highlightSquare(move.getEndRow(), move.getEndCol());
@@ -327,19 +328,19 @@ public class Controller {
 		if (RuleEngine.isAttackedSquare(king.getRow(), king.getCol(), "black"))
 			inCheck = true;
 
-		ArrayList<Move> list = new ArrayList<Move>();
+		ArrayList<Move> legalMoves = new ArrayList<Move>();
 		
 		if (inCheck){
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++)
 				if (boardController.getPieceByCoords(row, col) != null
 						&& boardController.getPieceByCoords(row, col).isWhite()) {
-					list.addAll(moveGenerator.findMoves(row, col));
+					moveGenerator.findMoves(legalMoves,row, col);
 
 				}
 		}
 		}
-		result = inCheck && (list.isEmpty());
+		result = inCheck && (legalMoves.isEmpty());
 		}
 		return result;
 	}
@@ -363,19 +364,19 @@ public class Controller {
 		if (RuleEngine.isAttackedSquare(king.getRow(), king.getCol(), "white"))
 			inCheck = true;
 
-		ArrayList<Move> list = new ArrayList<Move>();
+		ArrayList<Move> legalMoves = new ArrayList<Move>();
 		if (inCheck){
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++)
 				if (boardController.getPieceByCoords(row, col) != null
 						&& !boardController.getPieceByCoords(row, col)
 								.isWhite()) {
-					list.addAll(moveGenerator.findMoves(row, col));
+					moveGenerator.findMoves(legalMoves,row, col);
 
 				}
 		}}
 
-		result = inCheck && (list.isEmpty());
+		result = inCheck && (legalMoves.isEmpty());
 		}
 		return result;
 	}
@@ -411,7 +412,7 @@ public class Controller {
 
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++) {
-				legalMoves.addAll(moveGenerator.findMoves(row, col));
+				moveGenerator.findMoves(legalMoves,row, col);
 			}
 		}
 

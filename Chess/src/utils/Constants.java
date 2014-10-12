@@ -23,7 +23,7 @@ public class Constants {
 	private final static int connectedRooksBonusWeight = 5;
 	private final static int bishopPairBonusWeight = 3;
 	private final static int centralPawnsPushedBonusWeight = 5;
-	private final static int earlyQueenPenaltyWeight = 10;
+	private final static int earlyQueenPenaltyWeight = 1000;
 	
 	private final static int kingsideCastleRookCol = 5;
 	private final static int queensideCastleRookCol = 3;
@@ -60,7 +60,7 @@ public class Constants {
 	private  static double bonusScoreWeight = .01;
 	
 
-	private static int depth = 5;
+	private static int depth = 4;
 	
 	public static int getPieceWeight(Piece piece){
 		int result = 0;

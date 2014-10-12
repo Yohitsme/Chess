@@ -1,8 +1,8 @@
-This is a Java chess engine made purely for fun and to get some practice with algorithms/optimizing data structures.
+This is a Java chess engine made purely for fun and to get some practice with algorithms/optimizing data structures.  At it's current strength it can consistently beat the Windows factory-installed engine Chess Titans on max difficulty while searching only to depth 4.
 
 Move search/pruning algorithms used:
 * Principal Variation Search
-* Null Move Search Extensions
+* Null Move Search Reduction (WIP)
 * Alpha Beta Pruning
 * Killer Move Heuristic
 * MVV/LVA Move ordering

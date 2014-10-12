@@ -1,7 +1,14 @@
 // TODO
 
--Fix evaluation methods to use a scale of "more positive = better for white," more negative = better for black.  Current implementation depends on the depth and is unstable
+// A: Affecting ongoing dev, bugs that slow progress and distract, current priority development
+-Null Move Search reductions causing exceptions, as well as en passent checking is not handling the null move well
+
+// B: Annoying bugs. Features that could help a lot
+-The AI doesn't quantify king safety other than castling early
+-Multithreading instead of event driven
+
+// C: Features that would be nice and optimize code for later. 
 -Finish adding bonuses/penalties in AI
--Captured Piece view in GUI
--Consider moves as different positions instead of one move at a time
--
+-Passive processing
+-Ability to undo a move
+-Ability to click forward and backward through the game

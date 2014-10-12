@@ -8,9 +8,12 @@ import java.awt.GridLayout;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 
 import javax.imageio.ImageIO;
+import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -21,10 +24,12 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
+import javax.swing.JTextArea;
 import javax.swing.JTree;
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 
+import utils.Constants;
 import model.Move;
 import model.Piece;
 import controller.BoardController;
@@ -45,9 +50,11 @@ public class View {
 	JPanel highlightPanel;
 	JPanel analysisPanel;
 	JPanel moveListPanel;
+	JPanel capturedPiecePanel;
 	JPanel sidePanel;
 	JLayeredPane layeredPane;
 	BoardController boardController;
+	ArrayList<Piece>capturedPieces;
 	MasterListener masterListener;
 	PiecePanel[][] piecePanelArray;
 	JLabel [][] highlightArray;
@@ -64,15 +71,17 @@ public class View {
 	 * @param boardControllerIn
 	 */
 	public View(BoardController boardControllerIn,
-			MasterListener masterListenerIn) {
+			MasterListener masterListenerIn, ArrayList<Piece> capturedPiecesIn) {
 
 		this.boardController = boardControllerIn;
 		this.masterListener = masterListenerIn;
+		this.capturedPieces = capturedPiecesIn;
 		this.boardOrientation = "normal";
 		// Populate imageMap
 		loadImages();
 
 		// Configure Panels
+		configureCapturedPiecePanel();
 		configureFrame();
 		configureMenuBar();
 		configureBoardPanel();
@@ -90,6 +99,11 @@ public class View {
 
 	}
 
+	private void configureCapturedPiecePanel() {
+		capturedPiecePanel = new JPanel();
+		
+	}
+
 	/**
 	 * Sets up the menu options available to the user
 	 */
@@ -97,6 +111,7 @@ public class View {
 		JMenuBar menuBar = new JMenuBar();
 		JMenu fileMenu = new JMenu("File");
 		JMenu viewMenu = new JMenu("View");
+		JMenu settingsMenu = new JMenu("Settings");
 		
 		JMenuItem newGame = new JMenuItem("New Game");
 		newGame.setActionCommand("newGame");
@@ -114,12 +129,24 @@ public class View {
 		flipBoard.setActionCommand("flipBoard");
 		flipBoard.addActionListener(masterListener);
 		
+		JMenuItem adjustDepth = new JMenuItem("Adjust Depth");
+		adjustDepth.setActionCommand("adjustDepth");
+		adjustDepth.addActionListener(masterListener);
+		
+		JMenuItem tuneEngine = new JMenuItem("Tune Engine");
+		tuneEngine.setActionCommand("tuneEngine");
+		tuneEngine.addActionListener(masterListener);
+		
 		fileMenu.add(newGame);
 		fileMenu.add(changeGameMode);
 		fileMenu.add(exportMoveList);
 		viewMenu.add(flipBoard);
+		settingsMenu.add(tuneEngine);
+		settingsMenu.add(adjustDepth);
+		
 		menuBar.add(fileMenu);
 		menuBar.add(viewMenu);
+		menuBar.add(settingsMenu);
 		frame.setJMenuBar(menuBar);
 	}
 	
@@ -135,7 +162,8 @@ public class View {
 		sidePanel = new JPanel();
 		sidePanel.setLayout(new GridLayout(2,1));
 		sidePanel.add(moveListPanel);
-		sidePanel.add(analysisPanel);
+//		sidePanel.add(analysisPanel);
+		sidePanel.add(capturedPiecePanel);
 	}
 	/**
 	 * Boilerplate highlight panel configuration.  The highlight panel is between the board panel and
@@ -228,10 +256,69 @@ public class View {
 			
 			
 		}
+		updateCapturedPiecePanel();
 		piecePanel.repaint();
 		piecePanel.revalidate();
 		frame.pack();
 
+	}
+
+	@SuppressWarnings("unchecked")
+	private void updateCapturedPiecePanel() {
+		// TODO Auto-generated method stub
+		//JLabel deadPieces = new JLabel();
+		JPanel whitePanel1 = new JPanel();
+		whitePanel1.setLayout(new BoxLayout(whitePanel1, BoxLayout.Y_AXIS));
+		JPanel blackPanel1 = new JPanel(); 
+		blackPanel1.setLayout(new BoxLayout(blackPanel1, BoxLayout.Y_AXIS));
+		JPanel whitePanel2 = new JPanel();
+		whitePanel2.setLayout(new BoxLayout(whitePanel2, BoxLayout.Y_AXIS));
+		JPanel blackPanel2 = new JPanel(); 
+		blackPanel2.setLayout(new BoxLayout(blackPanel2, BoxLayout.Y_AXIS));		
+		
+		
+		ArrayList<Piece>whiteList = new ArrayList<Piece>();
+		ArrayList<Piece>blackList = new ArrayList<Piece>();
+		
+		
+		for (Piece piece: capturedPieces){
+			if (piece.isWhite())
+				whiteList.add(piece);
+			else
+				blackList.add(piece);
+		}
+		Collections.sort(whiteList, new PieceSorter());
+		Collections.sort(blackList, new PieceSorter());
+		
+		
+		int i = 0;
+		for (Piece piece: whiteList){
+			if (i < 8)
+				whitePanel1.add(new JLabel(imgMap.get(getPieceAbbreviation(piece)+"_small")));
+			else
+				whitePanel2.add(new JLabel(imgMap.get(getPieceAbbreviation(piece)+"_small")));
+				i++;
+		}
+		i = 0;
+		for (Piece piece: blackList){
+			if (i < 8)
+				blackPanel1.add(new JLabel(imgMap.get(getPieceAbbreviation(piece)+"_small")));
+			else
+				blackPanel2.add(new JLabel(imgMap.get(getPieceAbbreviation(piece)+"_small")));
+				i++;
+		}
+		
+		
+		
+		
+		capturedPiecePanel.removeAll();
+		capturedPiecePanel.add(whitePanel1);
+		capturedPiecePanel.add(whitePanel2);
+		capturedPiecePanel.add(blackPanel1);
+		capturedPiecePanel.add(blackPanel2);
+		
+		capturedPiecePanel.repaint();
+		capturedPiecePanel.revalidate();
 	}
 
 	/**
@@ -302,7 +389,7 @@ public class View {
 		table.setEnabled(false);
 	
 		JScrollPane scrollPane = new JScrollPane(table);
-		scrollPane.setPreferredSize(moveListPanel.getPreferredSize());
+		scrollPane.setPreferredSize(new Dimension(200,310));
 		moveListPanel.add(new JScrollPane(scrollPane));
 
 		moveListPanel.repaint();
@@ -324,32 +411,32 @@ public class View {
 
 		if (piece == null)
 			image = imgMap.get("blank");
-		else if (piece.getType().equals("pawn")) {
+		else if (piece.getType()==Constants.getPawnChar()) {
 			if (piece.isWhite())
 				image = imgMap.get("WP");
 			else
 				image = imgMap.get("BP");
-		} else if (piece.getType().equals("rook")) {
+		} else if (piece.getType()==Constants.getRookChar()) {
 			if (piece.isWhite())
 				image = imgMap.get("WR");
 			else
 				image = imgMap.get("BR");
-		} else if (piece.getType().equals("bishop")) {
+		} else if (piece.getType()==Constants.getBishopChar()) {
 			if (piece.isWhite())
 				image = imgMap.get("WB");
 			else
 				image = imgMap.get("BB");
-		} else if (piece.getType().equals("knight")) {
+		} else if (piece.getType()==Constants.getKnightChar()) {
 			if (piece.isWhite())
 				image = imgMap.get("WN");
 			else
 				image = imgMap.get("BN");
-		} else if (piece.getType().equals("queen")) {
+		} else if (piece.getType()==Constants.getQueenChar()) {
 			if (piece.isWhite())
 				image = imgMap.get("WQ");
 			else
 				image = imgMap.get("BQ");
-		} else if (piece.getType().equals("king")) {
+		} else if (piece.getType()==Constants.getKingChar()) {
 			if (piece.isWhite())
 				image = imgMap.get("WK");
 			else
@@ -415,22 +502,34 @@ public class View {
 		imgMap.put("blackSquare", buildImage("blackSquare"));
 
 		imgMap.put("WB", buildImage("WB"));
+		imgMap.put("WB_small", buildImage("WB_small"));
 		imgMap.put("BB", buildImage("BB"));
+		imgMap.put("BB_small", buildImage("BB_small"));
 
 		imgMap.put("WR", buildImage("WR"));
+		imgMap.put("WR_small", buildImage("WR_small"));
 		imgMap.put("BR", buildImage("BR"));
+		imgMap.put("BR_small", buildImage("BR_small"));
 
 		imgMap.put("WK", buildImage("WK"));
+		imgMap.put("WK_small", buildImage("WK_small"));
 		imgMap.put("BK", buildImage("BK"));
+		imgMap.put("BK_small", buildImage("BK_small"));
 
 		imgMap.put("WN", buildImage("WN"));
+		imgMap.put("WN_small", buildImage("WN_small"));
 		imgMap.put("BN", buildImage("BN"));
+		imgMap.put("BN_small", buildImage("BN_small"));
 
 		imgMap.put("WQ", buildImage("WQ"));
+		imgMap.put("WQ_small", buildImage("WQ_small"));
 		imgMap.put("BQ", buildImage("BQ"));
+		imgMap.put("BQ_small", buildImage("BQ_small"));
 
 		imgMap.put("WP", buildImage("WP"));
+		imgMap.put("WP_small", buildImage("WP_small"));
 		imgMap.put("BP", buildImage("BP"));
+		imgMap.put("BP_small", buildImage("BP_small"));
 
 	}
 
@@ -528,6 +627,18 @@ public class View {
 		highlightArray[row][col].setIcon(imgMap.get("highlight"));
 		
 	}
+	
+	public String getPieceAbbreviation(Piece piece){
+		String result = "";
+		
+		if (piece.isWhite())
+			result+="W";
+		else
+			result+="B";
+		result +=Character.toUpperCase(piece.getType());
+		
+		return result;
+	}
 
 	public void highlightPreviousMove(ArrayList<Move> moveList) {
 		int row,col;
@@ -543,4 +654,24 @@ public class View {
 		highlightArray[row][col].setIcon(imgMap.get("squareHighlight"));
 	}
 
+}
+
+class PieceSorter implements Comparator{
+
+	@Override
+	public int compare(Object o1, Object o2) {
+		Piece p1 = (Piece)o1;
+		Piece p2 = (Piece)o2;
+		int weight1 = Constants.getPieceWeight(p1);
+		int weight2 = Constants.getPieceWeight(p2);
+		
+		
+		if ( weight1< weight2)
+			return 1;
+		else if (weight1 == weight2)
+			return 0;
+		else
+		return -1;
+	}
+	
 }

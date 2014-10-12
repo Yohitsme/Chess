@@ -87,6 +87,11 @@ public class Utils {
 		return result;
 	}
 
+	/**
+	 * Writes a string to a file designated by <code>filename</code>
+	 * @param fileName
+	 * @param msg
+	 */
 	public static void writeToFile(String fileName, String msg) {
 
 		String output = msg;
@@ -111,7 +116,39 @@ public class Utils {
 		}
 
 	}
+	
+	
+	/**
+	 * Takes the memory preservative char representation of a piece and returns
+	 * the string name
+	 * @param piece
+	 * @return
+	 */
+	public String getFullPieceName(char piece){
+		String result = "";
+		
+		if (piece == 'p')
+			result = "pawn";
+		else if (piece == 'q')
+			result = "queen";
+		else if (piece == 'b')
+			result = "bishop";
+		else if (piece == 'r')
+			result = "rook";
+		else if (piece == 'n')
+			result = "knight";
+		else if (piece == 'k')
+			result = "king";		
+		else
+			result = "?";
+		
+		return result;
+	}
 
+	/**
+	 * Returns the current date and time in human readable format (MMM dd, yyyy HH:mm:ss)
+	 * @return
+	 */
 	public static String getTime() {
 		long yourmilliseconds = System.currentTimeMillis();
 		SimpleDateFormat sdf = new SimpleDateFormat("MMM dd, yyyy HH:mm:ss");
@@ -120,6 +157,11 @@ public class Utils {
 		return sdf.format(resultdate);
 	}
 	
+	/**
+	 * Returns the same thing as getTime, but with dashes and underscores instead of spaces
+	 * so it can be used in a file path. Format: MM-dd-yyyy_HH-mm-ss
+	 * @return
+	 */
 	public static String getTimeNoSpaces() {
 		long yourmilliseconds = System.currentTimeMillis();
 		SimpleDateFormat sdf = new SimpleDateFormat("MM-dd-yyyy_HH-mm-ss");

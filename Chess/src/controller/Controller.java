@@ -1,21 +1,26 @@
 package controller;
 
+import java.awt.Component;
+import java.awt.FlowLayout;
+import java.awt.LayoutManager;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseEvent;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.ArrayList;
 
+import javax.swing.BoxLayout;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JOptionPane;
-import javax.swing.JScrollPane;
-import javax.swing.JTree;
+import javax.swing.JPanel;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
 
 import model.Model;
 import model.Move;
+import model.Node;
 import model.Piece;
+import model.PieceArray;
+import utils.Constants;
 import utils.Log;
 import utils.Utils;
 import view.View;
@@ -45,21 +50,18 @@ public class Controller {
 	 */
 	public static void main(String[] arg) {
 		Controller controller = null;
-		try {
-			controller = new Controller();
-		}
-
-		catch (Exception e) {
-			controller.getLog().error(e.toString());
-			controller.getLog().error(e.getStackTrace().toString());
-
-			String moveListDump = "";
-			for (Move move : controller.getModel().getMoveList())
-				moveListDump += move.algebraicNotationPrint() + "\n";
-
-			controller.getLog().error(moveListDump);
-		}
-
+		
+		controller = new Controller();
+		
+//      Peformance testing below to ensure move generation correctness
+//		for (int depth = 0; depth < 9; depth++) {
+//			long startTime = System.currentTimeMillis();
+//			int nodes = controller.AI.perft(depth,true);
+//			long endTime = System.currentTimeMillis();
+//
+//			System.out.println("Peft " + (depth + 1) + ": "
+//					+nodes + ": " + (endTime - startTime) / 1000.0 + " seconds");
+//		}
 	}
 
 	/**
@@ -71,7 +73,8 @@ public class Controller {
 		boardController = new BoardController(model);
 		moveGenerator = new MoveGenerator(boardController, ruleEngine, this);
 		masterListener = new MasterListener(this);
-		view = new View(boardController, masterListener);
+		view = new View(boardController, masterListener,
+				model.getCapturedPieces());
 		gameTreeController = new GameTreeController(model.getGameTree(), this);
 		AI = new AI(this);
 		long startTime = System.currentTimeMillis();
@@ -107,7 +110,8 @@ public class Controller {
 		int row = computeRowFromMouseEvent(e);
 		int col = computeColFromMouseEvent(e);
 
-		ArrayList<Move> legalMoves = moveGenerator.findMoves(row, col);
+		ArrayList<Move> legalMoves = new ArrayList<Move>();
+		moveGenerator.findMoves(legalMoves, row, col);
 
 		for (Move move : legalMoves)
 			view.highlightSquare(move.getEndRow(), move.getEndCol());
@@ -159,27 +163,25 @@ public class Controller {
 			processMove(AI.move(computeTurn()));
 		}
 
-		view.updateAnalysisPanel(new JTree(gameTreeController.getRoot()));
+		// view.updateAnalysisPanel(new JTree(gameTreeController.getRoot()));
 		view.updateMoveListPanel(model.getMoveList());
 		view.update();
 
-		gameTreeController.getRoot().removeAllChildren();
+		// gameTreeController.getRoot().removeAllChildren();
 		if (isGameOver())
 			JOptionPane.showMessageDialog(new JFrame(), "Game over!");
 
-		view.highlightPreviousMove(model.getMoveList());
+		if (model.getMoveList().size() != 0)
+			view.highlightPreviousMove(model.getMoveList());
 		/*
 		 * long startTime = System.currentTimeMillis(); long endTime =
 		 * System.currentTimeMillis(); System.out.println(
 		 * "Controller.Controller(): Done printing. Time elapsed: " +
 		 * (endTime-startTime)/1000.0 +" seconds");
 		 */
-
-		//
-		// JFrame frame = new JFrame();
-		// frame.setVisible(true);
-		// frame.add(new JScrollPane(new JTree(gameTreeController.getRoot())));
-		// frame.pack();
+		boolean printFlag = true;
+		AI.evaluate(computeTurn().equals("white") ? true : false,
+				gameTreeController.getRoot(), printFlag);
 
 	}
 
@@ -190,40 +192,20 @@ public class Controller {
 	 * @param move
 	 */
 	public void processMoveAttempt(Move move) {
-
+		boolean moveFound = false;
 		if (RuleEngine.validateMove(move, boardController, true)) {
-			model.getMoveList().add(move);
-			// Check for special cases, such as pawn promotes, en
-			// passant captures
-			handleSpecialCases(move);
-
-			// Remove piece from it's list in model if a capture
-			// occurred
-			updatePieceLists(move);
-
-			// Move the piece
-			boardController.setPieceByCoords(move.getEndRow(),
-					move.getEndCol(), move.getPiece());
-			move.getPiece().setCol(move.getEndCol());
-			move.getPiece().setRow(move.getEndRow());
-
-			// Mark the piece has having moved
-			boardController.getPieceByCoords(move.getStartRow(),
-					move.getStartCol()).setHasMoved(true);
-
-			boardController.clearSquare(move.getStartRow(), move.getStartCol());
-
-			System.out.println("Controller.handleMouseRelease: Valid Move: "
-					+ move.algebraicNotationPrint());
-
-			// System.out.println("Controller.processMoveAttempt:---------------------------------------------");
-			// gameTreeController.setRootNode(new Node(move));
-			// // model.getGameTree().setRootNode(new Node(move));
-			// gameTreeController.generateSubtree(Constants.getDepth(), 0,
-			// gameTreeController.getRootNode());
-			// gameTreeController.print(gameTreeController.getRootNode(), 0);
-			// System.out.println("\nController.processMoveAttempt:---------------------------------------------");
-
+			Node root = gameTreeController.getRoot();
+			if (root.getChildren().size() != 0)
+				for (Node node : root.getChildren())
+					if (node.getMove().equals(move)) {
+						moveFound = true;
+						processMove(node);
+					}
+			if (!moveFound) {
+				processMove(new Node(move));
+				System.out
+						.println("Controller.processMoveAttempt: Error: Chosen move not found.");
+			}
 		} else
 			System.out
 					.println("Controller.handleMouseRelease: Invalid move. Board not modified.");
@@ -234,7 +216,8 @@ public class Controller {
 	 * 
 	 * @param move
 	 */
-	public void processMove(Move move) {
+	public void processMove(Node node) {
+		Move move = node.getMove();
 		model.getMoveList().add(move);
 		// Check for special cases, such as pawn promotes, en
 		// passant captures
@@ -250,12 +233,21 @@ public class Controller {
 		move.getPiece().setCol(move.getEndCol());
 		move.getPiece().setRow(move.getEndRow());
 
+		if (boardController.getPieceByCoords(move.getStartRow(),
+				move.getStartCol()) == null) {
+			System.out
+					.println("Controller.processMove ERROR: Trying to move a null piece? A move probably wasn't selected from the search, so the same move that was picked last time is now being picked.");
+			System.out.println("Controller.processMove: " + move.toString());
+		}
 		// Mark the piece has having moved
 		boardController
 				.getPieceByCoords(move.getStartRow(), move.getStartCol())
 				.setHasMoved(true);
 
 		boardController.clearSquare(move.getStartRow(), move.getStartCol());
+
+		gameTreeController.setRoot(node);
+		node.setParent(null);
 	}
 
 	/**
@@ -322,34 +314,34 @@ public class Controller {
 	 * @return
 	 */
 	public boolean isWhiteCheckmated() {
-		ArrayList<Piece> white = model.getWhitePieces();
+		PieceArray white = model.getWhitePieces();
 		Piece king = null;
 		boolean inCheck = false;
 		boolean result = false;
 
-		for (Piece piece : white) {
-			if (piece.getType().equals("king"))
-				king = piece;
-		}
-
+		king = white.getKing();
+		
+		if (king == null)
+			result = true;
+		else{
+		
 		if (RuleEngine.isAttackedSquare(king.getRow(), king.getCol(), "black"))
 			inCheck = true;
 
-		ArrayList<Move> list = new ArrayList<Move>();
+		ArrayList<Move> legalMoves = new ArrayList<Move>();
+		
+		if (inCheck){
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++)
 				if (boardController.getPieceByCoords(row, col) != null
 						&& boardController.getPieceByCoords(row, col).isWhite()) {
-					list.addAll(moveGenerator.findMoves(row, col));
+					moveGenerator.findMoves(legalMoves,row, col);
 
 				}
 		}
-
-		result = inCheck && (list.isEmpty());
-		if (result)
-			System.out
-					.println("Controller.isWhiteCheckMated: White is checkmated");
-
+		}
+		result = inCheck && (legalMoves.isEmpty());
+		}
 		return result;
 	}
 
@@ -359,45 +351,49 @@ public class Controller {
 	 * @return
 	 */
 	public boolean isBlackCheckmated() {
-		ArrayList<Piece> black = model.getBlackPieces();
+		PieceArray black = model.getBlackPieces();
 		Piece king = null;
 		boolean inCheck = false;
 		boolean result = false;
 
-		for (Piece piece : black) {
-			if (piece.getType().equals("king"))
-				king = piece;
-		}
-
+		king = black.getKing();
+		
+		if (king == null)
+			result = true;
+		else{
 		if (RuleEngine.isAttackedSquare(king.getRow(), king.getCol(), "white"))
 			inCheck = true;
 
-		ArrayList<Move> list = new ArrayList<Move>();
+		ArrayList<Move> legalMoves = new ArrayList<Move>();
+		if (inCheck){
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++)
 				if (boardController.getPieceByCoords(row, col) != null
 						&& !boardController.getPieceByCoords(row, col)
 								.isWhite()) {
-					list.addAll(moveGenerator.findMoves(row, col));
+					moveGenerator.findMoves(legalMoves,row, col);
 
 				}
+		}}
+
+		result = inCheck && (legalMoves.isEmpty());
 		}
-
-		result = inCheck && (list.isEmpty());
-
-		if (result)
-			System.out
-					.println("Controller.isWhiteCheckMated: Black is checkmated");
-
 		return result;
 	}
 
+	/**
+	 * Returns true if a square designated by row = endRow and col = endCol is
+	 * on the board
+	 * @param endRow
+	 * @param endCol
+	 * @return
+	 */
 	private boolean isWithinBounds(int endRow, int endCol) {
 		return (endRow >= 0 && endRow <= 7 && endCol >= 0 && endCol <= 7);
 	}
 
 	/**
-	 * Calls methods to check and handle edge case moves <li>En Passant captures
+	 * Calls methods to process edge case moves <li>En Passant captures
 	 * <li>Pawn promotions <li>Castling
 	 * 
 	 * @param move
@@ -416,7 +412,7 @@ public class Controller {
 
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++) {
-				legalMoves.addAll(moveGenerator.findMoves(row, col));
+				moveGenerator.findMoves(legalMoves,row, col);
 			}
 		}
 
@@ -430,8 +426,8 @@ public class Controller {
 	 * 
 	 * @param move
 	 */
-	private void handleCastling(Move move) {
-		if (move.getPiece().getType().equals("king")
+	public void handleCastling(Move move) {
+		if (move.getPiece().getType()==Constants.getKingChar()
 				&& RuleEngine.calculateDeltaColUnsigned(move) == 2) {
 			if (RuleEngine.calculateDeltaColSigned(move) == 2) {
 				Piece rook = boardController.getPieceByCoords(
@@ -454,18 +450,19 @@ public class Controller {
 	/**
 	 * If parameter move was a pawn being moved to the first or last rank, this
 	 * method prompts the user for a piece type and turns the pawn into the type
-	 * chosen by the user.  If it's the AI's move, default to a queen.
+	 * chosen by the user. If it's the AI's move, default to a queen.
 	 * 
 	 * @param move
 	 */
 	private void handlePawnPromote(Move move) {
-		
-		
-		if (move.getPiece().getType().equals("pawn")
+
+		// If it's a user move, the piece type will be a pawn
+		if (move.getPiece().getType()==Constants.getPawnChar()
 				&& (move.getEndRow() == 7 || move.getEndRow() == 0)) {
-			String choice = "";
-			if ((move.getPiece().isWhite() && isWhiteAI()) || (!move.getPiece().isWhite() && isBlackAI()))
-				choice = "queen";
+			char choice;
+
+			if (isAIturn())
+				choice = move.getPromotePiece();
 			else
 				choice = getPawnPromoteChoice();
 			move.getPiece().setType(choice);
@@ -479,7 +476,7 @@ public class Controller {
 	 * 
 	 * @return
 	 */
-	private String getPawnPromoteChoice() {
+	private char getPawnPromoteChoice() {
 		// TODO Auto-generated method stub
 		Object[] options = { "queen", "rook", "knight", "bishop" };
 		int selection = -1;
@@ -490,7 +487,9 @@ public class Controller {
 					"Pawn Promotion", JOptionPane.YES_NO_CANCEL_OPTION,
 					JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
 
-		return (String) options[selection];
+		
+		
+		return Utils.getAlgebraicCharacterFromPieceType((String) options[selection]);
 	}
 
 	/**
@@ -498,13 +497,18 @@ public class Controller {
 	 */
 	private void printTeams() {
 		System.out.println("Controller.printTeams: White pieces remaining: ");
-		for (Piece piece : model.getWhitePieces())
+		for (int i = 0; i < PieceArray.numPieces; i++){
+			Piece piece = model.getWhitePieces().getPiece(i);
+			if (piece !=null)
 			System.out.println("-" + piece.toString());
-
+		}
 		System.out.println("Controller.printTeams: Black pieces remaining: ");
-		for (Piece piece : model.getBlackPieces())
+		for (int i = 0; i < PieceArray.numPieces; i++){
+			Piece piece = model.getBlackPieces().getPiece(i);
+			if (piece !=null)
+	
 			System.out.println("-" + piece.toString());
-	}
+		}}
 
 	/**
 	 * If the move was a capture, remove the captured piece from it's list
@@ -531,7 +535,7 @@ public class Controller {
 	public Piece handleEnPassantCaptures(Move move) {
 		Piece pawnCaptured = null;
 
-		if (move.getPiece().getType().equals("pawn")
+		if (move.getPiece().getType()==Constants.getPawnChar()
 				&& move.getStartCol() != move.getEndCol()
 				&& boardController.getPieceByCoords(move.getEndRow(),
 						move.getEndCol()) == null) {
@@ -541,9 +545,18 @@ public class Controller {
 			// added to the move list,
 			// so we need to look 2 moves back to fine the move where the enemy
 			// pawn moved 2 squares.
-			Move previousMove = model.getMoveList().get(size - 2);
+			Move previousMove = null;
+			//if (AI.isNullMoveBranch())
+//			previousMove = model.getMoveList().get(size - 3);
+			//else
+			previousMove = model.getMoveList().get(size - 2);
 
-			removePieceFromList(previousMove);
+//			if (null == boardController.getPieceByCoords(previousMove.getEndRow(),
+//					previousMove.getEndCol()))
+//				System.out.println("Error");
+//			System.out.println(model.getMoveList().get(size-2).coloredAlgebraicNotationPrint());
+//			System.out.println(move.algebraicNotationPrint());
+				removePieceFromList(previousMove);
 
 			pawnCaptured = previousMove.getPiece();
 
@@ -576,19 +589,33 @@ public class Controller {
 		if (piece == null)
 			log.error("Controller.removePieceFromList: Removing null piece?");
 
+		
+		
 		if (piece.isWhite()) {
 			model.getWhitePieces().remove(piece);
 		} else
 			model.getBlackPieces().remove(piece);
 
+		model.getCapturedPieces().add(piece);
+
 	}
 
+	/**
+	 * Returns the column designated by a mouseEvent
+	 * @param e
+	 * @return
+	 */
 	public int computeColFromMouseEvent(MouseEvent e) {
 
 		int result = e.getX() / 80;
 		return result;
 	}
 
+	/**
+	 * Returns the row designated by a mouseEvent
+	 * @param e
+	 * @return
+	 */
 	public int computeRowFromMouseEvent(MouseEvent e) {
 
 		boolean isFlipped;
@@ -606,29 +633,7 @@ public class Controller {
 		return result;
 	}
 
-	public Model getModel() {
-		return model;
-	}
-
-	public BoardController getBoardController() {
-		return boardController;
-	}
-
-	public void setBoardController(BoardController boardController) {
-		this.boardController = boardController;
-	}
-
-	public void setModel(Model model) {
-		this.model = model;
-	}
-
-	public Log getLog() {
-		return log;
-	}
-
-	public void setLog(Log log) {
-		this.log = log;
-	}
+	
 
 	/**
 	 * Processes action events
@@ -646,11 +651,15 @@ public class Controller {
 			String choice = promptForGameMode();
 			if (choice != null) {
 				model.setGameMode(choice);
-				model.resetModel();
+				// model.resetModel();
 				view.update();
 			}
 		} else if (e.getActionCommand().equals("exportMoveList")) {
 			exportMoveList();
+		} else if (e.getActionCommand().equals("tuneEngine")) {
+			promptUserForNewWeights();
+		} else if (e.getActionCommand().equals("adjustDepth")) {
+			promptUserForNewDepth();
 		} else
 			System.out
 					.println("Controller.handleActionEvent: Action command /'"
@@ -658,18 +667,110 @@ public class Controller {
 
 	}
 
+	private void promptUserForNewDepth() {
+		// TODO Auto-generated method stub
+		JFrame frame = new JFrame();
+		Object[] possibilities = { "1", "2", "3", "4", "5" };
+		String s = (String) JOptionPane
+				.showInputDialog(
+						frame,
+						"Note: Clicking OK to confirm changes will restart the game"
+								+ "\n\nChoose the depth to which the engine will search",
+						"Tune Engine", JOptionPane.PLAIN_MESSAGE, null,
+						possibilities, "4");
+
+		if (s != null && s.length() > 0) {
+			int i = new Integer(s);
+			Constants.setDepth(i);
+			model.resetModel();
+			view.update();
+			AI.resizeKillerMoveArrays();
+		}
+	}
+
+	private void promptUserForNewWeights() {
+		JPanel panel = new JPanel();
+		BoxLayout boxLayout = new BoxLayout(panel, BoxLayout.Y_AXIS);
+		panel.setLayout(boxLayout);
+		JTextField materialWeightInput = new JTextField(3);
+		JTextField positionalWeightInput = new JTextField(3);
+		JTextField bonusWeightInput = new JTextField(3);
+
+		String info = "-Use decimal values to represent percents: 0.8 instead of 80%"
+				+ "\n-Default values: Material 0.8, Positional and Bonus 0.1"
+				+ "\n-Make sure all values add up to 1.0 (aka 100%)"
+				+ "\n-Bonus Weight includes castling, bishop pair, and central pawn pushes\n";
+		JTextArea textArea = new JTextArea(info);
+		textArea.setEditable(false);
+		textArea.setWrapStyleWord(true);
+		textArea.setOpaque(false);
+		panel.add(textArea);
+
+		JPanel materialPanel = new JPanel((LayoutManager) new FlowLayout(
+				FlowLayout.LEFT));
+		materialPanel.add(new JLabel("Material Weight: "));
+		materialPanel.add(materialWeightInput);
+		// materialPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+		panel.add(materialPanel);
+
+		JPanel positionalPanel = new JPanel((LayoutManager) new FlowLayout(
+				FlowLayout.LEFT));
+		positionalPanel.add(new JLabel("Positional Weight: "));
+		positionalPanel.add(positionalWeightInput);
+		// positionalPanel.setAlignmentX(Component.RIGHT_ALIGNMENT);
+		panel.add(positionalPanel);
+
+		JPanel bonusPanel = new JPanel((LayoutManager) new FlowLayout(
+				FlowLayout.LEFT));
+		bonusPanel.add(new JLabel("Bonus Weight: "));
+		bonusPanel.add(bonusWeightInput);
+		// bonusPanel.setAlignmentX(Component.RIGHT_ALIGNMENT);
+		panel.add(bonusPanel);
+		panel.revalidate();
+		panel.repaint();
+
+		JOptionPane.showConfirmDialog(null, panel, "Evaluation Weight Tuning",
+				JOptionPane.OK_CANCEL_OPTION);
+
+		try {
+			double bonusWeight = new Double(bonusWeightInput.getText());
+			double materialWeight = new Double(materialWeightInput.getText());
+			double positionalWeight = new Double(
+					positionalWeightInput.getText());
+
+			Constants.setBonusScoreWeight(bonusWeight);
+			Constants.setMaterialScoreWeight(materialWeight);
+			Constants.setPositionalScoreWeight(positionalWeight);
+		} catch (NumberFormatException numberFormatException) {
+			JOptionPane.showMessageDialog(new JFrame(),
+					"Invalid input. Weights not modified.");
+		}
+
+	}
+
 	private void exportMoveList() {
 
 		ArrayList<Move> moveList = model.getMoveList();
-		String fileName = "Chess Game Move List Export - " + Utils.getTimeNoSpaces() + ".txt";
-		String body = "Game played on " + Utils.getTime() + "\n";
-		for(int i = 0; i < moveList.size(); i++){
-			if (i%2 == 0)
-			body += "\n" + Integer.toString(i/2 +1) + " ";
-			
-			body +=moveList.get(i).algebraicNotationPrint()  + " ";
+		String fileName = "Chess Game Move List Export - "
+				+ Utils.getTimeNoSpaces() + ".txt";
+
+		String body = "Game played on " + Utils.getTime();
+		body += "\n\nEngine stats:\n";
+		body += "\nDepth: " + Constants.getDepth();
+		body += "\nPositional Scoring weight: "
+				+ Constants.getPositionalScoreWeight();
+		body += "\nMaterial Scoring weight: "
+				+ Constants.getMaterialScoreWeight();
+		body += "\nBonus Scoring weight: " + Constants.getBonusScoreWeight();
+		body += "\n";
+
+		for (int i = 0; i < moveList.size(); i++) {
+			if (i % 2 == 0)
+				body += "\n" + Integer.toString(i / 2 + 1) + " ";
+
+			body += moveList.get(i).algebraicNotationPrint() + " ";
 		}
-		
+
 		Utils.writeToFile(fileName, body);
 
 	}
@@ -735,7 +836,59 @@ public class Controller {
 		return result;
 
 	}
+	
+	
+	/**
+	 * Returns true if the same position has occurred 3 times in a row.
+	 * @return
+	 */
+	public boolean isDrawByThreefoldRepitition() {
+		boolean result = true;
 
+		if (model.getMoveList().size() < 11)
+			result = false;
+		else {
+			int size = model.getMoveList().size();
+			ArrayList<Move> moveList = model.getMoveList();
+			for (int i = 0; i < 5; i++) {
+				if (!moveList.get(size - 1 - i).equals(
+						moveList.get(size - 4 - 1 - i)))
+					result = false;
+
+			}
+
+		}
+
+		return result;
+	}
+	
+	/******************************************************************/
+	/**                      Getters and Setters                     **/
+	/******************************************************************/
+	
+	public Model getModel() {
+		return model;
+	}
+
+	public BoardController getBoardController() {
+		return boardController;
+	}
+
+	public void setBoardController(BoardController boardController) {
+		this.boardController = boardController;
+	}
+
+	public void setModel(Model model) {
+		this.model = model;
+	}
+
+	public Log getLog() {
+		return log;
+	}
+
+	public void setLog(Log log) {
+		this.log = log;
+	}
 	public View getView() {
 		return view;
 	}
@@ -775,4 +928,6 @@ public class Controller {
 	public void setAI(AI aI) {
 		AI = aI;
 	}
+
+
 }

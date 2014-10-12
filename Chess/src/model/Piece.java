@@ -9,11 +9,12 @@ import utils.Utils;
  */
 public class Piece {
 
-	String type;
+	char type;
 	boolean isWhite;
 	boolean hasMoved;
 	int row;
 	int col;
+	int id;
 	
 	/**
 	 * Constructor
@@ -21,13 +22,13 @@ public class Piece {
 	 * @param isWhiteIn
 	 * @param hasMovedIn
 	 */
-	public Piece(String typeIn, boolean isWhiteIn, boolean hasMovedIn, int rowIn, int colIn){
+	public Piece(char typeIn, boolean isWhiteIn, boolean hasMovedIn, int rowIn, int colIn, int idIn){
 		this.type = typeIn;
 		this.isWhite = isWhiteIn;
 		this.hasMoved = hasMovedIn;
 		this.row = rowIn;
 		this.col = colIn;
-		
+		this.id = idIn;
 	}
 	/**
 	 * Copy constructor
@@ -39,6 +40,7 @@ public class Piece {
 		this.hasMoved=otherPiece.isHasMoved();
 		this.row=otherPiece.getRow();
 		this.col=otherPiece.getCol();
+		this.id = otherPiece.getID();
 	}
 
 	@Override
@@ -52,11 +54,19 @@ public class Piece {
 		return str += type;
 	}
 
-	public String getType() {
+	public int getID(){
+		return this.id;
+	}
+	
+	public void setID(int idIn){
+		this.id=idIn;
+	}
+	
+	public char getType() {
 		return type;
 	}
 
-	public void setType(String type) {
+	public void setType(char type) {
 		this.type = type;
 	}
 

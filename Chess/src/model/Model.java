@@ -11,8 +11,14 @@ import java.util.ArrayList;
 public class Model {
 
 	Piece[][] board;
-	ArrayList<Piece> whitePieces;
-	ArrayList<Piece> blackPieces;
+	//ArrayList<Piece> whitePieces;
+	//ArrayList<Piece> blackPieces;
+	PieceArray whitePieces;
+	PieceArray blackPieces;
+	
+	ArrayList<Piece> capturedPieces;
+	
+
 	ArrayList<Move> moveList;
 	String gameMode; // "pVc,pVp,cVp,cVc"
 	GameTree gameTree;
@@ -21,22 +27,29 @@ public class Model {
 	 * Constructor. Initializes board to classic chess start position
 	 */
 	public Model() {
-
-		whitePieces = new ArrayList<Piece>();
-		blackPieces = new ArrayList<Piece>();
+		boolean debug = false;
+		whitePieces = new PieceArray();
+		blackPieces = new PieceArray();
+		capturedPieces = new ArrayList<Piece>();
 		moveList = new ArrayList<Move>();
 		gameTree = new GameTree();
-		gameMode = "pVc";
+		gameMode = "cVc";//"pVc";
 
 		board = new Piece[8][8];
-		initializeBoard();
-//		initializeSimpleBoard();
+
+		
+		// Easy way to set up nonstandard positions for testing. Just comment out
+		// InitializeBoard and uncomment out the method call below
+		if(debug)
+			initializeDebugBoard();
+		else
+			initializeBoard();
+		
 		populateLists();
 	}
 
 	/**
-	 * Copy constructor. Don't need the same references to pieces to be the same
-	 * across moveList and board and piece lists? I don't think so
+	 * Copy constructor.
 	 * 
 	 * @param modelIn
 	 */
@@ -49,8 +62,8 @@ public class Model {
 			}
 		}
 
-		this.whitePieces = new ArrayList<Piece>(modelIn.getWhitePieces());
-		this.blackPieces = new ArrayList<Piece>(modelIn.getBlackPieces());
+		this.whitePieces = new PieceArray(modelIn.getWhitePieces());
+		this.blackPieces = new PieceArray(modelIn.getBlackPieces());
 		this.moveList = new ArrayList<Move>(modelIn.getMoveList());
 
 	}
@@ -59,8 +72,9 @@ public class Model {
 	 * Resets all data to initial game state
 	 */
 	public void resetModel() {
-		whitePieces.removeAll(whitePieces);
-		blackPieces.removeAll(blackPieces);
+		whitePieces.removeAll();
+		blackPieces.removeAll();
+		capturedPieces.removeAll(capturedPieces);
 		moveList.removeAll(moveList);
 
 		initializeBoard();
@@ -73,8 +87,14 @@ public class Model {
 	public void initializeBoard() {
 
 		/*
-		 * (row,col) (7,0) ... ... ... (7,7) ... ... ... ... ... ... (2,0) ...
-		 * (1,0) ... (0,0) ... ... ... (0,7)
+		 * How the array coordinates align with the actual chess board
+		 * (row,col) 
+		 * (7,0) ... ... ... 
+		 * (7,7) ... ... ... 
+		 *           ... ... ... 
+		 * (2,0) ...
+		 * (1,0) ... 
+		 * (0,0) ... ... ...          (0,7)
 		 */
 
 		boolean hasMoved = false;
@@ -82,18 +102,18 @@ public class Model {
 		boolean black = false;
 
 		// Set white piece row
-		board[0][0] = new Piece("rook", white, hasMoved, 0, 0);
-		board[0][1] = new Piece("knight", white, hasMoved, 0, 1);
-		board[0][2] = new Piece("bishop", white, hasMoved, 0, 2);
-		board[0][3] = new Piece("queen", white, hasMoved, 0, 3);
-		board[0][4] = new Piece("king", white, hasMoved, 0, 4);
-		board[0][5] = new Piece("bishop", white, hasMoved, 0, 5);
-		board[0][6] = new Piece("knight", white, hasMoved, 0, 6);
-		board[0][7] = new Piece("rook", white, hasMoved, 0, 7);
+		board[0][0] = new Piece('r', white, hasMoved, 0, 0, PieceArray.A_rookId);
+		board[0][1] = new Piece('n', white, hasMoved, 0, 1, PieceArray.B_knightId);
+		board[0][2] = new Piece('b', white, hasMoved, 0, 2, PieceArray.C_bishopId);
+		board[0][3] = new Piece('q', white, hasMoved, 0, 3, PieceArray.D_queenId);
+		board[0][4] = new Piece('k', white, hasMoved, 0, 4, PieceArray.E_kingId);
+		board[0][5] = new Piece('b', white, hasMoved, 0, 5, PieceArray.F_bishopId);
+		board[0][6] = new Piece('n', white, hasMoved, 0, 6, PieceArray.G_knightId);
+		board[0][7] = new Piece('r', white, hasMoved, 0, 7, PieceArray.H_rookId);
 
 		// Set white pawns
 		for (int i = 0; i < 8; i++) {
-			board[1][i] = new Piece("pawn", white, hasMoved, 1, i);
+			board[1][i] = new Piece('p', white, hasMoved, 1, i, i + 8);
 		}
 
 		// Set empty rows
@@ -103,54 +123,56 @@ public class Model {
 
 		// Set black pawns
 		for (int i = 0; i < 8; i++) {
-			board[6][i] = new Piece("pawn", black, hasMoved, 6, i);
+			board[6][i] = new Piece('p', black, hasMoved, 6, i, i+8);
 		}
 
 		// Set black piece row
-		board[7][0] = new Piece("rook", black, hasMoved, 7, 0);
-		board[7][1] = new Piece("knight", black, hasMoved, 7, 1);
-		board[7][2] = new Piece("bishop", black, hasMoved, 7, 2);
-		board[7][3] = new Piece("queen", black, hasMoved, 7, 3);
-		board[7][4] = new Piece("king", black, hasMoved, 7, 4);
-		board[7][5] = new Piece("bishop", black, hasMoved, 7, 5);
-		board[7][6] = new Piece("knight", black, hasMoved, 7, 6);
-		board[7][7] = new Piece("rook", black, hasMoved, 7, 7);
+		board[7][0] = new Piece('r', black, hasMoved, 7, 0, PieceArray.A_rookId);
+		board[7][1] = new Piece('n', black, hasMoved, 7, 1, PieceArray.B_knightId);
+		board[7][2] = new Piece('b', black, hasMoved, 7, 2, PieceArray.C_bishopId);
+		board[7][3] = new Piece('q', black, hasMoved, 7, 3, PieceArray.D_queenId);
+		board[7][4] = new Piece('k', black, hasMoved, 7, 4, PieceArray.E_kingId);
+		board[7][5] = new Piece('b', black, hasMoved, 7, 5, PieceArray.F_bishopId);
+		board[7][6] = new Piece('n', black, hasMoved, 7, 6, PieceArray.G_knightId);
+		board[7][7] = new Piece('r', black, hasMoved, 7, 7, PieceArray.H_rookId);
 	}
 
 	/**
-	 * Initialize a very simple version of the board for gameTree testing
+	 * Initialize a very simple version of the board for testing
 	 */
-	public void initializeSimpleBoard() {
-		boolean hasMoved = false;
+	public void initializeDebugBoard() {
+		boolean hasNotMoved = false;
+		boolean hasMoved = true;
 		boolean white = true;
 		boolean black = false;
-
-		// Set white piece row
-
-		// Set white pawns
 
 		// Set empty rows
 		for (int row = 0; row < 8; row++)
 			for (int col = 0; col < 8; col++)
 				board[row][col] = null;
 
-		board[1][0] = new Piece("king", white, hasMoved, 1, 0);
+		board[0][0] = new Piece('k', black, hasMoved, 0, 0, PieceArray.E_kingId);
+//		board[1][4] = new Piece("rook", white, hasMoved, 1, 4);
+		board[6][0] = new Piece('r', black, hasMoved, 6, 0, PieceArray.A_rookId);
+		board[6][1] = new Piece('r', black, hasMoved, 6, 1, PieceArray.H_rookId);
+		
 
-
-		board[7][4] = new Piece("king", black, hasMoved, 7, 4);
-		board[7][7] = new Piece("rook", black, hasMoved, 7, 7);
-		board[6][5] = new Piece("pawn", black, hasMoved, 6, 5);
-		board[6][6] = new Piece("pawn", black, hasMoved, 6, 6);
-		board[6][7] = new Piece("pawn", black, hasMoved, 6, 7);
-		board[6][4] = new Piece("pawn", black, hasMoved, 6, 4);
-			
+		board[7][4] = new Piece('k', white, hasMoved, 7, 4, PieceArray.E_kingId);
+//		board[7][7] = new Piece('r', black, hasNotMoved, 7, 7, PieceArray.A_rookId);
+//		board[6][7] = new Piece('p', black, hasNotMoved, 6, 7, PieceArray.A_pawnId);
+//		board[6][6] = new Piece('p', black, hasNotMoved, 6, 6, PieceArray.B_pawnId);
+//		board[6][5] = new Piece('p', black, hasNotMoved, 6, 5, PieceArray.C_pawnId);
+//		board[6][4] = new Piece('p', black, hasNotMoved, 6, 4, PieceArray.D_pawnId);
+	
+//		board[6][6] = new Piece("pawn", black, hasMoved, 6, 6);
+//		board[6][7] = new Piece("pawn", black, hasMoved, 6, 7);
+//		board[6][4] = new Piece("pawn", black, hasMoved, 6, 4);
+//			
 //		
 //		board[4][4] = new Piece("pawn", black, hasMoved, 4,4);
 //		board[3][5] = new Piece("rook", white,hasMoved,3,5);
 //		board[1][7] = new Piece("pawn",black,hasMoved,1,7);
 
-		// Set black piece row
-		
 	}
 
 	/**
@@ -159,16 +181,32 @@ public class Model {
 	 * @return
 	 */
 	public void populateLists() {
-		for (int row = 0; row < 2; row++) {
+		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++)
-				if (board[row][col] != null)
+				if (board[row][col] != null && board[row][col].isWhite())
 					whitePieces.add(board[row][col]);
+					//whitePieces.add(board[row][col]);
 		}
-		for (int row = 6; row < 8; row++) {
-			for (int col = 0; col < 8; col++)
-				if (board[row][col] != null)
-					blackPieces.add(board[row][col]);
+		for (int row = 0; row < 8; row++) {
+			for (int col = 0; col < 8; col++){
+				if (board[row][col] != null && !board[row][col].isWhite())
+					blackPieces.add(board[row][col]);}
+			
 		}
+	}
+	
+	/**
+	 * Prints the move list in human readable format
+	 */
+	public void printMoveList(){
+		String body = "";
+		for (int i = 0; i < moveList.size(); i++) {
+			if (i % 2 == 0)
+				body += "\n" + Integer.toString(i / 2 + 1) + " ";
+
+			body += moveList.get(i).algebraicNotationPrint() + " ";
+		}
+		System.out.println(body);
 	}
 
 	public Piece[][] getBoard() {
@@ -187,24 +225,32 @@ public class Model {
 		this.moveList = moveList;
 	}
 
-	public ArrayList<Piece> getWhitePieces() {
+	public PieceArray getWhitePieces() {
 		return whitePieces;
 	}
 
-	public void setWhitePieces(ArrayList<Piece> whitePieces) {
+	public void setWhitePieces(PieceArray whitePieces) {
 		this.whitePieces = whitePieces;
 	}
 
-	public ArrayList<Piece> getBlackPieces() {
+	public PieceArray getBlackPieces() {
 		return blackPieces;
 	}
 
-	public void setBlackPieces(ArrayList<Piece> blackPieces) {
+	public void setBlackPieces(PieceArray blackPieces) {
 		this.blackPieces = blackPieces;
 	}
 
 	public String getGameMode() {
 		return gameMode;
+	}
+	
+	public ArrayList<Piece> getCapturedPieces() {
+		return capturedPieces;
+	}
+
+	public void setCapturedPieces(ArrayList<Piece> capturedPieces) {
+		this.capturedPieces = capturedPieces;
 	}
 
 	public void setGameMode(String gameMode) {

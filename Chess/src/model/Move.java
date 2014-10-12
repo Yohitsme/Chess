@@ -10,19 +10,13 @@ import utils.Utils;
  * 
  */
 public class Move {
-
-	@Override
-	public String toString() {
-		return "Move [startRow=" + startRow + ", startCol=" + startCol
-				+ ", endRow=" + endRow + ", endCol=" + endCol + ", piece="
-				+ piece + "]";
-	}
-
 	int startRow;
 	int startCol;
 	int endRow;
 	int endCol;
 	Piece piece;
+	int score = 0;
+	char promotePiece;
 
 	/**
 	 * Constructor
@@ -40,6 +34,7 @@ public class Move {
 		this.startCol = startColIn;
 		this.endRow = endRowIn;
 		this.endCol = endColIn;
+		
 	}
 
 	public Move(Move move) {
@@ -48,21 +43,59 @@ public class Move {
 		this.startCol = move.getStartCol();
 		this.endRow = move.getEndRow();
 		this.endCol = move.getEndCol();
+		this.promotePiece = move.getPromotePiece();
 	}
 
+	/**
+	 * Returns the human readable version of a move.
+	 * @return
+	 */
 	public String algebraicNotationPrint() {
 
 		char startCol = Utils.getAlgebraicCharacterFromCol(this.startCol);
 		char endCol = Utils.getAlgebraicCharacterFromCol(this.endCol);
-		char pieceAbbreviation = Utils
-				.getAlgebraicCharacterFromPieceType(this.piece.getType());
+		char pieceAbbreviation = this.piece.getType();
 
 		String result = "" + pieceAbbreviation + startCol + (this.startRow + 1)
 				+ " " + pieceAbbreviation + endCol + (this.endRow + 1);
 
 		return result;
 	}
+	
+	/**
+	 * Returns true if two moves have the same origin, destination and piece.
+	 * @param moveIn
+	 * @return
+	 */
+	public boolean equals(Move moveIn){
+		boolean result = true;
+		
+		if (this.startCol != moveIn.getStartCol())
+			result = false;
+		if (this.endCol != moveIn.getEndCol())
+			result = false;
+		if (this.startRow != moveIn.getStartRow())
+			result = false;
+		if (this.endRow != moveIn.getEndRow())
+			result = false;
+		if (this.piece.type != moveIn.getPiece().getType())
+			result = false;
+		
+		return result;
+		
+	}
+	
+	@Override
+	public String toString() {
+		return "Move [startRow=" + startRow + ", startCol=" + startCol
+				+ ", endRow=" + endRow + ", endCol=" + endCol + ", piece="
+				+ piece + "]";
+	}
 
+	/**
+	 * Prints the algebraic notation with a prefix for the color
+	 * @return
+	 */
 	public String coloredAlgebraicNotationPrint() {
 
 		char color = piece.isWhite() ? 'w' : 'b';
@@ -70,8 +103,24 @@ public class Move {
 		return result;
 	}
 
+	public int getScore() {
+		return score;
+	}
+
+	public void setScore(int score) {
+		this.score = score;
+	}
+	
 	public Piece getPiece() {
 		return piece;
+	}
+	
+	public char getPromotePiece() {
+		return this.promotePiece;
+	}
+
+	public void setPromotePiece(char promotePiece) {
+		this.promotePiece= promotePiece;
 	}
 
 	public void setPiece(Piece piece) {

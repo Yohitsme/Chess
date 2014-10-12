@@ -3,6 +3,7 @@ package controller;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import utils.Constants;
 import model.Move;
 import model.Piece;
 
@@ -20,7 +21,7 @@ public class MoveGenerator {
 	BoardController boardController;
 	RuleEngine ruleEngine;
 	Controller controller;
-	
+
 	/**
 	 * Constructor
 	 * 
@@ -28,7 +29,7 @@ public class MoveGenerator {
 	 * @param ruleEngineIn
 	 */
 	public MoveGenerator(BoardController boardControllerIn,
-			RuleEngine ruleEngineIn,Controller controllerIn) {
+			RuleEngine ruleEngineIn, Controller controllerIn) {
 		this.boardController = boardControllerIn;
 		this.ruleEngine = ruleEngineIn;
 		this.controller = controllerIn;
@@ -38,28 +39,29 @@ public class MoveGenerator {
 	 * Given a square designated by coordinates (row,col), returns an arrayList
 	 * of legal moves for the piece on that square.
 	 */
-	public ArrayList<Move> findMoves(int row, int col) {
-		ArrayList<Move> legalMoves = new ArrayList<Move>();
+	public ArrayList<Move> findMoves(ArrayList<Move> legalMoves, int row, int col) {
+//		ArrayList<Move> legalMoves = new ArrayList<Move>();
 
 		Piece piece = boardController.getPieceByCoords(row, col);
-
 		if (piece != null) {
-			if (piece.getType().equals("rook"))
-				legalMoves.addAll(findRookMoves(row, col));
-			else if (piece.getType().equals("bishop"))
-				legalMoves.addAll(findBishopMoves(row, col));
-			else if (piece.getType().equals("queen")) {
-				legalMoves.addAll(findBishopMoves(row, col));
-				legalMoves.addAll(findRookMoves(row, col));
-			} else if (piece.getType().equals("knight"))
-				legalMoves.addAll(findKnightMoves(row, col));
-			else if (piece.getType().equals("king"))
-				legalMoves.addAll(findKingMoves(row, col));
-			else if (piece.getType().equals("pawn"))
-				legalMoves.addAll(findPawnMoves(row, col));
+			if (piece.getType()==Constants.getRookChar())
+				findRookMoves(legalMoves, row, col);
+			else if (piece.getType()==Constants.getBishopChar())
+				findBishopMoves(legalMoves, row, col);
+			else if (piece.getType()==Constants.getQueenChar()) {
+				findBishopMoves(legalMoves, row, col);
+				findRookMoves(legalMoves, row, col);
+			} else if (piece.getType()==Constants.getKnightChar())
+				findKnightMoves(legalMoves, row, col);
+			else if (piece.getType()==Constants.getKingChar())
+				findKingMoves(legalMoves,row, col);
+			else if (piece.getType()==Constants.getPawnChar())
+				findPawnMoves(legalMoves,row, col);
 
 		}
-
+		
+		
+		
 		return legalMoves;
 	}
 
@@ -75,18 +77,20 @@ public class MoveGenerator {
 			for (int col = 0; col < 8; col++) {
 				piece = boardController.getPieceByCoords(row, col);
 				if (piece != null) {
-					if (isWhite == piece.isWhite())
-
-						legalMoves.addAll(findMoves(row, col));
-
+					if (isWhite == piece.isWhite()){
+						
+						findMoves(legalMoves, row, col);
+					}
 				}
 			}
 		}
+
 		return legalMoves;
 	}
 
 	/**
-	 * Returns true i
+	 * Returns true if the side designated by isWhite has no moves
+	 * and is not in check.
 	 */
 	public boolean isStalemated(boolean isWhite) {
 		Piece piece = null;
@@ -95,35 +99,32 @@ public class MoveGenerator {
 		int numMoves = 0;
 		boolean result = false;
 		Piece king = null;
-		
+		ArrayList<Move>legalMoves = new ArrayList<Move>();
 		while (row < 8 && numMoves == 0) {
 			col = 0;
 			while (col < 8 && numMoves == 0) {
 				piece = boardController.getPieceByCoords(row, col);
 				if (piece != null) {
-					if ((isWhite == piece.isWhite())){
-						numMoves += findMoves(row, col).size();
+					if ((isWhite == piece.isWhite())) {
+						numMoves += findMoves(legalMoves, row, col).size();
 					}
 				}
-			col++;
+				col++;
 			}
 			row++;
 		}
-		
-		
-		
-		
-		if (numMoves == 0){
+
+		if (numMoves == 0) {
 			king = controller.getAI().findKing(isWhite);
-			String color = isWhite?"white":"black";
-			
+			String color = isWhite ? "white" : "black";
+
 			// If the king's square is attacked, it's checkmate, not stalemate.
-			if (!RuleEngine.isAttackedSquare(king.getRow(),king.getCol(),color));
+			if (!RuleEngine.isAttackedSquare(king.getRow(), king.getCol(),
+					color))
+				
 			result = true;
 		}
-		
-		
-		
+
 		if (result)
 			System.out.println("MoveGenerator.isStaleMated: StalemateDetected");
 		return result;
@@ -137,8 +138,7 @@ public class MoveGenerator {
 	 * @param col
 	 * @return
 	 */
-	public ArrayList<Move> findKingMoves(int row, int col) {
-		ArrayList<Move> legalMoves = new ArrayList<Move>();
+	public ArrayList<Move> findKingMoves(ArrayList<Move> legalMoves,int row, int col) {
 		Piece piece = boardController.getPieceByCoords(row, col);
 		Move move = null;
 		int newRow = 0;
@@ -201,17 +201,15 @@ public class MoveGenerator {
 	 * @param col
 	 * @return
 	 */
-	public ArrayList<Move> findBishopMoves(int row, int col) {
-		ArrayList<Move> legalMoves = new ArrayList<Move>();
+	public void findBishopMoves(ArrayList<Move> legalMoves,int row, int col) {
 
 		// Call the findBishopMovesAlongDiagonal method with each of the 4
 		// directions
-		legalMoves.addAll(findBishopMovesAlongDiagonal(row, col, 1, 1));
-		legalMoves.addAll(findBishopMovesAlongDiagonal(row, col, 1, -1));
-		legalMoves.addAll(findBishopMovesAlongDiagonal(row, col, -1, 1));
-		legalMoves.addAll(findBishopMovesAlongDiagonal(row, col, -1, -1));
+		findBishopMovesAlongDiagonal(legalMoves, row, col, 1, 1);
+		findBishopMovesAlongDiagonal(legalMoves, row, col, 1, -1);
+		findBishopMovesAlongDiagonal(legalMoves, row, col, -1, 1);
+		findBishopMovesAlongDiagonal(legalMoves, row, col, -1, -1);
 
-		return legalMoves;
 	}
 
 	/**
@@ -222,22 +220,20 @@ public class MoveGenerator {
 	 * @param col
 	 * @return
 	 */
-	public ArrayList<Move> findKnightMoves(int row, int col) {
-		ArrayList<Move> legalMoves = new ArrayList<Move>();
+	public void findKnightMoves(ArrayList<Move> legalMoves,int row, int col) {
 
 		// Check all moves that are two rows over and one column over
-		legalMoves.addAll(findKnightMoves_2Row1Col(row, col, 1, 1));
-		legalMoves.addAll(findKnightMoves_2Row1Col(row, col, -1, 1));
-		legalMoves.addAll(findKnightMoves_2Row1Col(row, col, 1, -1));
-		legalMoves.addAll(findKnightMoves_2Row1Col(row, col, -1, -1));
+		findKnightMoves_2Row1Col(legalMoves,row, col, 1, 1);
+		findKnightMoves_2Row1Col(legalMoves,row, col, -1, 1);
+		findKnightMoves_2Row1Col(legalMoves,row, col, 1, -1);
+		findKnightMoves_2Row1Col(legalMoves,row, col, -1, -1);
 
 		// Check all moves that are one row over and two columns over
-		legalMoves.addAll(findKnightMoves_1Row2Col(row, col, 1, 1));
-		legalMoves.addAll(findKnightMoves_1Row2Col(row, col, -1, 1));
-		legalMoves.addAll(findKnightMoves_1Row2Col(row, col, 1, -1));
-		legalMoves.addAll(findKnightMoves_1Row2Col(row, col, -1, -1));
+		findKnightMoves_1Row2Col(legalMoves,row, col, 1, 1);
+		findKnightMoves_1Row2Col(legalMoves,row, col, -1, 1);
+		findKnightMoves_1Row2Col(legalMoves,row, col, 1, -1);
+		findKnightMoves_1Row2Col(legalMoves,row, col, -1, -1);
 
-		return legalMoves;
 	}
 
 	/**
@@ -250,9 +246,9 @@ public class MoveGenerator {
 	 * @param colDirection
 	 * @return
 	 */
-	public ArrayList<Move> findKnightMoves_2Row1Col(int row, int col,
+	public void findKnightMoves_2Row1Col(ArrayList<Move> legalMoves, int row, int col,
 			int rowDirection, int colDirection) {
-		ArrayList<Move> legalMoves = new ArrayList<Move>();
+		
 		Move move = null;
 
 		Piece piece = boardController.getPieceByCoords(row, col);
@@ -269,8 +265,7 @@ public class MoveGenerator {
 					&& RuleEngine.isNotSelfCheck(move, boardController))
 				legalMoves.add(move);
 		}
-		return legalMoves;
-
+		
 	}
 
 	/**
@@ -283,9 +278,9 @@ public class MoveGenerator {
 	 * @param colDirection
 	 * @return
 	 */
-	public ArrayList<Move> findKnightMoves_1Row2Col(int row, int col,
+	public void findKnightMoves_1Row2Col(ArrayList<Move> legalMoves, int row, int col,
 			int rowDirection, int colDirection) {
-		ArrayList<Move> legalMoves = new ArrayList<Move>();
+		
 		Move move = null;
 
 		Piece piece = boardController.getPieceByCoords(row, col);
@@ -305,7 +300,7 @@ public class MoveGenerator {
 
 		}
 
-		return legalMoves;
+		
 
 	}
 
@@ -319,9 +314,9 @@ public class MoveGenerator {
 	 * @param colDirection
 	 * @return
 	 */
-	public ArrayList<Move> findBishopMovesAlongDiagonal(int row, int col,
+	public void findBishopMovesAlongDiagonal(ArrayList<Move> legalMoves,int row, int col,
 			int rowDirection, int colDirection) {
-		ArrayList<Move> legalMoves = new ArrayList<Move>();
+		
 
 		Piece piece = boardController.getPieceByCoords(row, col);
 		boolean isBlocked = false;
@@ -354,17 +349,17 @@ public class MoveGenerator {
 			newCol = col + i * colDirection;
 		}
 
-		return legalMoves;
+		
 	}
 
 	/**
-	 * 
+	 * Checks for all legal pawn moves and returns an arrayList of legal moves.
 	 * @param row
 	 * @param col
 	 * @return
 	 */
-	public ArrayList<Move> findPawnMoves(int row, int col) {
-		ArrayList<Move> legalMoves = new ArrayList<Move>();
+	public ArrayList<Move> findPawnMoves(ArrayList<Move> legalMoves, int row, int col) {
+	
 		Piece piece = boardController.getPieceByCoords(row, col);
 		Move move;
 		int rowDirection;
@@ -376,31 +371,77 @@ public class MoveGenerator {
 		// Moving one step forward
 		move = new Move(piece, row, col, row + 1 * rowDirection, col);
 		if (RuleEngine.isLegalPawnMove(move, boardController)
-				&& RuleEngine.isNotSelfCheck(move, boardController))
+				&& RuleEngine.isNotSelfCheck(move, boardController)) {
+			if (move.getEndRow() == 0 || move.getEndRow() == 7) {
+				
+				move.setPromotePiece(Constants.getQueenChar());
+				
+			}
 			legalMoves.add(move);
+			
+		}
 
 		// Moving two steps forward
-		if (boardController.getPieceByCoords(row + 1 * rowDirection, col) == null) {
+		if (!piece.isHasMoved()
+				&& boardController
+						.getPieceByCoords(row + 1 * rowDirection, col) == null) {
 			move = new Move(piece, row, col, row + 2 * rowDirection, col);
+
 			if (RuleEngine.isLegalPawnMove(move, boardController)
 					&& RuleEngine.isNotSelfCheck(move, boardController))
 				legalMoves.add(move);
 		}
 
 		// Capturing to the right
-		move = new Move(piece, row, col, row + 1 * rowDirection, col + 1);
-		if (isEnemyPieceOrEmpty(piece, row + 1 * rowDirection, col + 1) &&
-				RuleEngine.isLegalPawnMove(move, boardController)
-				&& RuleEngine.isNotSelfCheck(move, boardController))
-			legalMoves.add(move);
+		int newCol = col + 1;
+		int newRow = row + 1 * rowDirection;
+		move = new Move(piece, row, col, newRow, newCol);
+		if (isLegalSquare(newRow, newCol)
+				&& isEnemyPieceOrEmpty(piece, newRow, newCol)
+				&& RuleEngine.isLegalPawnMove(move, boardController)
+				&& RuleEngine.isNotSelfCheck(move, boardController)){
+			// If it is a move to the first or last rank, add a move for each promote
+						if (move.getEndRow() == 0 || move.getEndRow() == 7) {
+							
+							move.setPromotePiece(Constants.getQueenChar());
+							
+							
+						}
+			legalMoves.add(move);}
 
 		// Capturing to the left
-		move = new Move(piece, row, col, row + 1 * rowDirection, col - 1);
-		if (isEnemyPieceOrEmpty(piece, row + 1 * rowDirection, col - 1) && 
-				RuleEngine.isLegalPawnMove(move, boardController)
-				&& RuleEngine.isNotSelfCheck(move, boardController))
-			legalMoves.add(move);
+		newCol = col - 1;
+
+		move = new Move(piece, row, col, newRow, newCol);
+		if (isLegalSquare(newRow, newCol)
+				&& isEnemyPieceOrEmpty(piece, newRow, newCol)
+				&& RuleEngine.isLegalPawnMove(move, boardController)
+				&& RuleEngine.isNotSelfCheck(move, boardController)){
+			// If it is a move to the first or last rank, add a move for each promote
+						if (move.getEndRow() == 0 || move.getEndRow() == 7) {
+												
+							move.setPromotePiece(Constants.getQueenChar());
+							
+							
+						}
+						
+			legalMoves.add(move);}
 		return legalMoves;
+	}
+
+	/**
+	 * Returns true if the square designated by (row,col) is on the board.
+	 * @param row
+	 * @param col
+	 * @return
+	 */
+	public boolean isLegalSquare(int row, int col) {
+		boolean result = true;
+
+		if (row < 0 || row > 7 || col < 0 || col > 7)
+			result = false;
+
+		return result;
 	}
 
 	/**
@@ -413,28 +454,34 @@ public class MoveGenerator {
 	 * @param col
 	 * @return
 	 */
-	public ArrayList<Move> findRookMoves(int row, int col) {
-		ArrayList<Move> legalMoves = new ArrayList<Move>();
+	public void findRookMoves(ArrayList<Move> legalMoves,int row, int col) {
 		int i = 1;
 		int direction = 1;
 
 		// Check up direction
-		legalMoves.addAll(findRookMovesAlongCol(row, col, direction));
+		findRookMovesAlongCol(legalMoves, row, col, direction);
 
 		// Check down direction
-		legalMoves.addAll(findRookMovesAlongCol(row, col, direction * -1));
+		findRookMovesAlongCol(legalMoves, row, col, direction * -1);
 
 		// Check right direction
-		legalMoves.addAll(findRookMovesAlongRow(row, col, direction));
+		findRookMovesAlongRow(legalMoves, row, col, direction);
 
 		// Check left direction
-		legalMoves.addAll(findRookMovesAlongRow(row, col, direction * -1));
+		findRookMovesAlongRow(legalMoves, row, col, direction * -1);
 
-		return legalMoves;
 	}
 
-	public ArrayList<Move> findRookMovesAlongCol(int row, int col, int direction) {
-		ArrayList<Move> legalMoves = new ArrayList<Move>();
+	
+	/** 
+	 * Returns all moves along a column that a rook has.
+	 * @param row
+	 * @param col
+	 * @param direction
+	 * @return
+	 */
+	public void findRookMovesAlongCol(ArrayList<Move> legalMoves, int row, int col, int direction) {
+		
 		Piece piece = boardController.getPieceByCoords(row, col);
 		boolean isBlocked = false;
 		Move move;
@@ -458,11 +505,17 @@ public class MoveGenerator {
 			i++;
 			newRow = row + i * direction;
 		}
-		return legalMoves;
+		
 	}
 
-	public ArrayList<Move> findRookMovesAlongRow(int row, int col, int direction) {
-		ArrayList<Move> legalMoves = new ArrayList<Move>();
+	/**
+	 * Returns all legal moves a rook has along a row.
+	 * @param row
+	 * @param col
+	 * @param direction
+	 * @return
+	 */
+	public void findRookMovesAlongRow(	ArrayList<Move> legalMoves,int row, int col, int direction) {
 		Piece piece = boardController.getPieceByCoords(row, col);
 		boolean isBlocked = false;
 		Move move;
@@ -486,7 +539,6 @@ public class MoveGenerator {
 			i++;
 			newCol = col + i * direction;
 		}
-		return legalMoves;
 	}
 
 	/**

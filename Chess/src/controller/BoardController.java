@@ -32,13 +32,16 @@ public class BoardController {
 	public Piece getPieceByCoords(int row, int col){
 		Piece piece = null;
 		
-		if (row >=8 || row <0)
-		;//	System.out.println("BoardController.getPieceByCoords: Row value of " + row + " outside range [0,7]. Null value returned.");
-		else if (col >=8 || col <0)
-		;//	System.out.println("BoardController.getPieceByCoords: Column value of " + row + " outside range [0,7]. Null value returned.");
-		else
+//		//piece.isWhite();
+//		if (row >=8 || row <0){
+//			System.out.println("BoardController.getPieceByCoords: Row value of " + row + " outside range [0,7]. Null value returned.");
+//			
+//		}else if (col >=8 || col <0){
+//			System.out.println("BoardController.getPieceByCoords: Column value of " + col + " outside range [0,7]. Null value returned.");
+//			
+//		}else
 			piece = model.getBoard()[row][col];
-		
+
 		
 		return piece;
 	}
@@ -54,12 +57,12 @@ public class BoardController {
 	public boolean setPieceByCoords(int row, int col, Piece piece){
 		boolean result = false;
 		
-		if (row >=8 || row <0)
-			System.out.println("Model.setPieceByCoords: Row value of " + row + " outside range [0,7]. No action taken.");
-		else if (col >=8 || col <0)
-			System.out.println("Model.setPieceByCoords: Column value of " + col + " outside range [0,7]. No action taken.");
-		else if (piece == null)
-			System.out.println("Model.setPieceByCoords: Error; attempt to move null piece ignored.");
+		if (row >=8 || row <0){
+			System.out.println("BoardController.setPieceByCoords: Row value of " + row + " outside range [0,7]. No action taken. Piece: " + piece.toString());
+		}else if (col >=8 || col <0){
+			System.out.println("BoardController.setPieceByCoords: Column value of " + col + " outside range [0,7]. No action taken. Piece: " + piece.toString());
+	}else if (piece == null)
+			System.out.println("BoardController.setPieceByCoords: Error; attempt to move null piece ignored.");
 		else{
 			model.getBoard()[row][col] = piece;
 			result = true;

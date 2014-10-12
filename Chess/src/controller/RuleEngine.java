@@ -515,7 +515,7 @@ public class RuleEngine {
 			if ((piece.getType() == Constants.getRookChar() && (piece.getRow() == row || piece
 					.getCol() == col)))
 				seemsValid = true;
-			 if ((piece.getType() == Constants.getPawnChar()
+			else if ((piece.getType() == Constants.getPawnChar()
 					&& (unsignedColDifference == 1) && (unsignedRowDifference == 1)))
 				seemsValid = true;
 			else if ((piece.getType() == Constants.getBishopChar() && unsignedColDifference == unsignedRowDifference))
@@ -532,7 +532,8 @@ public class RuleEngine {
 			if (validateCheck(
 						new Move(piece, piece.getRow(), piece.getCol(), row,
 								col), controller.getBoardController(), false))
-					result = true;
+//					result = true;
+				return true;
 			}}
 		}
 

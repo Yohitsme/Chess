@@ -51,7 +51,7 @@ public class Constants {
 	
 	
 	private final static int nullMoveReduction = 2;
-	private final static int checkMateScore = 10000000;
+	private final static int checkMateScore = 1000000;
 	private final static int drawScore = 0;
 	private final static double killerMoveScore = -0.1;
 	

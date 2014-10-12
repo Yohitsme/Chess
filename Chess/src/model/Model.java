@@ -27,20 +27,24 @@ public class Model {
 	 * Constructor. Initializes board to classic chess start position
 	 */
 	public Model() {
-
+		boolean debug = false;
 		whitePieces = new PieceArray();
 		blackPieces = new PieceArray();
 		capturedPieces = new ArrayList<Piece>();
 		moveList = new ArrayList<Move>();
 		gameTree = new GameTree();
-		gameMode = "pVc";
+		gameMode = "pVc";//"pVc";
 
 		board = new Piece[8][8];
-		initializeBoard();
+
 		
 		// Easy way to set up nonstandard positions for testing. Just comment out
 		// InitializeBoard and uncomment out the method call below
-		// initializeSimpleBoard();
+		if(debug)
+			initializeDebugBoard();
+		else
+			initializeBoard();
+		
 		populateLists();
 	}
 
@@ -134,9 +138,9 @@ public class Model {
 	}
 
 	/**
-	 * Initialize a very simple version of the board for gameTree testing
+	 * Initialize a very simple version of the board for testing
 	 */
-	public void initializeSimpleBoard() {
+	public void initializeDebugBoard() {
 		boolean hasNotMoved = false;
 		boolean hasMoved = true;
 		boolean white = true;
@@ -147,17 +151,18 @@ public class Model {
 			for (int col = 0; col < 8; col++)
 				board[row][col] = null;
 
-		board[0][0] = new Piece('k', white, hasMoved, 0, 0, PieceArray.E_kingId);
+		board[0][0] = new Piece('k', black, hasMoved, 0, 0, PieceArray.E_kingId);
 //		board[1][4] = new Piece("rook", white, hasMoved, 1, 4);
-		board[5][5] = new Piece('p', white, hasMoved, 5, 5, PieceArray.A_pawnId);
+		board[6][0] = new Piece('r', black, hasMoved, 6, 0, PieceArray.A_rookId);
+		board[6][1] = new Piece('r', black, hasMoved, 6, 1, PieceArray.H_rookId);
 		
 
-		board[7][4] = new Piece('k', black, hasNotMoved, 7, 4, PieceArray.E_kingId);
-		board[7][7] = new Piece('r', black, hasNotMoved, 7, 7, PieceArray.A_rookId);
-		board[6][7] = new Piece('p', black, hasNotMoved, 6, 7, PieceArray.A_pawnId);
-		board[6][6] = new Piece('p', black, hasNotMoved, 6, 6, PieceArray.B_pawnId);
-		board[6][5] = new Piece('p', black, hasNotMoved, 6, 5, PieceArray.C_pawnId);
-		board[6][4] = new Piece('p', black, hasNotMoved, 6, 4, PieceArray.D_pawnId);
+		board[7][4] = new Piece('k', white, hasMoved, 7, 4, PieceArray.E_kingId);
+//		board[7][7] = new Piece('r', black, hasNotMoved, 7, 7, PieceArray.A_rookId);
+//		board[6][7] = new Piece('p', black, hasNotMoved, 6, 7, PieceArray.A_pawnId);
+//		board[6][6] = new Piece('p', black, hasNotMoved, 6, 6, PieceArray.B_pawnId);
+//		board[6][5] = new Piece('p', black, hasNotMoved, 6, 5, PieceArray.C_pawnId);
+//		board[6][4] = new Piece('p', black, hasNotMoved, 6, 4, PieceArray.D_pawnId);
 	
 //		board[6][6] = new Piece("pawn", black, hasMoved, 6, 6);
 //		board[6][7] = new Piece("pawn", black, hasMoved, 6, 7);

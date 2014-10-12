@@ -70,8 +70,8 @@ public class AI {
 
 	public void chooseMove(boolean isWhiteTurn) {
 
-		double alpha = -1000000001.0;
-		double beta = 1000000001.0;
+		double alpha = -100000000000.0;
+		double beta =   100000000000.0;
 
 		Node parentNode = controller.gameTreeController.root;
 		initializeKillerMoveArrays();
@@ -90,9 +90,6 @@ public class AI {
 			// System.out.println(PV[i].getMove().algebraicNotationPrint());
 
 		}
-		// this.depth = Constants.getDepth();
-		// alphaBeta(alpha, beta, depth, isWhite, parentNode);
-		//
 		for (Node node : this.masterPV) {
 			System.out.println("PV: "
 					+ node.getMove().coloredAlgebraicNotationPrint());
@@ -129,24 +126,28 @@ public class AI {
 		boolean bSearchPv = true;
 		boolean exploringPV = false;
 
-		
-		for (int r = 0; r < 8; r++){
-			for (int c = 0; c < 8; c++)
-				if (controller.getBoardController().getPieceByCoords(r, c)!=null)
-				if (controller.getBoardController().getPieceByCoords(r, c).getRow()!= r ||controller.getBoardController().getPieceByCoords(r, c).getCol()!= c )
-					System.out.println("AI.pvSearch: BOARD OUT OF SYNC ERROR");
-		}
+		// Validate board and pieces agree on all piece locations for debugging
+//		for (int r = 0; r < 8; r++){
+//			for (int c = 0; c < 8; c++)
+//				if (controller.getBoardController().getPieceByCoords(r, c)!=null)
+//				if (controller.getBoardController().getPieceByCoords(r, c).getRow()!= r ||controller.getBoardController().getPieceByCoords(r, c).getCol()!= c )
+//					System.out.println("AI.pvSearch: ERROR: Board out of sync, make/unmake process unstable");
+//		}
 		
 		// If Check mate/draw/king got captured
-		
-		if (controller.isWhiteCheckmated()){
-			score = -Constants.getCheckMateScore() ;
-		}else if (controller.isBlackCheckmated()){
+		if (controller.isWhiteCheckmated()){this.localPV = new ArrayList<Node>();
+		this.localPV.add(parentNode);
+			score = -Constants.getCheckMateScore(); // This one should be negative
+		}else if (controller.isBlackCheckmated()){this.localPV = new ArrayList<Node>();
+		this.localPV.add(parentNode);
 			score = Constants.getCheckMateScore();
-		}else if (controller.isDrawByThreefoldRepitition())
-			return Constants.getDrawScore();
+		}else if (controller.isDrawByThreefoldRepitition()){
+			this.localPV = new ArrayList<Node>();
+			this.localPV.add(parentNode);
+			return Constants.getDrawScore();}
 		if (score != 0)
 			return score;
+		
 		// Termination condition
 		if (depthleft == 0) {
 			this.localPV = new ArrayList<Node>();
@@ -188,15 +189,7 @@ public class AI {
 			Node node = parentNode.getChildren().get(j);
 			Move move = node.getMove();
 
-			if (move.getEndRow() == 5 && move.getEndCol() == 5 && move.getPiece().getType() == 'q' && depthleft==2)
-				System.out.println("PV Search queen move 55");
-			
-			if (move.getEndRow() == 2 && move.getEndCol() == 2 && move.getStartCol() == 5 && move.getPiece().getType() == 'q' && depthleft == 2)
-				System.out.println("PVSearch checking queen move");
-				
 			Piece capturedPiece = RuleEngine.processMove(move);
-			if (capturedPiece != null && capturedPiece.getType()== 'k')
-				System.out.println("PVSearch removing king");
 			tmpHasMoved = move.getPiece().isHasMoved();
 			move.getPiece().setHasMoved(true);
 
@@ -229,7 +222,7 @@ public class AI {
 //				
 //			}
 			// Null move addition END
-						
+//			score = -pvSearch(-beta, -alpha, depthleft - 1, !isWhiteTurn, node);
 			// PV backend
 			if (bSearchPv) {
 				score = -pvSearch(-beta, -alpha, depthleft - 1, !isWhiteTurn, node);
@@ -239,9 +232,6 @@ public class AI {
 				if (score > alpha){
 					score = -pvSearch(-beta, -alpha, depthleft - 1, !isWhiteTurn,
 							node); // re-search
-//					if (depthleft == Constants.getDepth()) {
-//						System.out.println("AI.pvSearch: Researching....expensive!");
-//					}
 				}}
 
 			RuleEngine.undoChanges(capturedPiece, move);
@@ -255,9 +245,10 @@ public class AI {
 				for (Move killerNode : killerMoves.get(depthleft))
 					if (killerNode.equals(node.getMove()))
 						nodeFound = true;
-				if (!nodeFound)
+				if (!nodeFound){
 					killerMoves.get(depthleft).add(node.getMove());
-
+					
+				}
 				return beta;
 			}
 
@@ -275,13 +266,6 @@ public class AI {
 			}
 
 			bSearchPv = false;
-		}
-
-		if (parentNode.getChildren().size() == 0) {
-			// If I have no moves assume I was checkmated and return low alpha
-			// value
-
-			alpha = -1000000000.0;
 		}
 
 		ArrayList<Node> tmp = new ArrayList<Node>();
@@ -545,8 +529,11 @@ public class AI {
 	 * @param child
 	 */
 	public void prioritizeNode(Node parent, Node child) {
-		parent.getChildren().remove(child);
+		boolean successfulRemove = parent.getChildren().remove(child);
+		if (successfulRemove)
 		parent.getChildren().add(0, child);
+		else
+			System.out.println("AI.PrioritizeNode: ERROR, non-child node was attempted to prioritize");
 		// child.setScore((-500));
 	}
 
@@ -560,11 +547,7 @@ public class AI {
 	 * @param depthleft
 	 */
 	public void populateChildren(Node parentNode, boolean isWhiteTurn, int depthleft) {
-		
-//		if (isWhiteTurn == parentNode.getMove().getPiece().isWhite())
-//			System.out.println("Houston we have a problems");
-		
-		
+	
 		ArrayList<Move> legalMoves = controller.getMoveGenerator().findMoves(
 				isWhiteTurn);
 		for (Move move : legalMoves) {

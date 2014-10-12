@@ -44,7 +44,8 @@ public class MoveGenerator {
 
 		Piece piece = boardController.getPieceByCoords(row, col);
 		if(piece.getRow() != row || piece.getCol() != col)
-			System.out.println("MoveGen.findMoves: Board and Piece out of sync ERROR");
+;
+		//			System.out.println("MoveGen.findMoves: Board and Piece out of sync ERROR");
 		if (piece != null) {
 			if (piece.getType()==Constants.getRookChar())
 				findRookMoves(legalMoves, row, col);
@@ -347,8 +348,8 @@ public class MoveGenerator {
 					&& RuleEngine.isNotSelfCheck(move, boardController)) {
 				
 				
-			if (move.getStartCol() == 5 && move.getStartRow() == 5 && move.getEndRow() == 2 && move.getEndCol() == 2  &&move.getPiece().getType() == 'q')
-						System.out.println("MoveGenerator.findMoves: Found queen move");
+//			if (move.getStartCol() == 5 && move.getStartRow() == 5 && move.getEndRow() == 2 && move.getEndCol() == 2  &&move.getPiece().getType() == 'q')
+//						System.out.println("MoveGenerator.findBishopMovesAlongDiagonal: Found queen move");
 				legalMoves.add(move);
 			}
 			i++;

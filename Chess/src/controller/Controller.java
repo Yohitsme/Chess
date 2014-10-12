@@ -328,6 +328,8 @@ public class Controller {
 			inCheck = true;
 
 		ArrayList<Move> list = new ArrayList<Move>();
+		
+		if (inCheck){
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++)
 				if (boardController.getPieceByCoords(row, col) != null
@@ -336,7 +338,7 @@ public class Controller {
 
 				}
 		}
-
+		}
 		result = inCheck && (list.isEmpty());
 		}
 		return result;
@@ -362,6 +364,7 @@ public class Controller {
 			inCheck = true;
 
 		ArrayList<Move> list = new ArrayList<Move>();
+		if (inCheck){
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++)
 				if (boardController.getPieceByCoords(row, col) != null
@@ -370,7 +373,7 @@ public class Controller {
 					list.addAll(moveGenerator.findMoves(row, col));
 
 				}
-		}
+		}}
 
 		result = inCheck && (list.isEmpty());
 		}

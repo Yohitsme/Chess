@@ -1,3 +1,21 @@
+/*
+Quiet Intrigue is a chess playing engine with GUI written in Java.
+Copyright (C) <2014>  Matthew Voss
+
+Quiet Intrigue is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Quiet Intrigue is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Quiet Intrigue.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 package controller;
 
 import java.util.ArrayList;
@@ -13,6 +31,17 @@ import model.PieceArray;
 import utils.Constants;
 import utils.Log;
 
+/**
+ * This class holds the searching and evaluation parts of the chess engine.
+ * 
+ * You can create an instance of the AI class and call AI.move(boolean isWhite)
+ *  and it will return the move it chooses.
+ * 
+ * All of the weights for bonuses, penalties, and piece values can be found
+ * and/or tweaked in utils/Constants.java.
+ * @author Matthew
+ *
+ */
 public class AI {
 
 	Controller controller;
@@ -34,7 +63,10 @@ public class AI {
     int branchCounter;
     int numBranches;
     
-	
+	/**
+	 * Constructor
+	 * @param controllerIn
+	 */
 	public AI(Controller controllerIn) {
 		this.controller = controllerIn;
 
@@ -48,7 +80,11 @@ public class AI {
 		nodesPerLevel = new int[20];
 	}
 
-	// Color is the side to play
+	/**
+	 * This method calls the choose move method and returns the result.
+	 * @param isWhiteTurn
+	 * @return
+	 */
 	public Node move(boolean isWhiteTurn) {
 		Node node = null;
 		isThinking = true;
@@ -73,6 +109,12 @@ public class AI {
 		return node;
 	}
 
+	/**
+	 * This method deepens iteratively and calls the pvSearch method, building
+	 * up the masterPV array with the most probably variation, and then returns
+	 * the first move in that sequence.
+	 * @param isWhiteTurn
+	 */
 	public void chooseMove(boolean isWhiteTurn) {
 
 		double alpha = -100000000000.0;
@@ -118,6 +160,10 @@ public class AI {
 
 	}
 
+	/**
+	 * Updates the arrays that hold killer moves.  This gets called whenever
+	 * the user changes the depth the AI is searching to.
+	 */
 	public void resizeKillerMoveArrays() {
 		killerMoves = new ArrayList<ArrayList<Move>>(Constants.getDepth() + 1);
 		for (int i = 0; i < Constants.getDepth() + 1; i++)
@@ -232,7 +278,7 @@ public class AI {
 //				
 //			}
 			// Null move addition END
-//			score = -pvSearch(-beta, -alpha, depthleft - 1, !isWhiteTurn, node);
+
 			// PV backend
 			if (bSearchPv) {
 				score = -pvSearch(-beta, -alpha, depthleft - 1, !isWhiteTurn, node);
@@ -781,6 +827,9 @@ public class AI {
 	 */
 	public int computeBonusScore() {
 
+		// TODO: Break up the bonuses instead of lumping them all together
+		//       so it is easier to apply different weights.
+		
 		boolean black = false;
 		boolean white = true;
 
@@ -814,7 +863,7 @@ public class AI {
 		int connectedRooksBonus = computeConnectedRooksBonus(isWhite);
 		int earlyQueenPenalty = computeEarlyQueenPenalty(isWhite);
 		result = castlingBonus + centralPawnsPushedBonus + bishopPairBonus
-				+ connectedRooksBonus + earlyQueenPenalty;
+				+ connectedRooksBonus + earlyQueenPenalty + multiMoveOpeningPiecePenalty;
 		return result;
 	}
 
@@ -855,13 +904,36 @@ public class AI {
 		return result;
 	}
 
-
+	/**
+	 * This checks to see if any pawns are on the same column, and returns 
+	 * the penalty cost if so.
+	 * @param isWhite
+	 * @return
+	 */
 	private int computeDoubledPawnsPenalty(boolean isWhite){
+		
+		// TODO: Implement this
 		return 0;
 	}
 	
+	/**
+	 * If we are less than 30 ply into the game (or the first 15 moves), then
+	 * this method will count how many times a piece has moved more than once,
+	 * and multiply that times the penalty.  After 15 moves the opening is 
+	 * considered over and this method will return 0.
+	 * 
+	 * Making tons of ArrayLists is too slow, the current implementation will
+	 * need to be redone.  One option would be to add a boolean to the piece
+	 * class (or an int) to reflect if it has moved more than once, or how many 
+	 * times it has moved.
+	 * 
+	 * @param isWhite
+	 * @return
+	 */
 	private int computeMultiMoveOpeningPiecePenalty(boolean isWhite){
 		int result = 0;
+		
+		// TODO: Find a faster implementation
 	//	ArrayList<Move>moveList = controller.getModel().getMoveList();
 		
 		// If we're not in the opening anymore, this isn't relevant anymore

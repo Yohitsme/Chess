@@ -1,3 +1,21 @@
+/*
+Quiet Intrigue is a chess playing engine with GUI written in Java.
+Copyright (C) <2014>  Matthew Voss
+
+Quiet Intrigue is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Quiet Intrigue is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Quiet Intrigue.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 package controller;
 
 import java.awt.Component;
@@ -169,15 +187,9 @@ public class Controller {
 			Runnable aiRunnable = new AI_Thread(this, AI, isWhiteTurn());
 			Thread aiThread = new Thread(aiRunnable);
 			aiThread.start();
-//			processMove(AI.move(computeTurn()));
 		
 		}
 
-		// view.updateAnalysisPanel(new JTree(gameTreeController.getRoot()));
-	//	view.updateMoveListPanel(model.getMoveList());
-	//	view.update();
-
-		// gameTreeController.getRoot().removeAllChildren();
 	/*
 		 * long startTime = System.currentTimeMillis(); long endTime =
 		 * System.currentTimeMillis(); System.out.println(
@@ -672,6 +684,9 @@ public class Controller {
 
 	}
 
+	/**
+	 * Displays a popup and returns the user's choice in depth of search
+	 */
 	private void promptUserForNewDepth() {
 		// TODO Auto-generated method stub
 		JFrame frame = new JFrame();
@@ -693,6 +708,10 @@ public class Controller {
 		}
 	}
 
+	/**
+	 * Prompts the user for new weights and lets them fill in their choices.
+	 * If the input is valid, it sets the values accordingly
+	 */
 	private void promptUserForNewWeights() {
 		JPanel panel = new JPanel();
 		BoxLayout boxLayout = new BoxLayout(panel, BoxLayout.Y_AXIS);
@@ -753,6 +772,9 @@ public class Controller {
 
 	}
 
+	/**
+	 * Writes the move list and basic weights used by the AI to a file.
+	 */
 	private void exportMoveList() {
 
 		ArrayList<Move> moveList = model.getMoveList();
@@ -780,6 +802,10 @@ public class Controller {
 
 	}
 
+	/**
+	 * Prompts the user for a new game mode.
+	 * @return
+	 */
 	public String promptForGameMode() {
 
 		// TODO Auto-generated method stub
@@ -813,6 +839,10 @@ public class Controller {
 		return result;
 	}
 	
+	/**
+	 * Returns true if it is white's turn to move, false otherwise.
+	 * @return
+	 */
 	public boolean isWhiteTurn(){
 		boolean result = false;
 		int turnNumber = model.getMoveList().size();

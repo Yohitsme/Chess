@@ -5,7 +5,7 @@
 
 // B: Annoying bugs. Features that could help a lot
 -The AI doesn't quantify king safety other than castling early
--Multithreading instead of event driven
+
 
 // C: Features that would be nice and optimize code for later. 
 -Finish adding bonuses/penalties in AI

@@ -24,6 +24,7 @@ public class Constants {
 	private final static int bishopPairBonusWeight = 3;
 	private final static int centralPawnsPushedBonusWeight = 5;
 	private final static int earlyQueenPenaltyWeight = 1000;
+	private final static int multiMoveOpeningPiecePenalty = 10;
 	
 	private final static int kingsideCastleRookCol = 5;
 	private final static int queensideCastleRookCol = 3;
@@ -54,6 +55,7 @@ public class Constants {
 	private final static int checkMateScore = 1000000;
 	private final static int drawScore = 0;
 	private final static double killerMoveScore = -0.1;
+	private static final String openingGameText = "Welcome to the Quiet Intrique chess engine.";
 	
 	private  static double positionalScoreWeight = .09;
 	private  static double materialScoreWeight = .9;
@@ -246,6 +248,10 @@ public class Constants {
 		return queenKnightCol;
 	}
 
+	public static String getOpeningGameText(){
+		return openingGameText;
+	}
+	
 
 	public static int getQueenBishopCol() {
 		return queenBishopCol;
@@ -334,6 +340,11 @@ public class Constants {
 	public static double getDrawScore() {
 		// TODO Auto-generated method stub
 		return drawScore;
+	}
+
+	public static int getMultiMoveOpeningPiecePenalty() {
+		// TODO Auto-generated method stub
+		return multiMoveOpeningPiecePenalty;
 	}
 
 

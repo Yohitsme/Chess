@@ -73,13 +73,16 @@ public class Controller {
 		boardController = new BoardController(model);
 		moveGenerator = new MoveGenerator(boardController, ruleEngine, this);
 		masterListener = new MasterListener(this);
-		view = new View(boardController, masterListener,
+		view = new View(this, boardController, masterListener,
 				model.getCapturedPieces());
 		gameTreeController = new GameTreeController(model.getGameTree(), this);
 		AI = new AI(this);
 		long startTime = System.currentTimeMillis();
 		log = new Log();
-
+		
+		Runnable aiProgressRunnable = new AI_ProgressThread(this);
+		Thread aiProgressThread = new Thread(aiProgressRunnable);
+		aiProgressThread.start();
 	}
 
 	/**
@@ -156,32 +159,34 @@ public class Controller {
 
 		gameOver = isGameOver();
 
-		if (gameOver)
-			JOptionPane.showMessageDialog(new JFrame(), "Game over!");
-
-		if (isAIturn() && !gameOver) {
-			processMove(AI.move(computeTurn()));
-		}
-
-		// view.updateAnalysisPanel(new JTree(gameTreeController.getRoot()));
-		view.updateMoveListPanel(model.getMoveList());
-		view.update();
-
-		// gameTreeController.getRoot().removeAllChildren();
 		if (isGameOver())
 			JOptionPane.showMessageDialog(new JFrame(), "Game over!");
 
 		if (model.getMoveList().size() != 0)
 			view.highlightPreviousMove(model.getMoveList());
-		/*
+	
+		if (isAIturn() && !gameOver) {
+			Runnable aiRunnable = new AI_Thread(this, AI, isWhiteTurn());
+			Thread aiThread = new Thread(aiRunnable);
+			aiThread.start();
+//			processMove(AI.move(computeTurn()));
+		
+		}
+
+		// view.updateAnalysisPanel(new JTree(gameTreeController.getRoot()));
+	//	view.updateMoveListPanel(model.getMoveList());
+	//	view.update();
+
+		// gameTreeController.getRoot().removeAllChildren();
+	/*
 		 * long startTime = System.currentTimeMillis(); long endTime =
 		 * System.currentTimeMillis(); System.out.println(
 		 * "Controller.Controller(): Done printing. Time elapsed: " +
 		 * (endTime-startTime)/1000.0 +" seconds");
 		 */
 		boolean printFlag = true;
-		AI.evaluate(computeTurn().equals("white") ? true : false,
-				gameTreeController.getRoot(), printFlag);
+//		AI.evaluate(computeTurn().equals("white") ? true : false,
+//				gameTreeController.getRoot(), printFlag);
 
 	}
 
@@ -801,14 +806,25 @@ public class Controller {
 	 */
 	public String computeTurn() {
 		String result;
+		if (isWhiteTurn())
+			result = "white";
+		else
+			result = "black";
+		return result;
+	}
+	
+	public boolean isWhiteTurn(){
+		boolean result = false;
 		int turnNumber = model.getMoveList().size();
 
 		if ((turnNumber % 2) == 1)
-			result = "black";
+			result = false;
 		else
-			result = "white";
+			result = true;
 		return result;
 	}
+	
+	
 
 	/**
 	 * Returns true if white is played by the computer

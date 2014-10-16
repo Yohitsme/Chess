@@ -24,15 +24,15 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.JTextArea;
 import javax.swing.JTree;
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 
-import utils.Constants;
 import model.Move;
 import model.Piece;
+import utils.Constants;
 import controller.BoardController;
+import controller.Controller;
 import controller.MasterListener;
 
 /**
@@ -60,6 +60,8 @@ public class View {
 	JLabel [][] highlightArray;
 	JLabel dragPiece;
 	String boardOrientation;
+	Controller controller;
+	JLabel messageLabel;
 
 	HashMap<String, ImageIcon> imgMap;
 
@@ -70,12 +72,13 @@ public class View {
 	 * 
 	 * @param boardControllerIn
 	 */
-	public View(BoardController boardControllerIn,
+	public View(Controller controllerIn, BoardController boardControllerIn,
 			MasterListener masterListenerIn, ArrayList<Piece> capturedPiecesIn) {
 
 		this.boardController = boardControllerIn;
 		this.masterListener = masterListenerIn;
 		this.capturedPieces = capturedPiecesIn;
+		this.controller = controllerIn;
 		this.boardOrientation = "normal";
 		// Populate imageMap
 		loadImages();
@@ -92,11 +95,18 @@ public class View {
 		configureAnalysisPanel();
 		configureMoveListPanel();
 		configureSidePanel();
-
+		configureMessageLabel();
+		
 		frame.add(layeredPane, BorderLayout.CENTER);
 		frame.add(sidePanel,BorderLayout.EAST);
+		frame.add(messageLabel,BorderLayout.SOUTH);
 		frame.pack();
+		update();
 
+	}
+
+	private void configureMessageLabel() {
+		messageLabel = new JLabel(Constants.getOpeningGameText());
 	}
 
 	private void configureCapturedPiecePanel() {
@@ -257,6 +267,9 @@ public class View {
 			
 		}
 		updateCapturedPiecePanel();
+		updateMoveListPanel(controller.getModel().getMoveList());
+		removeHighlights();
+		highlightPreviousMove(controller.getModel().getMoveList());
 		piecePanel.repaint();
 		piecePanel.revalidate();
 		frame.pack();
@@ -348,7 +361,7 @@ public class View {
 		piecePanel.setPreferredSize(new Dimension(640, 640));
 		piecePanel.setBounds(0, 0, 640, 640);
 		piecePanelArray = new PiecePanel[8][8];
-		update();
+//		update();
 
 	}
 	
@@ -639,8 +652,13 @@ public class View {
 		
 		return result;
 	}
+	
+	public void updateMessageLabel(String text){
+		messageLabel.setText(text);
+	}
 
 	public void highlightPreviousMove(ArrayList<Move> moveList) {
+		if (moveList.size() != 0){
 		int row,col;
 		int size = moveList.size();
 		Move move = moveList.get(size-1);
@@ -652,7 +670,7 @@ public class View {
 		row = move.getEndRow();
 		col = move.getEndCol();
 		highlightArray[row][col].setIcon(imgMap.get("squareHighlight"));
-	}
+	}}
 
 }
 

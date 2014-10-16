@@ -69,4 +69,11 @@ public class PieceArray {
 		return array[E_kingId];
 	}
 	
+	public Piece getA_rook(){
+		return array[A_rookId];
+	}
+	
+	public Piece getH_rook(){
+		return array[H_rookId];
+	}
 }

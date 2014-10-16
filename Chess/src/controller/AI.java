@@ -30,6 +30,10 @@ public class AI {
 	int nodesPerLevel[];
 	boolean isNullMoveBranch = false;
     static NodeComparator nodeComparator;
+    boolean isThinking = false;
+    int branchCounter;
+    int numBranches;
+    
 	
 	public AI(Controller controllerIn) {
 		this.controller = controllerIn;
@@ -45,10 +49,9 @@ public class AI {
 	}
 
 	// Color is the side to play
-	public Node move(String color) {
+	public Node move(boolean isWhiteTurn) {
 		Node node = null;
-
-		boolean isWhiteTurn = color.equals("white") ? true : false;
+		isThinking = true;
 		chooseMove(isWhiteTurn);
 		node = bestNode;
 		log.info("AI.move: Move chosen: "
@@ -66,6 +69,7 @@ public class AI {
 		// for (ArrayList<Node> list : killerMoves)
 		// System.out.println(killerMoves.indexOf(list) + ": "
 		// + list.toString());
+		isThinking = false;
 		return node;
 	}
 
@@ -74,14 +78,19 @@ public class AI {
 		double alpha = -100000000000.0;
 		double beta =   100000000000.0;
 
+		// Reset Branch counter
+		branchCounter = 0;
 		Node parentNode = controller.gameTreeController.root;
+
 		initializeKillerMoveArrays();
 
 		for (int depth = 1; depth <= Constants.getDepth(); depth++) {
 			this.depth = depth;
 
-			if (depth == Constants.getDepth())
+			if (depth == Constants.getDepth()){
 				System.out.println();
+				numBranches = parentNode.getChildren().size();
+			}
 			pvSearch(alpha, beta, depth, isWhiteTurn, parentNode);
 
 			masterPV = new ArrayList<Node>();
@@ -95,7 +104,6 @@ public class AI {
 			System.out.println("PV: "
 					+ node.getMove().coloredAlgebraicNotationPrint());
 		}
-
 		bestNode = this.masterPV.get(0);
 
 	}
@@ -183,6 +191,7 @@ public class AI {
 
 			// Branch timing housekeeping
 			if (depthleft == Constants.getDepth()) {
+				branchCounter++;
 				printTimeStats(i++, parentNode, startTime);
 				startTime = System.currentTimeMillis();
 			}
@@ -792,7 +801,6 @@ public class AI {
 		int result = 0;
 		Piece king = findKing(isWhite);
 
-		// TODO: Bonus for not moving the queen early on
 		// TODO: Bonus for not moving the same piece twice in the opening
 		// TODO: Bonus for not having a knight on the edge of the board
 		// TODO: Bonus for connected pawns
@@ -800,6 +808,7 @@ public class AI {
 		// TODO: Penalty for isolated pawns
 
 		int castlingBonus = computeCastlingBonus(king);
+		int multiMoveOpeningPiecePenalty = computeMultiMoveOpeningPiecePenalty(isWhite);
 		int centralPawnsPushedBonus = computeCentralPawnsPushedBonus(isWhite);
 		int bishopPairBonus = computeBishopPairBonus(isWhite);
 		int connectedRooksBonus = computeConnectedRooksBonus(isWhite);
@@ -846,6 +855,39 @@ public class AI {
 		return result;
 	}
 
+
+	private int computeDoubledPawnsPenalty(boolean isWhite){
+		return 0;
+	}
+	
+	private int computeMultiMoveOpeningPiecePenalty(boolean isWhite){
+		int result = 0;
+	//	ArrayList<Move>moveList = controller.getModel().getMoveList();
+		
+		// If we're not in the opening anymore, this isn't relevant anymore
+//		if (moveList.size() > 30)
+//			result = 0;
+//		else{
+//		int start = 0;
+//		if(isWhite)
+//			start = 0;
+//		else
+//			start = 1;
+//		ArrayList<Piece>movedPieces = new ArrayList<Piece>();
+//		for (int i = 0; (2*i+start) < moveList.size(); i++){
+//			int index = 2*i + start;
+//			
+//			Piece piece = moveList.get(index).getPiece();
+//			if (!movedPieces.contains(piece))
+//			movedPieces.add(piece);
+//			else
+//				result++;
+//		}
+//		}
+//	
+		return -result * Constants.getMultiMoveOpeningPiecePenalty();
+	}
+	
 	/**
 	 * Checks to see if both rooks are alive and if they are connected, returning the relevant bonus if so.
 	 * @param isWhite
@@ -853,7 +895,45 @@ public class AI {
 	 */
 	private int computeConnectedRooksBonus(boolean isWhite) {
 		// TODO Implement this.
-		return 0;
+		int result = 0;
+		Piece A_rook = findPieceList(isWhite).getA_rook();
+		Piece H_rook = findPieceList(isWhite).getH_rook();
+		
+		// If either or both rooks are dead, no bonus
+		if (A_rook == null || H_rook == null)
+			result = 0;
+		else{
+			int A_rookCol = A_rook.getCol();
+			int A_rookRow = A_rook.getRow();
+			int H_rookCol = H_rook.getCol();
+			int H_rookRow = H_rook.getRow();
+			
+			// If on same col
+			if (A_rookCol == H_rookCol){
+				int startRow = Math.min(A_rookRow, H_rookRow);
+				boolean pathBlocked = false;
+				for (int i = 1; i < Math.abs(A_rookRow - H_rookRow); i++)
+					if (controller.getBoardController().getPieceByCoords(startRow + i, A_rookCol) != null)
+						pathBlocked = true;
+				if (!pathBlocked)
+					result = Constants.getConnectedRooksBonusWeight();
+			}
+			// Else if on same row
+			else if (A_rookRow == H_rookRow){
+
+				int startCol = Math.min(A_rookCol, H_rookCol);
+				boolean pathBlocked = false;
+				for (int i = 1; i < Math.abs(A_rookCol - H_rookCol); i++)
+					if (controller.getBoardController().getPieceByCoords(A_rookRow, startCol+i) != null)
+						pathBlocked = true;
+				if (!pathBlocked)
+					result = Constants.getConnectedRooksBonusWeight();
+			}
+			// If not on same row or col, they are not connected
+			else
+				result = 0;
+		}
+		return result;
 	}
 
 	/**
@@ -1028,6 +1108,14 @@ public class AI {
 		startTime = System.currentTimeMillis();
 	}
 	
+	public int getBranchCounter(){
+		return branchCounter;
+	}
+	
+	public int getNumBranches(){
+		return numBranches;
+	}
+	
 	/**
 	 * Getter to let outside classes know if we are on a NullMoveBranch,
 	 * since there will be a null move if that's the case.
@@ -1035,6 +1123,10 @@ public class AI {
 	 */
 	public boolean isNullMoveBranch(){
 		return isNullMoveBranch;
+	}
+	
+	public boolean isThinking(){
+		return isThinking;
 	}
 }
 

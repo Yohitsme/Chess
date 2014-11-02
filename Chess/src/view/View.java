@@ -272,7 +272,7 @@ public class View {
 		else if (boardOrientation.equals("flipped")){
 			
 			for (int row = 0; row < 8; row++) {
-				for (int col = 0; col < 8; col++) {
+				for (int col = 7; col >=0; col--) {
 					piecePanelArray[row][col] = new PiecePanel(row, col,
 							generateJLabel(row, col),
 							boardController.getPieceByCoords(row, col));
@@ -649,9 +649,11 @@ public class View {
 		this.boardOrientation = boardOrientation;
 	}
 
-	public void highlightSquare(int row, int col) {
-		if (boardOrientation.equals("flipped"))
+	public void highlightSquareWithDot(int row, int col) {
+		if (boardOrientation.equals("flipped")){
 			row = 7-row;
+			col = 7-col;
+		}
 		
 		
 		highlightArray[row][col].setIcon(imgMap.get("highlight"));
@@ -676,19 +678,27 @@ public class View {
 
 	public void highlightPreviousMove(ArrayList<Move> moveList) {
 		if (moveList.size() != 0){
-		int row,col;
 		int size = moveList.size();
 		Move move = moveList.get(size-1);
 		
-		row = move.getStartRow();
-		col = move.getStartCol();
-		highlightArray[row][col].setIcon(imgMap.get("squareHighlight"));
+		highlightSquareWithOutline(move.getStartRow(),move.getStartCol());
+		highlightSquareWithOutline(move.getEndRow(),move.getEndCol());
+		
+	}
 
-		row = move.getEndRow();
-		col = move.getEndCol();
-		highlightArray[row][col].setIcon(imgMap.get("squareHighlight"));
-	}}
+}
 
+	public void highlightSquareWithOutline(int row, int col){
+		int newRow = row;
+		int newCol = col;
+		
+		if (boardOrientation.equals("flipped")){
+			newRow = 7-row;
+			newCol = 7-col;
+		}
+		
+		highlightArray[newRow][newCol].setIcon(imgMap.get("squareHighlight"));
+	}
 }
 
 class PieceSorter implements Comparator{

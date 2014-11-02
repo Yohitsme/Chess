@@ -41,13 +41,14 @@ public class AI_ProgressThread implements Runnable{
 			text = "Quiet Intrigue is thinking..." + ai.getBranchCounter() + "/" + ai.getNumBranches() + " moves considered.";
 		}
 		else{
-			text = "It is your turn to move";
+			double score = ai.evaluate(controller.isWhiteTurn(), controller.gameTreeController.root, false);
+			text = "It is your turn to move. Evaluation of current position: " + score;
 		}
 		
 		controller.getView().updateMessageLabel(text);
 		
 		try {
-			Thread.sleep(100);
+			Thread.sleep(2000);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

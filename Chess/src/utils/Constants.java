@@ -41,7 +41,7 @@ public class Constants {
 	private final static int connectedRooksBonusWeight = 5;
 	private final static int bishopPairBonusWeight = 3;
 	private final static int centralPawnsPushedBonusWeight = 5;
-	private final static int earlyQueenPenaltyWeight = 1000;
+	private final static int earlyQueenPenaltyWeight = 25;
 	private final static int multiMoveOpeningPiecePenalty = 10;
 	
 	private final static int kingsideCastleRookCol = 5;
@@ -75,9 +75,9 @@ public class Constants {
 	private final static double killerMoveScore = -0.1;
 	private static final String openingGameText = "Welcome to the Quiet Intrique chess engine.";
 	
-	private  static double positionalScoreWeight = .09;
-	private  static double materialScoreWeight = .9;
-	private  static double bonusScoreWeight = .01;
+	private  static double positionalScoreWeight = .01;
+	private  static double materialScoreWeight = .89;
+	private  static double bonusScoreWeight = .1;
 	
 
 	private static int depth = 4;

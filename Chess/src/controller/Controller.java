@@ -135,7 +135,7 @@ public class Controller {
 		moveGenerator.findMoves(legalMoves, row, col);
 
 		for (Move move : legalMoves)
-			view.highlightSquare(move.getEndRow(), move.getEndCol());
+			view.highlightSquareWithDot(move.getEndRow(), move.getEndCol());
 
 	}
 
@@ -169,8 +169,6 @@ public class Controller {
 
 		if (isAcceptableInput(piece) && piece != null && iswithinBounds)
 			processMoveAttempt(move);
-
-		System.out.println("================================================");
 
 		view.removeHighlights();
 		view.update();
@@ -623,8 +621,17 @@ public class Controller {
 	 * @return
 	 */
 	public int computeColFromMouseEvent(MouseEvent e) {
+		boolean isFlipped;
 
+		if (view.getBoardOrientation().equals("normal"))
+			isFlipped = false;
+		else
+			isFlipped = true;
+		
 		int result = e.getX() / 80;
+		if (isFlipped)
+			result = 7-result;
+		
 		return result;
 	}
 
@@ -838,6 +845,8 @@ public class Controller {
 			result = "black";
 		return result;
 	}
+	
+	
 	
 	/**
 	 * Returns true if it is white's turn to move, false otherwise.

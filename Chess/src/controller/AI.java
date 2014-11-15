@@ -1,3 +1,21 @@
+/*
+Quiet Intrigue is a chess playing engine with GUI written in Java.
+Copyright (C) <2014>  Matthew Voss
+
+Quiet Intrigue is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Quiet Intrigue is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Quiet Intrigue.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package controller;
 
 import java.util.ArrayList;
@@ -13,10 +31,23 @@ import model.PieceArray;
 import utils.Constants;
 import utils.Log;
 
+/**
+ * This class holds the searching and evaluation parts of the chess engine.
+ * 
+ * You can create an instance of the AI class and call AI.move(boolean isWhite)
+ * and it will return the move it chooses.
+ * 
+ * All of the weights for bonuses, penalties, and piece values can be found
+ * and/or tweaked in utils/Constants.java.
+ * 
+ * @author Matthew
+ * 
+ */
 public class AI {
 
 	Controller controller;
 	boolean debug = true;
+	boolean printThinkingProgress = false;
 	Log log = new Log();
 	int nodesVisited = 0;
 	int depth;
@@ -29,75 +60,108 @@ public class AI {
 	Node[] PV;
 	int nodesPerLevel[];
 	boolean isNullMoveBranch = false;
-    static NodeComparator nodeComparator;
-	
+	static NodeComparator nodeComparator;
+	boolean isThinking = false;
+	int branchCounter;
+	int numBranches;
+
+	/**
+	 * Constructor
+	 * 
+	 * @param controllerIn
+	 */
 	public AI(Controller controllerIn) {
 		this.controller = controllerIn;
 
 		for (int i = 0; i < Constants.getDepth() + 1; i++)
 			killerMoves.add(new ArrayList<Move>());
+
 		PV = new Node[10];
 		this.nodeComparator = new NodeComparator();
+
+		// Initialization
 		for (int i = 0; i < 10; i++)
 			PV[i] = null;
 
 		nodesPerLevel = new int[20];
 	}
 
-	// Color is the side to play
-	public Node move(String color) {
+	/**
+	 * This method calls the choose move method and returns the result.
+	 * 
+	 * @param isWhiteTurn
+	 * @return
+	 */
+	public Node move(boolean isWhiteTurn) {
 		Node node = null;
+		isThinking = true;
 
-		boolean isWhiteTurn = color.equals("white") ? true : false;
+		// The real method that generates and evaluates moves
 		chooseMove(isWhiteTurn);
+
 		node = bestNode;
-		log.info("AI.move: Move chosen: "
-				+ node.getMove().algebraicNotationPrint());
-		System.out.println("Nodes visited: " + nodesVisited);
 		nodesVisited = 0;
 
-//		 Branching factor calculations
-//		 if (true)
-//		 for (int i = 0; i< 15; i++){
-//		 if (nodesPerLevel[i+1]!=0)
-//		 System.out.println("Branching Factor " + i + ": " +
-//		 (double)nodesPerLevel[i+1]/(double)nodesPerLevel[i]);
-//		 }
-		// for (ArrayList<Node> list : killerMoves)
-		// System.out.println(killerMoves.indexOf(list) + ": "
-		// + list.toString());
+		// Set flag back to false since we've picked the move we want.
+		isThinking = false;
 		return node;
 	}
 
+	/**
+	 * This method deepens iteratively and calls the pvSearch method, building
+	 * up the masterPV array with the most probably variation, and then returns
+	 * the first move in that sequence.
+	 * 
+	 * @param isWhiteTurn
+	 */
 	public void chooseMove(boolean isWhiteTurn) {
 
-		double alpha = -100000000000.0;
-		double beta =   100000000000.0;
+		// Initialize alpha and beta
+		double alpha = -Constants.getCheckMateScore();
+		double beta = Constants.getCheckMateScore();
 
+		// Reset Branch counter
+		branchCounter = 0;
 		Node parentNode = controller.gameTreeController.root;
+
 		initializeKillerMoveArrays();
 
+		// Iterative deepening loop
 		for (int depth = 1; depth <= Constants.getDepth(); depth++) {
 			this.depth = depth;
 
-			if (depth == Constants.getDepth())
-				System.out.println();
+			if (depth == Constants.getDepth()) {
+				numBranches = parentNode.getChildren().size();
+			}
+
+			// Call the real search method
 			pvSearch(alpha, beta, depth, isWhiteTurn, parentNode);
 
 			masterPV = new ArrayList<Node>();
 			masterPV.addAll(this.localPV);
-			// for (int i = 0; i < 10; i++)
-			// if (PV[i] != null)
-			// System.out.println(PV[i].getMove().algebraicNotationPrint());
 
 		}
-		for (Node node : this.masterPV) {
-			System.out.println("PV: "
-					+ node.getMove().coloredAlgebraicNotationPrint());
-		}
-
+		
+	
+		// The first node in the PV is the one we've chosen
 		bestNode = this.masterPV.get(0);
 
+	}
+
+	/**
+	 * Print the variation the AI considers most likely.
+	 */
+	private void printPV() {
+
+		if (printThinkingProgress)
+			System.out.println("Nodes visited: " + nodesVisited);
+
+		int pvCounter = 1;
+		System.out.println("AI is expecting this variation:");
+		for (Node node : this.masterPV) {
+			System.out.println(pvCounter++ + ": "
+					+ node.getMove().coloredAlgebraicNotationPrint());
+		}
 	}
 
 	/**
@@ -110,6 +174,10 @@ public class AI {
 
 	}
 
+	/**
+	 * Updates the arrays that hold killer moves. This gets called whenever the
+	 * user changes the depth the AI is searching to.
+	 */
 	public void resizeKillerMoveArrays() {
 		killerMoves = new ArrayList<ArrayList<Move>>(Constants.getDepth() + 1);
 		for (int i = 0; i < Constants.getDepth() + 1; i++)
@@ -117,8 +185,8 @@ public class AI {
 
 	}
 
-	double pvSearch(double alpha, double beta, int depthleft, boolean isWhiteTurn,
-			Node parentNode) {
+	double pvSearch(double alpha, double beta, int depthleft,
+			boolean isWhiteTurn, Node parentNode) {
 		Node pv = null;
 		double score = 0.0;
 		long startTime = 0;
@@ -127,42 +195,24 @@ public class AI {
 		boolean bSearchPv = true;
 		boolean exploringPV = false;
 
-		// Validate board and pieces agree on all piece locations for debugging
-//		for (int r = 0; r < 8; r++){
-//			for (int c = 0; c < 8; c++)
-//				if (controller.getBoardController().getPieceByCoords(r, c)!=null)
-//				if (controller.getBoardController().getPieceByCoords(r, c).getRow()!= r ||controller.getBoardController().getPieceByCoords(r, c).getCol()!= c )
-//					System.out.println("AI.pvSearch: ERROR: Board out of sync, make/unmake process unstable");
-//		}
-		
-		// If Check mate/draw/king got captured
-		if (controller.isWhiteCheckmated()){this.localPV = new ArrayList<Node>();
-		this.localPV.add(parentNode);
-			score = -Constants.getCheckMateScore(); // This one should be negative
-		}else if (controller.isBlackCheckmated()){this.localPV = new ArrayList<Node>();
-		this.localPV.add(parentNode);
-			score = Constants.getCheckMateScore();
-		}else if (controller.isDrawByThreefoldRepitition()){
-			this.localPV = new ArrayList<Node>();
-			this.localPV.add(parentNode);
-			return Constants.getDrawScore();}
-		if (score != 0)
-			return score;
-		
+		validateBoardInSync();
+		score = checkPVsearchTerminationConditions(parentNode, alpha, beta,
+				depthleft, isWhiteTurn);
 		// Termination condition
 		if (depthleft == 0) {
 			this.localPV = new ArrayList<Node>();
 			this.localPV.add(parentNode);
 			return quiesce(alpha, beta, isWhiteTurn, parentNode, depthleft);
 		}
+		if (controller.isDrawByThreefoldRepitition()) {
+			this.localPV = new ArrayList<Node>();
+			this.localPV.add(parentNode);
+			return Constants.getDrawScore();
+		}
+		if (score != 0)
+			return score;
 
 		ArrayList<Node> localPV = new ArrayList<Node>();
-
-		// Branch timing housekeeping
-		if (depthleft == Constants.getDepth()) {
-			startTime = System.currentTimeMillis();
-			initTime = startTime;
-		}
 
 		if (parentNode.getChildren().size() == 0)
 			populateChildren(parentNode, isWhiteTurn, depthleft);
@@ -172,21 +222,17 @@ public class AI {
 
 		// If the established PV is longer than the chain we're looking at,
 		// then there's at least one move we might consider
-		boolean isDeepEnough = masterPV.size() > this.depth + 1- depthleft;
+		boolean isDeepEnough = masterPV.size() > this.depth + 1 - depthleft;
 
-		if (isDeepEnough && validatePV(parentNode, depthleft)){
+		if (isDeepEnough && validatePV(parentNode, depthleft)) {
 			prioritizeNode(parentNode,
-					this.masterPV.get(this.depth +1- depthleft));
+					this.masterPV.get(this.depth + 1 - depthleft));
 			exploringPV = true;
 		}
+
 		for (int j = 0; j < parentNode.getChildren().size(); j++) {
 
-			// Branch timing housekeeping
-			if (depthleft == Constants.getDepth()) {
-				printTimeStats(i++, parentNode, startTime);
-				startTime = System.currentTimeMillis();
-			}
-
+			updateBranchCounter(depthleft, j);
 			Node node = parentNode.getChildren().get(j);
 			Move move = node.getMove();
 
@@ -194,47 +240,56 @@ public class AI {
 			tmpHasMoved = move.getPiece().isHasMoved();
 			move.getPiece().setHasMoved(true);
 
-
-			// Null move addition BEGIN
-//			if ((!(exploringPV && j == 0))&& (depthleft-1-Constants.getNullMoveReduction()>0) ){ // If we're looking at PV and on the first child move, we're continuing PV
-//				if (!inCheck(isWhite)){
-//					isNullMoveBranch = true;
-////					System.out.println(depthleft-1-Constants.getNullMoveReduction());
-//				
-//					ArrayList <Node> realChildren = new ArrayList<Node>();
-//					realChildren.addAll(parentNode.getChildren());
-//					
-//					parentNode.getChildren().removeAll(parentNode.getChildren());
-//					populateChildren(parentNode, !isWhite,depthleft-1-Constants.getNullMoveReduction());
-//				
-//					score = -pvSearch(-beta,-alpha, depthleft-1-Constants.getNullMoveReduction(), isWhite,parentNode);
-//					
-//					parentNode.getChildren().removeAll(parentNode.getChildren());
-//					parentNode.getChildren().addAll(realChildren);
-//					
-//					isNullMoveBranch = false;
-// 
-//		    if(score >= beta){
-//				RuleEngine.undoChanges(capturedPiece, move);
-//				move.getPiece().setHasMoved(tmpHasMoved);
-//		    	return score; // Cutoff
-//		    }
-//				}
-//				
-//			}
+//			// Null move addition BEGIN
+//			 if ((!(exploringPV && j == 0))&&
+//			 (depthleft-1-Constants.getNullMoveReduction()>0) ){ // If we're
+//			 //looking at PV and on the first child move, we're continuing PV
+//			 if (!inCheck(isWhiteTurn)){
+//			 isNullMoveBranch = true;
+//			 // System.out.println(depthleft-1-Constants.getNullMoveReduction());
+//			
+//			 ArrayList <Node> realChildren = new ArrayList<Node>();
+//			 realChildren.addAll(parentNode.getChildren());
+//			
+//			 parentNode.getChildren().removeAll(parentNode.getChildren());
+//			 populateChildren(parentNode,
+//			 !isWhiteTurn,depthleft-1-Constants.getNullMoveReduction());
+//			
+//			 score = -pvSearch(-beta,-alpha,
+//			 depthleft-1-Constants.getNullMoveReduction(),
+//			 isWhiteTurn,parentNode);
+//			
+//			 parentNode.getChildren().removeAll(parentNode.getChildren());
+//			 parentNode.getChildren().addAll(realChildren);
+//			
+//			 isNullMoveBranch = false;
+//			
+//			 if(score >= beta){
+//			 RuleEngine.undoChanges(capturedPiece, move);
+//			 move.getPiece().setHasMoved(tmpHasMoved);
+//			 return score; // Cutoff
+//			 }
+//			 }
+//			
+//			 }
 			// Null move addition END
-//			score = -pvSearch(-beta, -alpha, depthleft - 1, !isWhiteTurn, node);
+
 			// PV backend
 			if (bSearchPv) {
-				score = -pvSearch(-beta, -alpha, depthleft - 1, !isWhiteTurn, node);
+				score = -pvSearch(-beta, -alpha, depthleft - 1, !isWhiteTurn,
+						node);
 			} else {
 				score = -pvSearch(-alpha - 0.00000001, -alpha, depthleft - 1,
 						!isWhiteTurn, node);
-				if (score > alpha){
-					score = -pvSearch(-beta, -alpha, depthleft - 1, !isWhiteTurn,
-							node); // re-search
-				}}
+				if (score > alpha) {
+					score = -pvSearch(-beta, -alpha, depthleft - 1,
+							!isWhiteTurn, node); // re-search
+				}
+			}
 
+			if(depthleft == Constants.getDepth())
+			log.info(node.getMove().coloredAlgebraicNotationPrint() + ": " + score);
+			
 			RuleEngine.undoChanges(capturedPiece, move);
 			move.getPiece().setHasMoved(tmpHasMoved);
 
@@ -246,9 +301,9 @@ public class AI {
 				for (Move killerNode : killerMoves.get(depthleft))
 					if (killerNode.equals(node.getMove()))
 						nodeFound = true;
-				if (!nodeFound){
+				if (!nodeFound) {
 					killerMoves.get(depthleft).add(node.getMove());
-					
+
 				}
 				return beta;
 			}
@@ -277,18 +332,69 @@ public class AI {
 		return alpha;
 	}
 
-	
+	private void updateBranchCounter(int depth, int branchNbr) {
+		if (depth == Constants.getDepth())
+			branchCounter = branchNbr;
+		
+	}
+
+	private double checkPVsearchTerminationConditions(Node parentNode,
+			double alpha, double beta, int depthleft, boolean isWhiteTurn) {
+		double score = 0.0;
+		// If Check mate/draw/king got captured
+		if (controller.isWhiteCheckmated()) {
+			this.localPV = new ArrayList<Node>();
+			this.localPV.add(parentNode);
+			score = -Constants.getCheckMateScore(); // This one should be
+													// negative
+		} else if (controller.isBlackCheckmated()) {
+			this.localPV = new ArrayList<Node>();
+			this.localPV.add(parentNode);
+			score = Constants.getCheckMateScore();
+		} else if (controller.isDrawByThreefoldRepitition()) {
+			this.localPV = new ArrayList<Node>();
+			this.localPV.add(parentNode);
+			return Constants.getDrawScore();
+		}
+
+		return score;
+	}
+
+	/**
+	 * Checks if board and pieces agree on piece location
+	 * 
+	 * @return false if any piece thinks it is on a different square than it is
+	 */
+	private boolean validateBoardInSync() {
+
+		// Validate board and pieces agree on all piece locations for debugging
+		for (int r = 0; r < 8; r++) {
+			for (int c = 0; c < 8; c++)
+				if (controller.getBoardController().getPieceByCoords(r, c) != null)
+					if (controller.getBoardController().getPieceByCoords(r, c)
+							.getRow() != r
+							|| controller.getBoardController()
+									.getPieceByCoords(r, c).getCol() != c) {
+						log.error("AI.pvSearch: ERROR: Board out of sync, make/unmake process unstable");
+						return false;
+					}
+		}
+		return true;
+	}
+
 	/**
 	 * Returns true if the king of color <code>isWhite</code> is in check.
+	 * 
 	 * @param isWhite
 	 * @return
 	 */
 	private boolean inCheck(boolean isWhite) {
 		boolean result = false;
 		Piece king = findKing(isWhite);
-		if(RuleEngine.isAttackedSquare(king.getRow(),king.getCol(), king.isWhite()==true?"white":"black"))
-		result = true;
-		
+		if (RuleEngine.isAttackedSquare(king.getRow(), king.getCol(),
+				king.isWhite()))
+			result = true;
+
 		return result;
 	}
 
@@ -311,9 +417,9 @@ public class AI {
 				boolean tmpHasMoved = move.getPiece().isHasMoved();
 				move.getPiece().setHasMoved(true);
 				Piece capturedPiece = RuleEngine.processMove(move);
-				
+
 				numMoves += perft(depth - 1, !isWhite);
-				
+
 				RuleEngine.undoChanges(capturedPiece, move);
 				move.getPiece().setHasMoved(tmpHasMoved);
 			}
@@ -323,10 +429,11 @@ public class AI {
 		return numMoves;
 	}
 
-	
 	/**
-	 * Alpha Beta Search.  This was replaced by pvSearch.  Searches in a very similar
-	 * way but pvSearch has optimizations that help performance significantly.
+	 * Alpha Beta Search. This was replaced by pvSearch. Searches in a very
+	 * similar way but pvSearch has optimizations that help performance
+	 * significantly.
+	 * 
 	 * @param alpha
 	 * @param beta
 	 * @param depthleft
@@ -425,11 +532,11 @@ public class AI {
 			}
 		}
 
-		if (parentNode.getChildren().size() == 0) {
-			// If I have no moves assume I was checkmated and return low alpha
-			// value
-			alpha = -10000000000000.0;
-		}
+//		if (parentNode.getChildren().size() == 0) {
+//			// If I have no moves assume I was checkmated and return low alpha
+//			// value
+//			alpha = -Constants.getCheckMateScore();
+//		}
 
 		ArrayList<Node> tmp = new ArrayList<Node>();
 		if (depthleft != Constants.getDepth())
@@ -440,10 +547,11 @@ public class AI {
 	}
 
 	/**
-	 * This continues the end of the search until it finds a "quiet" position, or
-	 * one in which no captures can be made.  This helps avoid the horizon effect,
-	 * and is called at the end of pvSearch.  It returns the score of the position 
-	 * found by the eval function.
+	 * This continues the end of the search until it finds a "quiet" position,
+	 * or one in which no captures can be made. This helps avoid the horizon
+	 * effect, and is called at the end of pvSearch. It returns the score of the
+	 * position found by the eval function.
+	 * 
 	 * @param alpha
 	 * @param beta
 	 * @param isWhite
@@ -455,8 +563,7 @@ public class AI {
 			Node parentNode, int depthleft) {
 		nodesPerLevel[this.depth]++;
 		boolean printFlag = false;
-		
-		
+
 		double stand_pat = evaluate(isWhiteTurn, parentNode, printFlag);
 		double score;
 		boolean tmpHasMoved = true;
@@ -473,13 +580,17 @@ public class AI {
 			int row = move.getEndRow();
 			Piece otherPiece = controller.boardController.getPieceByCoords(row,
 					col);
-			if (otherPiece != null) {
+			
+			Piece king = findKing(isWhiteTurn);
+			
+			if (otherPiece != null || RuleEngine.isAttackedSquare(king.getRow(), king.getCol(), !king.isWhite())) {
 
 				Piece capturedPiece = RuleEngine.processMove(move);
 				tmpHasMoved = move.getPiece().isHasMoved();
 				move.getPiece().setHasMoved(true);
 
-				score = -quiesce(-beta, -alpha, !isWhiteTurn, node, depthleft - 1);
+				score = -quiesce(-beta, -alpha, !isWhiteTurn, node,
+						depthleft - 1);
 
 				RuleEngine.undoChanges(capturedPiece, move);
 				move.getPiece().setHasMoved(tmpHasMoved);
@@ -495,9 +606,10 @@ public class AI {
 
 	/**
 	 * Verifies that we have explored a Princpal variation branch up to the node
-	 * parentNode.  This allows us to continue checking the PV.  If we are no longer
-	 * on the PV branch, then we shouldn't assume that the PV node at the current
-	 * depth is a good move.
+	 * parentNode. This allows us to continue checking the PV. If we are no
+	 * longer on the PV branch, then we shouldn't assume that the PV node at the
+	 * current depth is a good move.
+	 * 
 	 * @param parentNode
 	 * @param depthleft
 	 * @return
@@ -520,7 +632,6 @@ public class AI {
 		return result;
 	}
 
-	
 	/**
 	 * Takes the Node child and puts it in the front of the arraylist of
 	 * children of the parent Node. This makes that child the first one analyzed
@@ -532,9 +643,10 @@ public class AI {
 	public void prioritizeNode(Node parent, Node child) {
 		boolean successfulRemove = parent.getChildren().remove(child);
 		if (successfulRemove)
-		parent.getChildren().add(0, child);
+			parent.getChildren().add(0, child);
 		else
-			System.out.println("AI.PrioritizeNode: ERROR, non-child node was attempted to prioritize");
+			System.out
+					.println("AI.PrioritizeNode: ERROR, non-child node was attempted to prioritize");
 		// child.setScore((-500));
 	}
 
@@ -547,8 +659,9 @@ public class AI {
 	 * @param isWhite
 	 * @param depthleft
 	 */
-	public void populateChildren(Node parentNode, boolean isWhiteTurn, int depthleft) {
-	
+	public void populateChildren(Node parentNode, boolean isWhiteTurn,
+			int depthleft) {
+
 		ArrayList<Move> legalMoves = controller.getMoveGenerator().findMoves(
 				isWhiteTurn);
 		for (Move move : legalMoves) {
@@ -568,12 +681,11 @@ public class AI {
 	 * Takes a list of legal moves and attempts to sort them with the following
 	 * weight:
 	 * 
-	 * <li>1. MVV-LVA (pxn before nxp)
-	 * <li>2. Killer Heuristic
+	 * <li>1. MVV-LVA (pxn before nxp) <li>2. Killer Heuristic
 	 * 
-	 * pvSearch prioritizes PV nodes as it finds them, and that always
-	 * happens after this method is called, so PV nodes end up in the front of
-	 * the arraylist.
+	 * pvSearch prioritizes PV nodes as it finds them, and that always happens
+	 * after this method is called, so PV nodes end up in the front of the
+	 * arraylist.
 	 * 
 	 * @param nodes
 	 * @param depthleft
@@ -627,7 +739,7 @@ public class AI {
 
 		// If the current position is a checkmate, we can give it the end-game
 		// score without evaluating all the other factors.
-		if (controller.isWhiteCheckmated()||controller.isBlackCheckmated())
+		if (controller.isWhiteCheckmated() || controller.isBlackCheckmated())
 			result = Constants.getCheckMateScore();
 		else if (controller.isDrawByThreefoldRepitition())
 			result = Constants.getDrawScore();
@@ -642,7 +754,7 @@ public class AI {
 					* Constants.getMaterialScoreWeight();
 			double weightedBonusScore = bonusScore
 					* Constants.getBonusScoreWeight();
-			
+
 			/*
 			 * log.info("AI.evaluate: weightdP: " + weightedPositionalScore +
 			 * " weighgtedM: " + weightedMaterialScore + " weightedB: " +
@@ -651,17 +763,19 @@ public class AI {
 
 			result = weightedPositionalScore + weightedMaterialScore
 					+ weightedBonusScore;
-			
-			if (printFlag){
+
+			if (printFlag) {
 				System.out.println("Evaluation of current position: " + result);
 				System.out.println("-Material score:" + weightedMaterialScore);
-				System.out.println("-Positional score:" + weightedPositionalScore);
-				System.out.println("-Bonus score:" + weightedBonusScore);			
+				System.out.println("-Positional score:"
+						+ weightedPositionalScore);
+				System.out.println("-Bonus score:" + weightedBonusScore);
 			}
 
 		}
-		
-		// Positive scores mean white is winning, so we negate the calculated score here
+
+		// Positive scores mean white is winning, so we negate the calculated
+		// score here
 		// if it is black's turn
 		if (!isWhitesTurn)
 			result = result * -1.0;
@@ -735,27 +849,29 @@ public class AI {
 		PieceArray whitePieces = controller.getModel().getWhitePieces();
 		PieceArray blackPieces = controller.getModel().getBlackPieces();
 
-		for (int i = 0; i < PieceArray.numPieces; i++){
+		for (int i = 0; i < PieceArray.numPieces; i++) {
 			Piece piece = whitePieces.getPiece(i);
-			if (piece != null){
-			whiteScore += Constants.getPieceWeight(piece);
+			if (piece != null) {
+				whiteScore += Constants.getPieceWeight(piece);
 
-			// If it's a pawn that will be promoting, let it have the extra
-			// value it would have if it promotes to a queen (-1 because it
-			// already has 1 for being pawn)
-			if (piece.getType() == Constants.getPawnChar() && piece.getRow() == 7) {
-				whiteScore += Constants.getQueenweight() - 1;
-			}
+				// If it's a pawn that will be promoting, let it have the extra
+				// value it would have if it promotes to a queen (-1 because it
+				// already has 1 for being pawn)
+				if (piece.getType() == Constants.getPawnChar()
+						&& piece.getRow() == 7) {
+					whiteScore += Constants.getQueenweight() - 1;
+				}
 			}
 		}
-		for (int i = 0; i < PieceArray.numPieces; i++){
+		for (int i = 0; i < PieceArray.numPieces; i++) {
 			Piece piece = blackPieces.getPiece(i);
-			if (piece != null){
-			blackScore += Constants.getPieceWeight(piece);
+			if (piece != null) {
+				blackScore += Constants.getPieceWeight(piece);
 
-			if (piece.getType() == Constants.getPawnChar() && piece.getRow() == 0) {
-				blackScore += Constants.getQueenweight() - 1;
-			}
+				if (piece.getType() == Constants.getPawnChar()
+						&& piece.getRow() == 0) {
+					blackScore += Constants.getQueenweight() - 1;
+				}
 			}
 		}
 		// TODO account for passant
@@ -766,11 +882,15 @@ public class AI {
 	}
 
 	/**
-	 * Calls the bonus calculation methods for each side and returns the difference.
+	 * Calls the bonus calculation methods for each side and returns the
+	 * difference.
 	 * 
 	 * @return
 	 */
 	public int computeBonusScore() {
+
+		// TODO: Break up the bonuses instead of lumping them all together
+		// so it is easier to apply different weights.
 
 		boolean black = false;
 		boolean white = true;
@@ -785,6 +905,7 @@ public class AI {
 	 * Computes the integer value of "bonuses". These can be for castling,
 	 * moving the king and queen pawns early, having both bishops, having
 	 * connected rooks, etc.
+	 * 
 	 * @param isWhite
 	 * @return
 	 */
@@ -792,7 +913,6 @@ public class AI {
 		int result = 0;
 		Piece king = findKing(isWhite);
 
-		// TODO: Bonus for not moving the queen early on
 		// TODO: Bonus for not moving the same piece twice in the opening
 		// TODO: Bonus for not having a knight on the edge of the board
 		// TODO: Bonus for connected pawns
@@ -800,25 +920,29 @@ public class AI {
 		// TODO: Penalty for isolated pawns
 
 		int castlingBonus = computeCastlingBonus(king);
+		int multiMoveOpeningPiecePenalty = computeMultiMoveOpeningPiecePenalty(isWhite);
 		int centralPawnsPushedBonus = computeCentralPawnsPushedBonus(isWhite);
 		int bishopPairBonus = computeBishopPairBonus(isWhite);
 		int connectedRooksBonus = computeConnectedRooksBonus(isWhite);
 		int earlyQueenPenalty = computeEarlyQueenPenalty(isWhite);
 		result = castlingBonus + centralPawnsPushedBonus + bishopPairBonus
-				+ connectedRooksBonus + earlyQueenPenalty;
+				+ connectedRooksBonus + earlyQueenPenalty
+				+ multiMoveOpeningPiecePenalty;
 		return result;
 	}
 
 	/**
-	 * Returns the penalty weight of moving a queen from her home square early if
-	 * she is not on her homesquare and we're less than 3 moves in.
+	 * Returns the penalty weight of moving a queen from her home square early
+	 * if she is not on her homesquare and we're less than 3 moves in.
+	 * 
 	 * @param isWhite
 	 * @return
 	 */
 	private int computeEarlyQueenPenalty(boolean isWhite) {
-		
-		// TODO: The AI still loves to move the queen out early...not sure this is working 100% right
-		
+
+		// TODO: The AI still loves to move the queen out early...not sure this
+		// is working 100% right
+
 		int result = 0;
 		if (controller.getModel().getMoveList().size() < 16) {
 			PieceArray pieces = findPieceList(isWhite);
@@ -827,37 +951,135 @@ public class AI {
 				int row = queen.getRow();
 				int col = queen.getCol();
 
-				
 				int homeRow;
 				if (isWhite)
 					homeRow = Constants.getWhitePieceRow();
 				else
 					homeRow = Constants.getBlackPieceRow();
-				
+
 				if (!(col == Constants.getQueenCol() && row == homeRow))
 					result = -Constants.getEarlyQueenPenaltyWeight();
-//				if (result <0)
-//					System.out.println("Queen penalty, " + queen.toString());
+				// if (result <0)
+				// System.out.println("Queen penalty, " + queen.toString());
 			}
 		} else
 			result = 0;
-		
-		
+
 		return result;
 	}
 
 	/**
-	 * Checks to see if both rooks are alive and if they are connected, returning the relevant bonus if so.
+	 * This checks to see if any pawns are on the same column, and returns the
+	 * penalty cost if so.
+	 * 
+	 * @param isWhite
+	 * @return
+	 */
+	private int computeDoubledPawnsPenalty(boolean isWhite) {
+
+		// TODO: Implement this
+		return 0;
+	}
+
+	/**
+	 * If we are less than 30 ply into the game (or the first 15 moves), then
+	 * this method will count how many times a piece has moved more than once,
+	 * and multiply that times the penalty. After 15 moves the opening is
+	 * considered over and this method will return 0.
+	 * 
+	 * Making tons of ArrayLists is too slow, the current implementation will
+	 * need to be redone. One option would be to add a boolean to the piece
+	 * class (or an int) to reflect if it has moved more than once, or how many
+	 * times it has moved.
+	 * 
+	 * @param isWhite
+	 * @return
+	 */
+	private int computeMultiMoveOpeningPiecePenalty(boolean isWhite) {
+		int result = 0;
+
+		// TODO: Find a faster implementation
+		// ArrayList<Move>moveList = controller.getModel().getMoveList();
+
+		// If we're not in the opening anymore, this isn't relevant anymore
+		// if (moveList.size() > 30)
+		// result = 0;
+		// else{
+		// int start = 0;
+		// if(isWhite)
+		// start = 0;
+		// else
+		// start = 1;
+		// ArrayList<Piece>movedPieces = new ArrayList<Piece>();
+		// for (int i = 0; (2*i+start) < moveList.size(); i++){
+		// int index = 2*i + start;
+		//
+		// Piece piece = moveList.get(index).getPiece();
+		// if (!movedPieces.contains(piece))
+		// movedPieces.add(piece);
+		// else
+		// result++;
+		// }
+		// }
+		//
+		return -result * Constants.getMultiMoveOpeningPiecePenalty();
+	}
+
+	/**
+	 * Checks to see if both rooks are alive and if they are connected,
+	 * returning the relevant bonus if so.
+	 * 
 	 * @param isWhite
 	 * @return
 	 */
 	private int computeConnectedRooksBonus(boolean isWhite) {
 		// TODO Implement this.
-		return 0;
+		int result = 0;
+		Piece A_rook = findPieceList(isWhite).getA_rook();
+		Piece H_rook = findPieceList(isWhite).getH_rook();
+
+		// If either or both rooks are dead, no bonus
+		if (A_rook == null || H_rook == null)
+			result = 0;
+		else {
+			int A_rookCol = A_rook.getCol();
+			int A_rookRow = A_rook.getRow();
+			int H_rookCol = H_rook.getCol();
+			int H_rookRow = H_rook.getRow();
+
+			// If on same col
+			if (A_rookCol == H_rookCol) {
+				int startRow = Math.min(A_rookRow, H_rookRow);
+				boolean pathBlocked = false;
+				for (int i = 1; i < Math.abs(A_rookRow - H_rookRow); i++)
+					if (controller.getBoardController().getPieceByCoords(
+							startRow + i, A_rookCol) != null)
+						pathBlocked = true;
+				if (!pathBlocked)
+					result = Constants.getConnectedRooksBonusWeight();
+			}
+			// Else if on same row
+			else if (A_rookRow == H_rookRow) {
+
+				int startCol = Math.min(A_rookCol, H_rookCol);
+				boolean pathBlocked = false;
+				for (int i = 1; i < Math.abs(A_rookCol - H_rookCol); i++)
+					if (controller.getBoardController().getPieceByCoords(
+							A_rookRow, startCol + i) != null)
+						pathBlocked = true;
+				if (!pathBlocked)
+					result = Constants.getConnectedRooksBonusWeight();
+			}
+			// If not on same row or col, they are not connected
+			else
+				result = 0;
+		}
+		return result;
 	}
 
 	/**
 	 * Returns a bonus for having both bishops, if they are both alive.
+	 * 
 	 * @param isWhite
 	 * @return
 	 */
@@ -867,9 +1089,9 @@ public class AI {
 		int numBishops = 0;
 		int result = 0;
 
-		if (pieces.getPiece(PieceArray.C_bishopId)!= null)
+		if (pieces.getPiece(PieceArray.C_bishopId) != null)
 			numBishops++;
-		if (pieces.getPiece(PieceArray.F_bishopId)!= null)
+		if (pieces.getPiece(PieceArray.F_bishopId) != null)
 			numBishops++;
 
 		if (numBishops == 2)
@@ -899,7 +1121,7 @@ public class AI {
 		// Check King column pawn
 		col = Constants.getKingColumn();
 		piece = controller.getBoardController().getPieceByCoords(pawnRow, col);
-		if ((piece == null) || (piece.getType()!=Constants.getPawnChar()))
+		if ((piece == null) || (piece.getType() != Constants.getPawnChar()))
 			result += Constants.getCentralPawnsPushedBonusWeight();
 
 		// Check Queen column pawn
@@ -926,10 +1148,10 @@ public class AI {
 		return king;
 	}
 
-	
 	/**
-	 * Given a color <code>isWhite</code>, returns the arrayList of pieces associated
-	 * with that color.
+	 * Given a color <code>isWhite</code>, returns the arrayList of pieces
+	 * associated with that color.
+	 * 
 	 * @param isWhite
 	 * @return
 	 */
@@ -1018,23 +1240,38 @@ public class AI {
 	 */
 	public void printTimeStats(int i, Node parentNode, long startTime) {
 		long endTime = System.currentTimeMillis();
-		System.out.println("AI.ChooseMove: " + ++i + " of "
-				+ parentNode.getChildren().size()
+		if (printThinkingProgress) {
+			System.out.println("AI.ChooseMove: " + ++i + " of "
+					+ parentNode.getChildren().size()
 
-				+ " branches searched. Time elapsed: " + (endTime - initTime)
-				/ 1000.0 + " seconds, last branch took "
-				+ (endTime - startTime) / 1000.0 + " seconds");
-
+					+ " branches searched. Time elapsed: "
+					+ (endTime - initTime) / 1000.0
+					+ " seconds, last branch took " + (endTime - startTime)
+					/ 1000.0 + " seconds");
+		}
 		startTime = System.currentTimeMillis();
 	}
-	
+
+	public int getBranchCounter() {
+		return branchCounter;
+	}
+
+	public int getNumBranches() {
+		return numBranches;
+	}
+
 	/**
-	 * Getter to let outside classes know if we are on a NullMoveBranch,
-	 * since there will be a null move if that's the case.
+	 * Getter to let outside classes know if we are on a NullMoveBranch, since
+	 * there will be a null move if that's the case.
+	 * 
 	 * @return
 	 */
-	public boolean isNullMoveBranch(){
+	public boolean isNullMoveBranch() {
 		return isNullMoveBranch;
+	}
+
+	public boolean isThinking() {
+		return isThinking;
 	}
 }
 

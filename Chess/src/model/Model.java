@@ -1,6 +1,25 @@
+/*
+Quiet Intrigue is a chess playing engine with GUI written in Java.
+Copyright (C) <2014>  Matthew Voss
+
+Quiet Intrigue is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Quiet Intrigue is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Quiet Intrigue.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 package model;
 
 import java.util.ArrayList;
+import utils.Constants;
 
 /**
  * The array of pieces that represents the board is stored here.
@@ -11,8 +30,6 @@ import java.util.ArrayList;
 public class Model {
 
 	Piece[][] board;
-	//ArrayList<Piece> whitePieces;
-	//ArrayList<Piece> blackPieces;
 	PieceArray whitePieces;
 	PieceArray blackPieces;
 	
@@ -27,19 +44,18 @@ public class Model {
 	 * Constructor. Initializes board to classic chess start position
 	 */
 	public Model() {
-		boolean debug = false;
+		boolean debug = Constants.getDebugFlag();
+		gameMode = Constants.getGameMode();
 		whitePieces = new PieceArray();
 		blackPieces = new PieceArray();
 		capturedPieces = new ArrayList<Piece>();
 		moveList = new ArrayList<Move>();
 		gameTree = new GameTree();
-		gameMode = "cVc";//"pVc";
 
 		board = new Piece[8][8];
 
 		
-		// Easy way to set up nonstandard positions for testing. Just comment out
-		// InitializeBoard and uncomment out the method call below
+		// Easy way to set up nonstandard positions for testing.
 		if(debug)
 			initializeDebugBoard();
 		else
@@ -151,13 +167,13 @@ public class Model {
 			for (int col = 0; col < 8; col++)
 				board[row][col] = null;
 
-		board[0][0] = new Piece('k', black, hasMoved, 0, 0, PieceArray.E_kingId);
+		board[5][4] = new Piece('k', white, hasMoved, 5, 4, PieceArray.E_kingId);
 //		board[1][4] = new Piece("rook", white, hasMoved, 1, 4);
-		board[6][0] = new Piece('r', black, hasMoved, 6, 0, PieceArray.A_rookId);
-		board[6][1] = new Piece('r', black, hasMoved, 6, 1, PieceArray.H_rookId);
+		board[2][2] = new Piece('q', black, hasMoved, 2, 2, PieceArray.A_rookId);
+//		board[3][2] = new Piece('q', black, hasMoved, 3, 2, PieceArray.H_rookId);
 		
 
-		board[7][4] = new Piece('k', white, hasMoved, 7, 4, PieceArray.E_kingId);
+		board[0][0] = new Piece('k', black, hasMoved, 0, 0, PieceArray.E_kingId);
 //		board[7][7] = new Piece('r', black, hasNotMoved, 7, 7, PieceArray.A_rookId);
 //		board[6][7] = new Piece('p', black, hasNotMoved, 6, 7, PieceArray.A_pawnId);
 //		board[6][6] = new Piece('p', black, hasNotMoved, 6, 6, PieceArray.B_pawnId);

@@ -1,3 +1,21 @@
+/*
+Quiet Intrigue is a chess playing engine with GUI written in Java.
+Copyright (C) <2014>  Matthew Voss
+
+Quiet Intrigue is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Quiet Intrigue is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Quiet Intrigue.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 package controller;
 
 import java.util.ArrayList;
@@ -379,13 +397,13 @@ public class RuleEngine {
 			// Get signed deltaCol
 			deltaCol = calculateDeltaColSigned(move);
 
-			String color = move.getPiece().isWhite() ? "black" : "white";
+			boolean isWhite = !move.getPiece().isWhite();
 			kingHasMoved = move.getPiece().isHasMoved();
 
 			// Only continue if king hasn't moved
 			if (!kingHasMoved) {
 				isInCheck = isAttackedSquare(move.getPiece().getRow(), move
-						.getPiece().getCol(), color);
+						.getPiece().getCol(), isWhite);
 				// If castling kingside and rook is alive
 				if (deltaCol > 0) {
 					if (boardController.getPieceByCoords(move.getStartRow(), 7) == null)
@@ -406,11 +424,11 @@ public class RuleEngine {
 						int row = move.getPiece().getRow();
 						int col = move.getPiece().getCol() + 1;
 						isCastlingThroughCheck = isKingVulnerableOnThisSquare(
-								boardController, color, move, row, col);
+								boardController, isWhite, move, row, col);
 
 						col = col + 1;
 						isCastlingIntoCheck = isKingVulnerableOnThisSquare(
-								boardController, color, move, row, col);
+								boardController, isWhite, move, row, col);
 
 					}
 				}
@@ -433,11 +451,11 @@ public class RuleEngine {
 					int row = move.getPiece().getRow();
 					int col = move.getPiece().getCol() - 1;
 					isCastlingThroughCheck = isKingVulnerableOnThisSquare(
-							boardController, color, move, row, col);
+							boardController, isWhite, move, row, col);
 
 					col = col - 1;
 					isCastlingIntoCheck = isKingVulnerableOnThisSquare(
-							boardController, color, move, row, col);
+							boardController, isWhite, move, row, col);
 
 				}
 			}
@@ -462,7 +480,7 @@ public class RuleEngine {
 	 * @return
 	 */
 	public static boolean isKingVulnerableOnThisSquare(
-			BoardController boardController, String color, Move move,
+			BoardController boardController, boolean isWhite, Move move,
 			int newRow, int newCol) {
 		Piece piece = move.getPiece();
 		Piece prevPiece = null;
@@ -474,7 +492,7 @@ public class RuleEngine {
 		boardController.setPieceByCoords(newRow, newCol, piece);
 		piece.setCol(newCol);
 
-		isVulerable = isAttackedSquare(newRow, newCol, color);
+		isVulerable = isAttackedSquare(newRow, newCol, isWhite);
 
 		if (prevPiece != null)
 			boardController.setPieceByCoords(newRow, newCol, prevPiece);
@@ -495,10 +513,10 @@ public class RuleEngine {
 	 * 
 	 * @return
 	 */
-	public static boolean isAttackedSquare(int row, int col, String color) {
+	public static boolean isAttackedSquare(int row, int col, boolean isWhite) {
 		boolean result = false;
 		PieceArray pieces;
-		if (color.equals("white"))
+		if (isWhite)
 			pieces = controller.getModel().getWhitePieces();
 		else
 			pieces = controller.getModel().getBlackPieces();
@@ -796,8 +814,9 @@ public class RuleEngine {
 	public static boolean isNotSelfCheck(Move move,
 			BoardController boardController) {
 		boolean result = true;
-		String color = move.getPiece().isWhite() ? "white" : "black";
-		String opponentColor = color.equals("white") ? "black" : "white";
+		boolean isWhite = move.getPiece().isWhite();
+		boolean opponentIsWhite = !isWhite;
+		
 		Piece king = null;
 		int kingRow = 0;
 		int kingCol = 0;
@@ -805,7 +824,7 @@ public class RuleEngine {
 		Piece capturedPiece = processMove(move);
 
 		PieceArray pieces = null;
-		if (color.equals("white"))
+		if (isWhite)
 			pieces = controller.getModel().getWhitePieces();
 		else
 			pieces = controller.getModel().getBlackPieces();
@@ -837,7 +856,7 @@ public class RuleEngine {
 			kingCol = king.getCol();
 		}
 
-		result = !isAttackedSquare(kingRow, kingCol, opponentColor);
+		result = !isAttackedSquare(kingRow, kingCol, opponentIsWhite);
 
 		// Revert the board to it's previous state
 		undoChanges(capturedPiece, move);

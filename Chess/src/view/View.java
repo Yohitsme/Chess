@@ -1,3 +1,20 @@
+/*
+Quiet Intrigue is a chess playing engine with GUI written in Java.
+Copyright (C) <2014>  Matthew Voss
+
+Quiet Intrigue is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+Quiet Intrigue is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with Quiet Intrigue.  If not, see <http://www.gnu.org/licenses/>.
+*/
 package view;
 
 
@@ -24,15 +41,15 @@ import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTable;
-import javax.swing.JTextArea;
 import javax.swing.JTree;
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableCellRenderer;
 
-import utils.Constants;
 import model.Move;
 import model.Piece;
+import utils.Constants;
 import controller.BoardController;
+import controller.Controller;
 import controller.MasterListener;
 
 /**
@@ -60,6 +77,8 @@ public class View {
 	JLabel [][] highlightArray;
 	JLabel dragPiece;
 	String boardOrientation;
+	Controller controller;
+	JLabel messageLabel;
 
 	HashMap<String, ImageIcon> imgMap;
 
@@ -70,12 +89,13 @@ public class View {
 	 * 
 	 * @param boardControllerIn
 	 */
-	public View(BoardController boardControllerIn,
+	public View(Controller controllerIn, BoardController boardControllerIn,
 			MasterListener masterListenerIn, ArrayList<Piece> capturedPiecesIn) {
 
 		this.boardController = boardControllerIn;
 		this.masterListener = masterListenerIn;
 		this.capturedPieces = capturedPiecesIn;
+		this.controller = controllerIn;
 		this.boardOrientation = "normal";
 		// Populate imageMap
 		loadImages();
@@ -92,11 +112,18 @@ public class View {
 		configureAnalysisPanel();
 		configureMoveListPanel();
 		configureSidePanel();
-
+		configureMessageLabel();
+		
 		frame.add(layeredPane, BorderLayout.CENTER);
 		frame.add(sidePanel,BorderLayout.EAST);
+		frame.add(messageLabel,BorderLayout.SOUTH);
 		frame.pack();
+		update();
 
+	}
+
+	private void configureMessageLabel() {
+		messageLabel = new JLabel(Constants.getOpeningGameText());
 	}
 
 	private void configureCapturedPiecePanel() {
@@ -245,7 +272,7 @@ public class View {
 		else if (boardOrientation.equals("flipped")){
 			
 			for (int row = 0; row < 8; row++) {
-				for (int col = 0; col < 8; col++) {
+				for (int col = 7; col >=0; col--) {
 					piecePanelArray[row][col] = new PiecePanel(row, col,
 							generateJLabel(row, col),
 							boardController.getPieceByCoords(row, col));
@@ -257,6 +284,9 @@ public class View {
 			
 		}
 		updateCapturedPiecePanel();
+		updateMoveListPanel(controller.getModel().getMoveList());
+		removeHighlights();
+		highlightPreviousMove(controller.getModel().getMoveList());
 		piecePanel.repaint();
 		piecePanel.revalidate();
 		frame.pack();
@@ -348,7 +378,7 @@ public class View {
 		piecePanel.setPreferredSize(new Dimension(640, 640));
 		piecePanel.setBounds(0, 0, 640, 640);
 		piecePanelArray = new PiecePanel[8][8];
-		update();
+//		update();
 
 	}
 	
@@ -619,9 +649,11 @@ public class View {
 		this.boardOrientation = boardOrientation;
 	}
 
-	public void highlightSquare(int row, int col) {
-		if (boardOrientation.equals("flipped"))
+	public void highlightSquareWithDot(int row, int col) {
+		if (boardOrientation.equals("flipped")){
 			row = 7-row;
+			col = 7-col;
+		}
 		
 		
 		highlightArray[row][col].setIcon(imgMap.get("highlight"));
@@ -639,21 +671,34 @@ public class View {
 		
 		return result;
 	}
+	
+	public void updateMessageLabel(String text){
+		messageLabel.setText(text);
+	}
 
 	public void highlightPreviousMove(ArrayList<Move> moveList) {
-		int row,col;
+		if (moveList.size() != 0){
 		int size = moveList.size();
 		Move move = moveList.get(size-1);
 		
-		row = move.getStartRow();
-		col = move.getStartCol();
-		highlightArray[row][col].setIcon(imgMap.get("squareHighlight"));
-
-		row = move.getEndRow();
-		col = move.getEndCol();
-		highlightArray[row][col].setIcon(imgMap.get("squareHighlight"));
+		highlightSquareWithOutline(move.getStartRow(),move.getStartCol());
+		highlightSquareWithOutline(move.getEndRow(),move.getEndCol());
+		
 	}
 
+}
+
+	public void highlightSquareWithOutline(int row, int col){
+		int newRow = row;
+		int newCol = col;
+		
+		if (boardOrientation.equals("flipped")){
+			newRow = 7-row;
+			newCol = 7-col;
+		}
+		
+		highlightArray[newRow][newCol].setIcon(imgMap.get("squareHighlight"));
+	}
 }
 
 class PieceSorter implements Comparator{

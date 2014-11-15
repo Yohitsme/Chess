@@ -39,6 +39,7 @@ import model.Node;
 import model.Piece;
 import model.PieceArray;
 import utils.Constants;
+import utils.Constants.LogLevel;
 import utils.Log;
 import utils.Utils;
 import view.View;
@@ -125,32 +126,38 @@ public class Controller {
 
 			for (int i = 0; i < args.length; i = i + 2) {
 
-				String tmp = args[i];
+				String arg = args[i];
 
-				if (tmp.equals("-debug")) {
+				if (arg.equals("-debug")) {
 					if (args[i + 1].equals("true"))
 						Constants.setDebugFlag(true);
 					else if (args[i + 1].equals("false"))
 						Constants.setDebugFlag(false);
 					else
 						System.out
-								.println("ERROR: Command line parameter for debug \'"
+								.println("ERROR: Command line argument for debug \'"
 										+ args[i + 1]
 										+ "\' doesn't match expected values of true or false. Default value of "
 										+ Constants.getDebugFlag() + " used.");
-				} else if (tmp.equals("-depth")) {
+				} else if (arg.equals("-depth")) {
 					try {
 						int d = Integer.parseInt(args[i + 1]);
 						if (d >= Constants.getMinDepth() && d <= Constants.getMaxDepth())
 							Constants.setDepth(d);
+						else
+							System.out
+							.println("ERROR: Command line argument for depth \'"
+									+ args[i + 1]
+									+ "\' invalid. Default value of "
+									+ Constants.getDefaultDepth() + " used. Legal range is ["+ Constants.getMinDepth() + ", " + Constants.getMaxDepth() + "]");
 					} catch (NumberFormatException numberFormatException) {
 						System.out
-								.println("ERROR: Command line parameter for depth \'"
+								.println("ERROR: Command line argument for depth \'"
 										+ args[i + 1]
 										+ "\' invalid. Default value of "
 										+ Constants.getDefaultDepth() + " used. Legal range is ["+ Constants.getMinDepth() + ", " + Constants.getMaxDepth() + "]");
 					}
-				} else if (tmp.equals("-mode")) {
+				} else if (arg.equals("-mode")) {
 					String modeIn = args[i + 1];
 					String gameMode = Constants.getDefaultGameMode();
 					if (modeIn.equals("pVc"))
@@ -163,19 +170,34 @@ public class Controller {
 						gameMode = modeIn;
 					else
 						System.out
-								.println("ERROR: Command line parameter for mode \'"
+								.println("ERROR: Command line argument for mode \'"
 										+ modeIn
 										+ "\' doesn't match expected values of pVp, pVc, cVp, or cVc. Default value of "
 										+ gameMode + " used.");
 					Constants.setGameMode(gameMode);
 				}
+				else if (arg.equals("-log")){
+					String level =args[i + 1].toLowerCase();
+					
+					if (level.equals("info"))
+						Constants.setLogLevel(LogLevel.INFO);
+					else if(level.equals("error"))
+						Constants.setLogLevel(LogLevel.ERROR);
+					else if (level.equals("debug"))
+						Constants.setLogLevel(LogLevel.DEBUG);
+					else
+						System.out.println("ERROR: Command line argument for log level \'" + level + "\' doesn't match expected values of info, debug, or error. Default value of info used.");
+						
+					
+				}
+				else{
+					System.out.println("ERROR: Command line argument \'" + arg + "\' doesn't match supported arguments mode, depth, logLevel, or debug. No action taken.");
+				}
+				
 
 			}
 		}
 
-		System.out.println("Game mode: " + Constants.getGameMode());
-		System.out.println("Depth: " + Constants.getDepth());
-		System.out.println("Debug flag: " + Constants.getDebugFlag());
 	}
 
 	/**

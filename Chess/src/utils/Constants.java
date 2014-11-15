@@ -22,7 +22,8 @@ import model.Piece;
 
 
 public class Constants {
-	enum GameMode{pvp,pvc,cvp,cvc}
+	public enum GameMode{pvp,pvc,cvp,cvc}
+	public enum LogLevel{INFO,DEBUG,ERROR}
 
 	// Weights
 	private final static int pawnWeight = 1;
@@ -91,6 +92,10 @@ public class Constants {
 	// Mode constants
 	private static String defaultGameMode = "pVc";
 	private static String gameMode = defaultGameMode;
+	
+	// Log level constants
+	private static LogLevel defaultLogLevel = LogLevel.INFO;
+	private static LogLevel logLevel = defaultLogLevel;
 	
 	// Miscellaneous
 	private static final String openingGameText = "Welcome to the Quiet Intrique chess engine.";
@@ -428,6 +433,14 @@ public class Constants {
 
 	public static void setGameMode(String gameMode) {
 		Constants.gameMode = gameMode;
+	}
+
+	public static LogLevel getLogLevel() {
+		return logLevel;
+	}
+
+	public static void setLogLevel(LogLevel logLevel) {
+		Constants.logLevel = logLevel;
 	}
 
 

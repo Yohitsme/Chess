@@ -48,7 +48,7 @@ public class AI_ProgressThread implements Runnable{
 		controller.getView().updateMessageLabel(text);
 		
 		try {
-			Thread.sleep(2000);
+			Thread.sleep(200);
 		} catch (InterruptedException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

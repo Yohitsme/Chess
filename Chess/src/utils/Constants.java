@@ -65,10 +65,6 @@ public class Constants {
 	private final static char rook = 'r';
 	private final static char pawn = 'p';
 	
-	
-	
-	
-	
 	private final static int nullMoveReduction = 2;
 	private final static int checkMateScore = 1000000;
 	private final static int drawScore = 0;

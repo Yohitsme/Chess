@@ -134,11 +134,10 @@ public class MoveGenerator {
 
 		if (numMoves == 0) {
 			king = controller.getAI().findKing(isWhite);
-			String color = isWhite ? "white" : "black";
 
 			// If the king's square is attacked, it's checkmate, not stalemate.
 			if (!RuleEngine.isAttackedSquare(king.getRow(), king.getCol(),
-					color))
+					isWhite))
 				
 			result = true;
 		}

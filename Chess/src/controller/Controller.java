@@ -339,8 +339,8 @@ public class Controller {
 		if (king == null)
 			result = true;
 		else{
-		
-		if (RuleEngine.isAttackedSquare(king.getRow(), king.getCol(), "black"))
+		boolean black = false;
+		if (RuleEngine.isAttackedSquare(king.getRow(), king.getCol(), black))
 			inCheck = true;
 
 		ArrayList<Move> legalMoves = new ArrayList<Move>();
@@ -376,7 +376,8 @@ public class Controller {
 		if (king == null)
 			result = true;
 		else{
-		if (RuleEngine.isAttackedSquare(king.getRow(), king.getCol(), "white"))
+			boolean white = true;
+		if (RuleEngine.isAttackedSquare(king.getRow(), king.getCol(), white))
 			inCheck = true;
 
 		ArrayList<Move> legalMoves = new ArrayList<Move>();

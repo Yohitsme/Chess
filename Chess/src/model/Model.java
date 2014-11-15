@@ -168,11 +168,11 @@ public class Model {
 
 		board[0][0] = new Piece('k', black, hasMoved, 0, 0, PieceArray.E_kingId);
 //		board[1][4] = new Piece("rook", white, hasMoved, 1, 4);
-		board[6][0] = new Piece('r', black, hasMoved, 6, 0, PieceArray.A_rookId);
-		board[6][1] = new Piece('r', black, hasMoved, 6, 1, PieceArray.H_rookId);
+		board[6][0] = new Piece('q', black, hasMoved, 6, 0, PieceArray.A_rookId);
+//		board[6][1] = new Piece('r', black, hasMoved, 6, 1, PieceArray.H_rookId);
 		
 
-		board[7][4] = new Piece('k', white, hasMoved, 7, 4, PieceArray.E_kingId);
+		board[4][4] = new Piece('k', white, hasMoved, 4, 4, PieceArray.E_kingId);
 //		board[7][7] = new Piece('r', black, hasNotMoved, 7, 7, PieceArray.A_rookId);
 //		board[6][7] = new Piece('p', black, hasNotMoved, 6, 7, PieceArray.A_pawnId);
 //		board[6][6] = new Piece('p', black, hasNotMoved, 6, 6, PieceArray.B_pawnId);

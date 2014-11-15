@@ -35,7 +35,7 @@ public class Log {
 	private final int DEBUG = 1;
 	private final int INFO = 2;
 	private final int ERROR = 3;
-	private int logLevel = ERROR;
+	private int logLevel = INFO;
 
 	public void info(String msg) {
 		if (logLevel <= INFO) {

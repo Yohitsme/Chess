@@ -20,35 +20,31 @@ package utils;
 
 import model.Piece;
 
-public class Constants {
 
+public class Constants {
+	enum GameMode{pvp,pvc,cvp,cvc}
+
+	// Weights
 	private final static int pawnWeight = 1;
 	private final static int kingWeight = 200;
 	private final static int knightWeight = 3;
 	private final static int rookWeight = 5;
 	private final static int queenWeight = 9;
 	private final static int bishopWeight = 3;
+
+	// Score type weights
+	private  static double positionalScoreWeight = .01;
+	private  static double materialScoreWeight = .89;
+	private  static double bonusScoreWeight = .1;
 	
+	// Row, Column Constants
 	private final static int blackPieceRow = 7;
-	private final static int blackPawnRow = 6;
 	private final static int whitePieceRow = 0;
+	private final static int blackPawnRow = 6;
 	private final static int whitePawnRow = 1;
-	
+
 	private final static int queenColumn = 3;
 	private final static int kingColumn = 4;
-	
-	private final static int castlingBonusWeight = 10;
-	private final static int connectedRooksBonusWeight = 5;
-	private final static int bishopPairBonusWeight = 3;
-	private final static int centralPawnsPushedBonusWeight = 5;
-	private final static int earlyQueenPenaltyWeight = 25;
-	private final static int multiMoveOpeningPiecePenalty = 10;
-	
-	private final static int kingsideCastleRookCol = 5;
-	private final static int queensideCastleRookCol = 3;
-	private final static int kingsideCastleKingCol = 6;
-	private final static int queensideCastleKingCol = 2;
-	
 	private final static int queenRookCol = 0;
 	private final static int queenKnightCol = 1;
 	private final static int queenBishopCol = 2;
@@ -57,7 +53,20 @@ public class Constants {
 	private final static int kingBishopCol = 5;
 	private final static int kingKnightCol = 6;
 	private final static int kingRookCol = 7;
+	private final static int kingsideCastleRookCol = 5;
+	private final static int queensideCastleRookCol = 3;
+	private final static int kingsideCastleKingCol = 6;
+	private final static int queensideCastleKingCol = 2;
 	
+	// Bonus, Penalty weights
+	private final static int castlingBonusWeight = 10;
+	private final static int connectedRooksBonusWeight = 5;
+	private final static int bishopPairBonusWeight = 3;
+	private final static int centralPawnsPushedBonusWeight = 5;
+	private final static int earlyQueenPenaltyWeight = 25;
+	private final static int multiMoveOpeningPiecePenalty = 10;
+	
+	// Piece char constants
 	private final static char king = 'k';
 	private final static char queen = 'q';
 	private final static char knight= 'n';
@@ -65,18 +74,28 @@ public class Constants {
 	private final static char rook = 'r';
 	private final static char pawn = 'p';
 	
-	private final static int nullMoveReduction = 2;
+	// Game result scores
 	private final static int checkMateScore = 1000000;
 	private final static int drawScore = 0;
-	private final static double killerMoveScore = -0.1;
+	
+	// Depth constants
+	private static int maxDepth = 6;
+	private static int minDepth = 1;
+	private static int defaultDepth = 4;
+	private static int depth = defaultDepth;
+	
+	// Debug flag constants
+	private static boolean defaultDebugFlag = false;
+	private static boolean debugFlag = defaultDebugFlag;
+	
+	// Mode constants
+	private static String defaultGameMode = "pVc";
+	private static String gameMode = defaultGameMode;
+	
+	// Miscellaneous
 	private static final String openingGameText = "Welcome to the Quiet Intrique chess engine.";
-	
-	private  static double positionalScoreWeight = .01;
-	private  static double materialScoreWeight = .89;
-	private  static double bonusScoreWeight = .1;
-	
-
-	private static int depth = 4;
+	private final static double killerMoveScore = -0.1;
+	private final static int nullMoveReduction = 2;
 	
 	public static int getPieceWeight(Piece piece){
 		int result = 0;
@@ -124,7 +143,9 @@ public class Constants {
 		return pawnWeight;
 	}
 	
-	
+	public static int getDefaultDepth(){
+		return defaultDepth;
+	}
 
 	public static int getNullMoveReduction (){
 		return nullMoveReduction;
@@ -359,6 +380,54 @@ public class Constants {
 	public static int getMultiMoveOpeningPiecePenalty() {
 		// TODO Auto-generated method stub
 		return multiMoveOpeningPiecePenalty;
+	}
+
+	public static boolean getDefaultDebugFlag() {
+		return defaultDebugFlag;
+	}
+
+	public static void setDefaultDebugFlag(boolean defaultDebugFlag) {
+		Constants.defaultDebugFlag = defaultDebugFlag;
+	}
+
+	public static String getDefaultGameMode() {
+		return defaultGameMode;
+	}
+
+	public static void setDefaultGameMode(String defaultGameMode) {
+		Constants.defaultGameMode = defaultGameMode;
+	}
+
+	public static int getMaxDepth() {
+		return maxDepth;
+	}
+
+	public static void setMaxDepth(int maxDepth) {
+		Constants.maxDepth = maxDepth;
+	}
+
+	public static int getMinDepth() {
+		return minDepth;
+	}
+
+	public static void setMinDepth(int minDepth) {
+		Constants.minDepth = minDepth;
+	}
+
+	public static boolean getDebugFlag() {
+		return debugFlag;
+	}
+
+	public static void setDebugFlag(boolean debugFlag) {
+		Constants.debugFlag = debugFlag;
+	}
+
+	public static String getGameMode() {
+		return gameMode;
+	}
+
+	public static void setGameMode(String gameMode) {
+		Constants.gameMode = gameMode;
 	}
 
 

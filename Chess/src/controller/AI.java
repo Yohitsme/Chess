@@ -117,8 +117,8 @@ public class AI {
 	public void chooseMove(boolean isWhiteTurn) {
 
 		// Initialize alpha and beta
-		double alpha = -100000000000.0;
-		double beta = 100000000000.0;
+		double alpha = -Constants.getCheckMateScore();
+		double beta = Constants.getCheckMateScore();
 
 		// Reset Branch counter
 		branchCounter = 0;
@@ -287,6 +287,9 @@ public class AI {
 				}
 			}
 
+			if(depthleft == Constants.getDepth())
+			log.info(node.getMove().coloredAlgebraicNotationPrint() + ": " + score);
+			
 			RuleEngine.undoChanges(capturedPiece, move);
 			move.getPiece().setHasMoved(tmpHasMoved);
 
@@ -529,11 +532,11 @@ public class AI {
 			}
 		}
 
-		if (parentNode.getChildren().size() == 0) {
-			// If I have no moves assume I was checkmated and return low alpha
-			// value
-			alpha = -10000000000000.0;
-		}
+//		if (parentNode.getChildren().size() == 0) {
+//			// If I have no moves assume I was checkmated and return low alpha
+//			// value
+//			alpha = -Constants.getCheckMateScore();
+//		}
 
 		ArrayList<Node> tmp = new ArrayList<Node>();
 		if (depthleft != Constants.getDepth())

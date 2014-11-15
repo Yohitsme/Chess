@@ -14,7 +14,7 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with Quiet Intrigue.  If not, see <http://www.gnu.org/licenses/>.
-*/
+ */
 
 package controller;
 
@@ -66,26 +66,35 @@ public class Controller {
 	 * 
 	 * @param arg
 	 */
-	public static void main(String[] arg) {
+	public static void main(String[] args) {
 		Controller controller = null;
-		
-		controller = new Controller();
-		
-//      Peformance testing below to ensure move generation correctness
-//		for (int depth = 0; depth < 9; depth++) {
-//			long startTime = System.currentTimeMillis();
-//			int nodes = controller.AI.perft(depth,true);
-//			long endTime = System.currentTimeMillis();
-//
-//			System.out.println("Peft " + (depth + 1) + ": "
-//					+nodes + ": " + (endTime - startTime) / 1000.0 + " seconds");
-//		}
+
+		controller = new Controller(args);
+
+		// Peformance testing below to ensure move generation correctness
+		// for (int depth = 0; depth < 9; depth++) {
+		// long startTime = System.currentTimeMillis();
+		// int nodes = controller.AI.perft(depth,true);
+		// long endTime = System.currentTimeMillis();
+		//
+		// System.out.println("Peft " + (depth + 1) + ": "
+		// +nodes + ": " + (endTime - startTime) / 1000.0 + " seconds");
+		// }
 	}
 
 	/**
 	 * Constructor
 	 */
-	public Controller() {
+	public Controller(String[] args) {
+
+		//boolean debug = Constants.getDefaultDebugFlag();
+		//int depth = Constants.getDefaultDepth();
+		//String gameMode = Constants.getDefaultGameMode();
+
+
+		processCommandLineArguments(args);
+		
+		
 		model = new Model();
 		ruleEngine = new RuleEngine(this);
 		boardController = new BoardController(model);
@@ -97,10 +106,76 @@ public class Controller {
 		AI = new AI(this);
 		long startTime = System.currentTimeMillis();
 		log = new Log();
-		
+
+
 		Runnable aiProgressRunnable = new AI_ProgressThread(this);
 		Thread aiProgressThread = new Thread(aiProgressRunnable);
 		aiProgressThread.start();
+	}
+
+	/**
+	 * Checks command line arguments for valid flags and configures engine accordingly
+	 * @param args
+	 * @param debug
+	 * @param depth
+	 * @param gameMode
+	 */
+	private void processCommandLineArguments(String[] args) {
+		if (args.length > 0) {
+
+			for (int i = 0; i < args.length; i = i + 2) {
+
+				String tmp = args[i];
+
+				if (tmp.equals("-debug")) {
+					if (args[i + 1].equals("true"))
+						Constants.setDebugFlag(true);
+					else if (args[i + 1].equals("false"))
+						Constants.setDebugFlag(false);
+					else
+						System.out
+								.println("ERROR: Command line parameter for debug \'"
+										+ args[i + 1]
+										+ "\' doesn't match expected values of true or false. Default value of "
+										+ Constants.getDebugFlag() + " used.");
+				} else if (tmp.equals("-depth")) {
+					try {
+						int d = Integer.parseInt(args[i + 1]);
+						if (d >= Constants.getMinDepth() && d <= Constants.getMaxDepth())
+							Constants.setDepth(d);
+					} catch (NumberFormatException numberFormatException) {
+						System.out
+								.println("ERROR: Command line parameter for depth \'"
+										+ args[i + 1]
+										+ "\' invalid. Default value of "
+										+ Constants.getDefaultDepth() + " used. Legal range is ["+ Constants.getMinDepth() + ", " + Constants.getMaxDepth() + "]");
+					}
+				} else if (tmp.equals("-mode")) {
+					String modeIn = args[i + 1];
+					String gameMode = Constants.getDefaultGameMode();
+					if (modeIn.equals("pVc"))
+						gameMode = modeIn;
+					else if (modeIn.equals("pVp"))
+						gameMode = modeIn;
+					else if (modeIn.equals("cVp"))
+						gameMode = modeIn;
+					else if (modeIn.equals("cVc"))
+						gameMode = modeIn;
+					else
+						System.out
+								.println("ERROR: Command line parameter for mode \'"
+										+ modeIn
+										+ "\' doesn't match expected values of pVp, pVc, cVp, or cVc. Default value of "
+										+ gameMode + " used.");
+					Constants.setGameMode(gameMode);
+				}
+
+			}
+		}
+
+		System.out.println("Game mode: " + Constants.getGameMode());
+		System.out.println("Depth: " + Constants.getDepth());
+		System.out.println("Debug flag: " + Constants.getDebugFlag());
 	}
 
 	/**
@@ -180,23 +255,23 @@ public class Controller {
 
 		if (model.getMoveList().size() != 0)
 			view.highlightPreviousMove(model.getMoveList());
-	
+
 		if (isAIturn() && !gameOver) {
 			Runnable aiRunnable = new AI_Thread(this, AI, isWhiteTurn());
 			Thread aiThread = new Thread(aiRunnable);
 			aiThread.start();
-		
+
 		}
 
-	/*
+		/*
 		 * long startTime = System.currentTimeMillis(); long endTime =
 		 * System.currentTimeMillis(); System.out.println(
 		 * "Controller.Controller(): Done printing. Time elapsed: " +
 		 * (endTime-startTime)/1000.0 +" seconds");
 		 */
 		boolean printFlag = true;
-//		AI.evaluate(computeTurn().equals("white") ? true : false,
-//				gameTreeController.getRoot(), printFlag);
+		// AI.evaluate(computeTurn().equals("white") ? true : false,
+		// gameTreeController.getRoot(), printFlag);
 
 	}
 
@@ -335,27 +410,29 @@ public class Controller {
 		boolean result = false;
 
 		king = white.getKing();
-		
+
 		if (king == null)
 			result = true;
-		else{
-		boolean black = false;
-		if (RuleEngine.isAttackedSquare(king.getRow(), king.getCol(), black))
-			inCheck = true;
+		else {
+			boolean black = false;
+			if (RuleEngine
+					.isAttackedSquare(king.getRow(), king.getCol(), black))
+				inCheck = true;
 
-		ArrayList<Move> legalMoves = new ArrayList<Move>();
-		
-		if (inCheck){
-		for (int row = 0; row < 8; row++) {
-			for (int col = 0; col < 8; col++)
-				if (boardController.getPieceByCoords(row, col) != null
-						&& boardController.getPieceByCoords(row, col).isWhite()) {
-					moveGenerator.findMoves(legalMoves,row, col);
+			ArrayList<Move> legalMoves = new ArrayList<Move>();
 
+			if (inCheck) {
+				for (int row = 0; row < 8; row++) {
+					for (int col = 0; col < 8; col++)
+						if (boardController.getPieceByCoords(row, col) != null
+								&& boardController.getPieceByCoords(row, col)
+										.isWhite()) {
+							moveGenerator.findMoves(legalMoves, row, col);
+
+						}
 				}
-		}
-		}
-		result = inCheck && (legalMoves.isEmpty());
+			}
+			result = inCheck && (legalMoves.isEmpty());
 		}
 		return result;
 	}
@@ -372,27 +449,29 @@ public class Controller {
 		boolean result = false;
 
 		king = black.getKing();
-		
+
 		if (king == null)
 			result = true;
-		else{
+		else {
 			boolean white = true;
-		if (RuleEngine.isAttackedSquare(king.getRow(), king.getCol(), white))
-			inCheck = true;
+			if (RuleEngine
+					.isAttackedSquare(king.getRow(), king.getCol(), white))
+				inCheck = true;
 
-		ArrayList<Move> legalMoves = new ArrayList<Move>();
-		if (inCheck){
-		for (int row = 0; row < 8; row++) {
-			for (int col = 0; col < 8; col++)
-				if (boardController.getPieceByCoords(row, col) != null
-						&& !boardController.getPieceByCoords(row, col)
-								.isWhite()) {
-					moveGenerator.findMoves(legalMoves,row, col);
+			ArrayList<Move> legalMoves = new ArrayList<Move>();
+			if (inCheck) {
+				for (int row = 0; row < 8; row++) {
+					for (int col = 0; col < 8; col++)
+						if (boardController.getPieceByCoords(row, col) != null
+								&& !boardController.getPieceByCoords(row, col)
+										.isWhite()) {
+							moveGenerator.findMoves(legalMoves, row, col);
 
+						}
 				}
-		}}
+			}
 
-		result = inCheck && (legalMoves.isEmpty());
+			result = inCheck && (legalMoves.isEmpty());
 		}
 		return result;
 	}
@@ -400,6 +479,7 @@ public class Controller {
 	/**
 	 * Returns true if a square designated by row = endRow and col = endCol is
 	 * on the board
+	 * 
 	 * @param endRow
 	 * @param endCol
 	 * @return
@@ -409,8 +489,8 @@ public class Controller {
 	}
 
 	/**
-	 * Calls methods to process edge case moves <li>En Passant captures
-	 * <li>Pawn promotions <li>Castling
+	 * Calls methods to process edge case moves <li>En Passant captures <li>Pawn
+	 * promotions <li>Castling
 	 * 
 	 * @param move
 	 */
@@ -428,7 +508,7 @@ public class Controller {
 
 		for (int row = 0; row < 8; row++) {
 			for (int col = 0; col < 8; col++) {
-				moveGenerator.findMoves(legalMoves,row, col);
+				moveGenerator.findMoves(legalMoves, row, col);
 			}
 		}
 
@@ -443,7 +523,7 @@ public class Controller {
 	 * @param move
 	 */
 	public void handleCastling(Move move) {
-		if (move.getPiece().getType()==Constants.getKingChar()
+		if (move.getPiece().getType() == Constants.getKingChar()
 				&& RuleEngine.calculateDeltaColUnsigned(move) == 2) {
 			if (RuleEngine.calculateDeltaColSigned(move) == 2) {
 				Piece rook = boardController.getPieceByCoords(
@@ -473,7 +553,7 @@ public class Controller {
 	private void handlePawnPromote(Move move) {
 
 		// If it's a user move, the piece type will be a pawn
-		if (move.getPiece().getType()==Constants.getPawnChar()
+		if (move.getPiece().getType() == Constants.getPawnChar()
 				&& (move.getEndRow() == 7 || move.getEndRow() == 0)) {
 			char choice;
 
@@ -503,9 +583,8 @@ public class Controller {
 					"Pawn Promotion", JOptionPane.YES_NO_CANCEL_OPTION,
 					JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
 
-		
-		
-		return Utils.getAlgebraicCharacterFromPieceType((String) options[selection]);
+		return Utils
+				.getAlgebraicCharacterFromPieceType((String) options[selection]);
 	}
 
 	/**
@@ -513,18 +592,19 @@ public class Controller {
 	 */
 	private void printTeams() {
 		System.out.println("Controller.printTeams: White pieces remaining: ");
-		for (int i = 0; i < PieceArray.numPieces; i++){
+		for (int i = 0; i < PieceArray.numPieces; i++) {
 			Piece piece = model.getWhitePieces().getPiece(i);
-			if (piece !=null)
-			System.out.println("-" + piece.toString());
+			if (piece != null)
+				System.out.println("-" + piece.toString());
 		}
 		System.out.println("Controller.printTeams: Black pieces remaining: ");
-		for (int i = 0; i < PieceArray.numPieces; i++){
+		for (int i = 0; i < PieceArray.numPieces; i++) {
 			Piece piece = model.getBlackPieces().getPiece(i);
-			if (piece !=null)
-	
-			System.out.println("-" + piece.toString());
-		}}
+			if (piece != null)
+
+				System.out.println("-" + piece.toString());
+		}
+	}
 
 	/**
 	 * If the move was a capture, remove the captured piece from it's list
@@ -551,7 +631,7 @@ public class Controller {
 	public Piece handleEnPassantCaptures(Move move) {
 		Piece pawnCaptured = null;
 
-		if (move.getPiece().getType()==Constants.getPawnChar()
+		if (move.getPiece().getType() == Constants.getPawnChar()
 				&& move.getStartCol() != move.getEndCol()
 				&& boardController.getPieceByCoords(move.getEndRow(),
 						move.getEndCol()) == null) {
@@ -562,17 +642,18 @@ public class Controller {
 			// so we need to look 2 moves back to fine the move where the enemy
 			// pawn moved 2 squares.
 			Move previousMove = null;
-			//if (AI.isNullMoveBranch())
-//			previousMove = model.getMoveList().get(size - 3);
-			//else
+			// if (AI.isNullMoveBranch())
+			// previousMove = model.getMoveList().get(size - 3);
+			// else
 			previousMove = model.getMoveList().get(size - 2);
 
-//			if (null == boardController.getPieceByCoords(previousMove.getEndRow(),
-//					previousMove.getEndCol()))
-//				System.out.println("Error");
-//			System.out.println(model.getMoveList().get(size-2).coloredAlgebraicNotationPrint());
-//			System.out.println(move.algebraicNotationPrint());
-				removePieceFromList(previousMove);
+			// if (null ==
+			// boardController.getPieceByCoords(previousMove.getEndRow(),
+			// previousMove.getEndCol()))
+			// System.out.println("Error");
+			// System.out.println(model.getMoveList().get(size-2).coloredAlgebraicNotationPrint());
+			// System.out.println(move.algebraicNotationPrint());
+			removePieceFromList(previousMove);
 
 			pawnCaptured = previousMove.getPiece();
 
@@ -605,8 +686,6 @@ public class Controller {
 		if (piece == null)
 			log.error("Controller.removePieceFromList: Removing null piece?");
 
-		
-		
 		if (piece.isWhite()) {
 			model.getWhitePieces().remove(piece);
 		} else
@@ -618,6 +697,7 @@ public class Controller {
 
 	/**
 	 * Returns the column designated by a mouseEvent
+	 * 
 	 * @param e
 	 * @return
 	 */
@@ -628,16 +708,17 @@ public class Controller {
 			isFlipped = false;
 		else
 			isFlipped = true;
-		
+
 		int result = e.getX() / 80;
 		if (isFlipped)
-			result = 7-result;
-		
+			result = 7 - result;
+
 		return result;
 	}
 
 	/**
 	 * Returns the row designated by a mouseEvent
+	 * 
 	 * @param e
 	 * @return
 	 */
@@ -657,8 +738,6 @@ public class Controller {
 
 		return result;
 	}
-
-	
 
 	/**
 	 * Processes action events
@@ -717,8 +796,8 @@ public class Controller {
 	}
 
 	/**
-	 * Prompts the user for new weights and lets them fill in their choices.
-	 * If the input is valid, it sets the values accordingly
+	 * Prompts the user for new weights and lets them fill in their choices. If
+	 * the input is valid, it sets the values accordingly
 	 */
 	private void promptUserForNewWeights() {
 		JPanel panel = new JPanel();
@@ -812,6 +891,7 @@ public class Controller {
 
 	/**
 	 * Prompts the user for a new game mode.
+	 * 
 	 * @return
 	 */
 	public String promptForGameMode() {
@@ -846,14 +926,13 @@ public class Controller {
 			result = "black";
 		return result;
 	}
-	
-	
-	
+
 	/**
 	 * Returns true if it is white's turn to move, false otherwise.
+	 * 
 	 * @return
 	 */
-	public boolean isWhiteTurn(){
+	public boolean isWhiteTurn() {
 		boolean result = false;
 		int turnNumber = model.getMoveList().size();
 
@@ -863,8 +942,6 @@ public class Controller {
 			result = true;
 		return result;
 	}
-	
-	
 
 	/**
 	 * Returns true if white is played by the computer
@@ -892,10 +969,10 @@ public class Controller {
 		return result;
 
 	}
-	
-	
+
 	/**
 	 * Returns true if the same position has occurred 3 times in a row.
+	 * 
 	 * @return
 	 */
 	public boolean isDrawByThreefoldRepitition() {
@@ -917,11 +994,11 @@ public class Controller {
 
 		return result;
 	}
-	
+
 	/******************************************************************/
-	/**                      Getters and Setters                     **/
+	/** Getters and Setters **/
 	/******************************************************************/
-	
+
 	public Model getModel() {
 		return model;
 	}
@@ -945,6 +1022,7 @@ public class Controller {
 	public void setLog(Log log) {
 		this.log = log;
 	}
+
 	public View getView() {
 		return view;
 	}
@@ -984,6 +1062,5 @@ public class Controller {
 	public void setAI(AI aI) {
 		AI = aI;
 	}
-
 
 }

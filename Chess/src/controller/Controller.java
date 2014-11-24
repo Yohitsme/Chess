@@ -1,17 +1,14 @@
 /*
 Quiet Intrigue is a chess playing engine with GUI written in Java.
 Copyright (C) <2014>  Matthew Voss
-
 Quiet Intrigue is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
 the Free Software Foundation, either version 3 of the License, or
 (at your option) any later version.
-
 Quiet Intrigue is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU General Public License for more details.
-
 You should have received a copy of the GNU General Public License
 along with Quiet Intrigue.  If not, see <http://www.gnu.org/licenses/>.
  */
@@ -88,14 +85,12 @@ public class Controller {
 	 */
 	public Controller(String[] args) {
 
-		//boolean debug = Constants.getDefaultDebugFlag();
-		//int depth = Constants.getDefaultDepth();
-		//String gameMode = Constants.getDefaultGameMode();
-
+		// boolean debug = Constants.getDefaultDebugFlag();
+		// int depth = Constants.getDefaultDepth();
+		// String gameMode = Constants.getDefaultGameMode();
 
 		processCommandLineArguments(args);
-		
-		
+
 		model = new Model();
 		ruleEngine = new RuleEngine(this);
 		boardController = new BoardController(model);
@@ -108,14 +103,15 @@ public class Controller {
 		long startTime = System.currentTimeMillis();
 		log = new Log();
 
-
 		Runnable aiProgressRunnable = new AI_ProgressThread(this);
 		Thread aiProgressThread = new Thread(aiProgressRunnable);
 		aiProgressThread.start();
 	}
 
 	/**
-	 * Checks command line arguments for valid flags and configures engine accordingly
+	 * Checks command line arguments for valid flags and configures engine
+	 * accordingly
+	 * 
 	 * @param args
 	 * @param debug
 	 * @param depth
@@ -142,20 +138,29 @@ public class Controller {
 				} else if (arg.equals("-depth")) {
 					try {
 						int d = Integer.parseInt(args[i + 1]);
-						if (d >= Constants.getMinDepth() && d <= Constants.getMaxDepth())
+						if (d >= Constants.getMinDepth()
+								&& d <= Constants.getMaxDepth())
 							Constants.setDepth(d);
 						else
 							System.out
-							.println("ERROR: Command line argument for depth \'"
-									+ args[i + 1]
-									+ "\' invalid. Default value of "
-									+ Constants.getDefaultDepth() + " used. Legal range is ["+ Constants.getMinDepth() + ", " + Constants.getMaxDepth() + "]");
+									.println("ERROR: Command line argument for depth \'"
+											+ args[i + 1]
+											+ "\' invalid. Default value of "
+											+ Constants.getDefaultDepth()
+											+ " used. Legal range is ["
+											+ Constants.getMinDepth()
+											+ ", "
+											+ Constants.getMaxDepth() + "]");
 					} catch (NumberFormatException numberFormatException) {
 						System.out
 								.println("ERROR: Command line argument for depth \'"
 										+ args[i + 1]
 										+ "\' invalid. Default value of "
-										+ Constants.getDefaultDepth() + " used. Legal range is ["+ Constants.getMinDepth() + ", " + Constants.getMaxDepth() + "]");
+										+ Constants.getDefaultDepth()
+										+ " used. Legal range is ["
+										+ Constants.getMinDepth()
+										+ ", "
+										+ Constants.getMaxDepth() + "]");
 					}
 				} else if (arg.equals("-mode")) {
 					String modeIn = args[i + 1];
@@ -175,25 +180,27 @@ public class Controller {
 										+ "\' doesn't match expected values of pVp, pVc, cVp, or cVc. Default value of "
 										+ gameMode + " used.");
 					Constants.setGameMode(gameMode);
-				}
-				else if (arg.equals("-log")){
-					String level =args[i + 1].toLowerCase();
-					
+				} else if (arg.equals("-log")) {
+					String level = args[i + 1].toLowerCase();
+
 					if (level.equals("info"))
 						Constants.setLogLevel(LogLevel.INFO);
-					else if(level.equals("error"))
+					else if (level.equals("error"))
 						Constants.setLogLevel(LogLevel.ERROR);
 					else if (level.equals("debug"))
 						Constants.setLogLevel(LogLevel.DEBUG);
 					else
-						System.out.println("ERROR: Command line argument for log level \'" + level + "\' doesn't match expected values of info, debug, or error. Default value of info used.");
-						
-					
+						System.out
+								.println("ERROR: Command line argument for log level \'"
+										+ level
+										+ "\' doesn't match expected values of info, debug, or error. Default value of info used.");
+
+				} else {
+					System.out
+							.println("ERROR: Command line argument \'"
+									+ arg
+									+ "\' doesn't match supported arguments mode, depth, logLevel, or debug. No action taken.");
 				}
-				else{
-					System.out.println("ERROR: Command line argument \'" + arg + "\' doesn't match supported arguments mode, depth, logLevel, or debug. No action taken.");
-				}
-				
 
 			}
 		}
@@ -825,42 +832,46 @@ public class Controller {
 		JPanel panel = new JPanel();
 		BoxLayout boxLayout = new BoxLayout(panel, BoxLayout.Y_AXIS);
 		panel.setLayout(boxLayout);
-		JTextField materialWeightInput = new JTextField(3);
-		JTextField positionalWeightInput = new JTextField(3);
-		JTextField bonusWeightInput = new JTextField(3);
+		int defaultTextFieldWidth = 4;
+		
+		JTextField materialWeightInput = new JTextField(Double.toString(Constants.getMaterialScoreWeight()),defaultTextFieldWidth);
+		JTextField positionalWeightInput = new JTextField(Double.toString(Constants.getPositionalScoreWeight()),defaultTextFieldWidth);
+		JTextField bonusWeightInput = new JTextField(Double.toString(Constants.getBonusScoreWeight()),defaultTextFieldWidth);
+		
+		JTextField castlingWeightInput = new JTextField(Integer.toString(Constants.getCastlingBonusWeight()),defaultTextFieldWidth);
+		JTextField connectedRooksWeightInput = new JTextField(Integer.toString(Constants.getConnectedRooksBonusWeight()),defaultTextFieldWidth);
+		JTextField bishopPairWeightInput = new JTextField(Integer.toString(Constants.getBishopPairBonusWeight()),defaultTextFieldWidth);
+		JTextField centralPawnsPushedWeightInput = new JTextField(Integer.toString(Constants.getCentralPawnsPushedBonusWeight()),defaultTextFieldWidth);
+		JTextField earlyQueenMoveWeightInput = new JTextField(Integer.toString(Constants.getEarlyQueenPenaltyWeight()),defaultTextFieldWidth);
+		JTextField openingPieceMovedTwiceWeightInput = new JTextField(Integer.toString(Constants.getMultiMoveOpeningPiecePenalty()),defaultTextFieldWidth);
+		JTextField knightOnRimWeightInput = new JTextField(Integer.toString(Constants.getKnightOnRimPenalty()),defaultTextFieldWidth);
+		JTextField pawnShieldWeightInput = new JTextField(Integer.toString(Constants.getPawnShieldBonus()),defaultTextFieldWidth);
+		JTextField openFileNextToKingWeightInput = new JTextField(Integer.toString(Constants.getOpenFileNextToKingPenalty()),defaultTextFieldWidth);
 
 		String info = "-Use decimal values to represent percents: 0.8 instead of 80%"
-				+ "\n-Default values: Material 0.8, Positional and Bonus 0.1"
 				+ "\n-Make sure all values add up to 1.0 (aka 100%)"
-				+ "\n-Bonus Weight includes castling, bishop pair, and central pawn pushes\n";
+				+ "\n-Open file adjacent to king penalty counts double for completely"			
+				+ "\n open files, and once for half open files.";
+		
 		JTextArea textArea = new JTextArea(info);
 		textArea.setEditable(false);
 		textArea.setWrapStyleWord(true);
 		textArea.setOpaque(false);
 		panel.add(textArea);
 
-		JPanel materialPanel = new JPanel((LayoutManager) new FlowLayout(
-				FlowLayout.LEFT));
-		materialPanel.add(new JLabel("Material Weight: "));
-		materialPanel.add(materialWeightInput);
-		// materialPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-		panel.add(materialPanel);
-
-		JPanel positionalPanel = new JPanel((LayoutManager) new FlowLayout(
-				FlowLayout.LEFT));
-		positionalPanel.add(new JLabel("Positional Weight: "));
-		positionalPanel.add(positionalWeightInput);
-		// positionalPanel.setAlignmentX(Component.RIGHT_ALIGNMENT);
-		panel.add(positionalPanel);
-
-		JPanel bonusPanel = new JPanel((LayoutManager) new FlowLayout(
-				FlowLayout.LEFT));
-		bonusPanel.add(new JLabel("Bonus Weight: "));
-		bonusPanel.add(bonusWeightInput);
-		// bonusPanel.setAlignmentX(Component.RIGHT_ALIGNMENT);
-		panel.add(bonusPanel);
-		panel.revalidate();
-		panel.repaint();
+		addWeightInput("Material Weight: ", materialWeightInput, panel);
+		addWeightInput("Positional Weight: ", positionalWeightInput, panel);
+		addWeightInput("Bonus Weight: ", bonusWeightInput, panel);
+		
+		addWeightInput("Castling bonus: ", castlingWeightInput, panel);
+		addWeightInput("Connected rooks bonus: ", connectedRooksWeightInput, panel);
+		addWeightInput("Bishop pair bonus: ", bishopPairWeightInput, panel);
+		addWeightInput("Central pawns pushed bonus: ", centralPawnsPushedWeightInput, panel);
+		addWeightInput("Early queen move penalty: ", earlyQueenMoveWeightInput, panel);
+		addWeightInput("Opening piece moved twice penalty: ", openingPieceMovedTwiceWeightInput, panel);
+		addWeightInput("Knight on rim penalty: ", knightOnRimWeightInput, panel);
+		addWeightInput("Pawn shield bonus: ", pawnShieldWeightInput, panel);
+		addWeightInput("Open file adjacent to king penalty: ", openFileNextToKingWeightInput, panel);
 
 		JOptionPane.showConfirmDialog(null, panel, "Evaluation Weight Tuning",
 				JOptionPane.OK_CANCEL_OPTION);
@@ -870,15 +881,46 @@ public class Controller {
 			double materialWeight = new Double(materialWeightInput.getText());
 			double positionalWeight = new Double(
 					positionalWeightInput.getText());
+			
+			int castlingWeight = new Integer(castlingWeightInput.getText());
+			int connectedRooksWeight = new Integer(connectedRooksWeightInput.getText());
+			int bishopPairWeight = new Integer(bishopPairWeightInput.getText());
+			int centralPawnsPushedWeight = new Integer(centralPawnsPushedWeightInput.getText());
+			int earlyQueenMoveWeight = new Integer(earlyQueenMoveWeightInput.getText());
+			int openingPieceMovedTwiceWeight = new Integer(openingPieceMovedTwiceWeightInput.getText());
+			int knightOnRimWeight  = new Integer(knightOnRimWeightInput.getText());
+			int pawnShieldWeight = new Integer(pawnShieldWeightInput.getText());
+			int openFileNextToKingWeight = new Integer(openFileNextToKingWeightInput.getText());
 
 			Constants.setBonusScoreWeight(bonusWeight);
 			Constants.setMaterialScoreWeight(materialWeight);
 			Constants.setPositionalScoreWeight(positionalWeight);
+			
+			Constants.setCastlingBonus(castlingWeight);
+			Constants.setConnectedRooksBonus(connectedRooksWeight);
+			Constants.setBishopPairBonus(bishopPairWeight);
+			Constants.setCentralPawnsPushedBonus(centralPawnsPushedWeight);
+			Constants.setEarlyQueenMovePenalty(earlyQueenMoveWeight);
+			Constants.setOpeningPieceMovedTwicePenalty(openingPieceMovedTwiceWeight);
+			Constants.setKnightOnRimPenalty(knightOnRimWeight);
+			Constants.setPawnShieldBonus(pawnShieldWeight);
+			Constants.setOpenFileNextToKingPenalty(openFileNextToKingWeight);
+			
 		} catch (NumberFormatException numberFormatException) {
 			JOptionPane.showMessageDialog(new JFrame(),
 					"Invalid input. Weights not modified.");
 		}
 
+	}
+
+	private void addWeightInput(String text, JTextField textField, JPanel panel) {
+		JPanel newPanel = new JPanel((LayoutManager) new FlowLayout(
+				FlowLayout.LEFT));
+		newPanel.add(new JLabel(text));
+		newPanel.add(textField);
+		panel.add(newPanel);
+		panel.revalidate();
+		panel.repaint();
 	}
 
 	/**
@@ -898,6 +940,15 @@ public class Controller {
 		body += "\nMaterial Scoring weight: "
 				+ Constants.getMaterialScoreWeight();
 		body += "\nBonus Scoring weight: " + Constants.getBonusScoreWeight();
+		body += "\nCastling Bonus: "+Constants.getCastlingBonusWeight();
+		body += "\nConnected Rooks Bonus: "+Constants.getConnectedRooksBonusWeight();
+		body += "\nBishop Pair Bonus: "+Constants.getBishopPairBonusWeight();
+		body += "\nCentral Pawns Pushed Bonus: "+Constants.getCentralPawnsPushedBonusWeight();
+		body += "\nEarly Queen Move Penalty: "+Constants.getEarlyQueenPenaltyWeight();
+		body += "\nOpening Piece Moved Twice Penalty: "+Constants.getMultiMoveOpeningPiecePenalty();
+		body += "\nKnight On Rim Penalty: "+Constants.getKnightOnRimPenalty();
+		body += "\nPawn Shield Bonus: "+Constants.getPawnShieldBonus();
+		body += "\nOpen File Next To King Penalty: "+Constants.getOpenFileNextToKingPenalty();
 		body += "\n";
 
 		for (int i = 0; i < moveList.size(); i++) {

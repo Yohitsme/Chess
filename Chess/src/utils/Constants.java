@@ -60,12 +60,15 @@ public class Constants {
 	private final static int queensideCastleKingCol = 2;
 	
 	// Bonus, Penalty weights
-	private final static int castlingBonusWeight = 10;
-	private final static int connectedRooksBonusWeight = 5;
-	private final static int bishopPairBonusWeight = 3;
-	private final static int centralPawnsPushedBonusWeight = 5;
-	private final static int earlyQueenPenaltyWeight = 25;
-	private final static int multiMoveOpeningPiecePenalty = 10;
+	private static int castlingBonusWeight = 15;
+	private static int connectedRooksBonusWeight = 5;
+	private static int bishopPairBonusWeight = 3;
+	private static int centralPawnsPushedBonusWeight = 5;
+	private static int earlyQueenPenaltyWeight = 20;
+	private static int multiMoveOpeningPiecePenalty = 10;
+	private static int knightOnRimPenalty = 5;
+	private static int pawnShieldBonus = 5;
+	private static int openFileNextToKingPenalty = 3;
 	
 	// Piece char constants
 	private final static char king = 'k';
@@ -94,13 +97,22 @@ public class Constants {
 	private static String gameMode = defaultGameMode;
 	
 	// Log level constants
-	private static LogLevel defaultLogLevel = LogLevel.INFO;
+	private static LogLevel defaultLogLevel = LogLevel.ERROR;
 	private static LogLevel logLevel = defaultLogLevel;
 	
 	// Miscellaneous
 	private static final String openingGameText = "Welcome to the Quiet Intrique chess engine.";
 	private final static double killerMoveScore = -0.1;
 	private final static int nullMoveReduction = 2;
+	
+	// Endgame parameters
+	// If the move list has 70 ply in it, or 35 moves, we'll assume it's the end game
+	private final static int endgameTotalMoveThreshhold = 70;
+	// If the sum of all the material on the board is 414 
+	// (king = 200, minor piece = 3, 4 pawns, 1 rook)
+	// We'll say it's the end game
+	private final static int endgameTotalMaterialThreshhold = 414;
+	
 	
 	public static int getPieceWeight(Piece piece){
 		int result = 0;
@@ -441,6 +453,65 @@ public class Constants {
 
 	public static void setLogLevel(LogLevel logLevel) {
 		Constants.logLevel = logLevel;
+	}
+
+	public static int getKnightOnRimPenalty() {
+		// TODO Auto-generated method stub
+		return knightOnRimPenalty;
+	}
+
+	public static int getPawnShieldBonus() {
+		
+		return pawnShieldBonus;
+	}
+
+	public static int getOpenFileNextToKingPenalty() {
+		return openFileNextToKingPenalty;
+	}
+
+	public static int getEndGameTotalMoveThreshhold() {
+		return endgameTotalMoveThreshhold;
+	}
+
+	public static int getEndGameTotalMaterialThreshhold() {
+		return endgameTotalMaterialThreshhold;
+	}
+
+	public static void setCastlingBonus(int castlingWeight) {
+		Constants.castlingBonusWeight = castlingWeight;
+	}
+
+	public static void setConnectedRooksBonus(int connectedRooksBonus) {
+		Constants.connectedRooksBonusWeight = connectedRooksBonus;
+	}
+
+	public static void setBishopPairBonus(int bishopPairWeight) {
+		Constants.bishopPairBonusWeight = bishopPairWeight;
+	}
+
+	public static void setCentralPawnsPushedBonus(int centralPawnsPushedWeight) {
+		Constants.centralPawnsPushedBonusWeight = centralPawnsPushedWeight;
+	}
+
+	public static void setEarlyQueenMovePenalty(int earlyQueenMoveWeight) {
+		Constants.earlyQueenPenaltyWeight = earlyQueenMoveWeight;
+	}
+
+	public static void setOpeningPieceMovedTwicePenalty(
+			int openingPieceMovedTwiceWeight) {
+		Constants.multiMoveOpeningPiecePenalty = openingPieceMovedTwiceWeight;
+	}
+
+	public static void setKnightOnRimPenalty(int knightOnRimWeight) {
+		Constants.knightOnRimPenalty = knightOnRimWeight;
+	}
+
+	public static void setPawnShieldBonus(int pawnShieldWeight) {
+		Constants.pawnShieldBonus = pawnShieldWeight;
+	}
+
+	public static void setOpenFileNextToKingPenalty(int openFileNextToKingWeight) {
+		Constants.openFileNextToKingPenalty = openFileNextToKingWeight;
 	}
 
 

@@ -141,11 +141,10 @@ public class AI {
 			masterPV.addAll(this.localPV);
 
 		}
-		
-	
+
 		// The first node in the PV is the one we've chosen
 		bestNode = this.masterPV.get(0);
-
+		
 	}
 
 	/**
@@ -240,38 +239,39 @@ public class AI {
 			tmpHasMoved = move.getPiece().isHasMoved();
 			move.getPiece().setHasMoved(true);
 
-//			// Null move addition BEGIN
-//			 if ((!(exploringPV && j == 0))&&
-//			 (depthleft-1-Constants.getNullMoveReduction()>0) ){ // If we're
-//			 //looking at PV and on the first child move, we're continuing PV
-//			 if (!inCheck(isWhiteTurn)){
-//			 isNullMoveBranch = true;
-//			 // System.out.println(depthleft-1-Constants.getNullMoveReduction());
-//			
-//			 ArrayList <Node> realChildren = new ArrayList<Node>();
-//			 realChildren.addAll(parentNode.getChildren());
-//			
-//			 parentNode.getChildren().removeAll(parentNode.getChildren());
-//			 populateChildren(parentNode,
-//			 !isWhiteTurn,depthleft-1-Constants.getNullMoveReduction());
-//			
-//			 score = -pvSearch(-beta,-alpha,
-//			 depthleft-1-Constants.getNullMoveReduction(),
-//			 isWhiteTurn,parentNode);
-//			
-//			 parentNode.getChildren().removeAll(parentNode.getChildren());
-//			 parentNode.getChildren().addAll(realChildren);
-//			
-//			 isNullMoveBranch = false;
-//			
-//			 if(score >= beta){
-//			 RuleEngine.undoChanges(capturedPiece, move);
-//			 move.getPiece().setHasMoved(tmpHasMoved);
-//			 return score; // Cutoff
-//			 }
-//			 }
-//			
-//			 }
+			// // Null move addition BEGIN
+			// if ((!(exploringPV && j == 0))&&
+			// (depthleft-1-Constants.getNullMoveReduction()>0) ){ // If we're
+			// //looking at PV and on the first child move, we're continuing PV
+			// if (!inCheck(isWhiteTurn)){
+			// isNullMoveBranch = true;
+			// //
+			// System.out.println(depthleft-1-Constants.getNullMoveReduction());
+			//
+			// ArrayList <Node> realChildren = new ArrayList<Node>();
+			// realChildren.addAll(parentNode.getChildren());
+			//
+			// parentNode.getChildren().removeAll(parentNode.getChildren());
+			// populateChildren(parentNode,
+			// !isWhiteTurn,depthleft-1-Constants.getNullMoveReduction());
+			//
+			// score = -pvSearch(-beta,-alpha,
+			// depthleft-1-Constants.getNullMoveReduction(),
+			// isWhiteTurn,parentNode);
+			//
+			// parentNode.getChildren().removeAll(parentNode.getChildren());
+			// parentNode.getChildren().addAll(realChildren);
+			//
+			// isNullMoveBranch = false;
+			//
+			// if(score >= beta){
+			// RuleEngine.undoChanges(capturedPiece, move);
+			// move.getPiece().setHasMoved(tmpHasMoved);
+			// return score; // Cutoff
+			// }
+			// }
+			//
+			// }
 			// Null move addition END
 
 			// PV backend
@@ -287,9 +287,6 @@ public class AI {
 				}
 			}
 
-			if(depthleft == Constants.getDepth())
-			log.info(node.getMove().coloredAlgebraicNotationPrint() + ": " + score);
-			
 			RuleEngine.undoChanges(capturedPiece, move);
 			move.getPiece().setHasMoved(tmpHasMoved);
 
@@ -335,7 +332,7 @@ public class AI {
 	private void updateBranchCounter(int depth, int branchNbr) {
 		if (depth == Constants.getDepth())
 			branchCounter = branchNbr;
-		
+
 	}
 
 	private double checkPVsearchTerminationConditions(Node parentNode,
@@ -532,11 +529,11 @@ public class AI {
 			}
 		}
 
-//		if (parentNode.getChildren().size() == 0) {
-//			// If I have no moves assume I was checkmated and return low alpha
-//			// value
-//			alpha = -Constants.getCheckMateScore();
-//		}
+		// if (parentNode.getChildren().size() == 0) {
+		// // If I have no moves assume I was checkmated and return low alpha
+		// // value
+		// alpha = -Constants.getCheckMateScore();
+		// }
 
 		ArrayList<Node> tmp = new ArrayList<Node>();
 		if (depthleft != Constants.getDepth())
@@ -580,10 +577,12 @@ public class AI {
 			int row = move.getEndRow();
 			Piece otherPiece = controller.boardController.getPieceByCoords(row,
 					col);
-			
+
 			Piece king = findKing(isWhiteTurn);
-			
-			if (otherPiece != null || RuleEngine.isAttackedSquare(king.getRow(), king.getCol(), !king.isWhite())) {
+
+			if (otherPiece != null
+					|| RuleEngine.isAttackedSquare(king.getRow(),
+							king.getCol(), !king.isWhite())) {
 
 				Piece capturedPiece = RuleEngine.processMove(move);
 				tmpHasMoved = move.getPiece().isHasMoved();
@@ -913,8 +912,6 @@ public class AI {
 		int result = 0;
 		Piece king = findKing(isWhite);
 
-		// TODO: Bonus for not moving the same piece twice in the opening
-		// TODO: Bonus for not having a knight on the edge of the board
 		// TODO: Bonus for connected pawns
 		// TODO: Penalty for doubled pawns
 		// TODO: Penalty for isolated pawns
@@ -925,10 +922,218 @@ public class AI {
 		int bishopPairBonus = computeBishopPairBonus(isWhite);
 		int connectedRooksBonus = computeConnectedRooksBonus(isWhite);
 		int earlyQueenPenalty = computeEarlyQueenPenalty(isWhite);
+		int knightsOnRimPenalty = computeKnightsOnRimPenalty(isWhite);
+		int pawnShieldForCastledKingBonus = computePawnShieldForCastledKingBonus(isWhite);
+		int openFileNextToKingPenalty = computeOpenFileNextToKingPenalty(isWhite);
+		
 		result = castlingBonus + centralPawnsPushedBonus + bishopPairBonus
 				+ connectedRooksBonus + earlyQueenPenalty
-				+ multiMoveOpeningPiecePenalty;
+				+ multiMoveOpeningPiecePenalty + knightsOnRimPenalty
+				+ pawnShieldForCastledKingBonus + openFileNextToKingPenalty;
 		return result;
+	}
+
+	/**
+	 * Checks the column the king is on and adjacent columns.  Half open columns are
+	 * penalized, and completely open columns are penalized twice as much.
+	 * @param isWhite
+	 * @return
+	 */
+	private int computeOpenFileNextToKingPenalty(boolean isWhite) {
+
+		int result = 0;
+		if (!inEndGame()){
+		
+		Piece king = findKing(isWhite);
+		if (king != null) {
+			int col = king.getCol();
+			result += computeOpenFilePenalty(col+1);
+			result += computeOpenFilePenalty(col-1);
+			result += computeOpenFilePenalty(col);
+			
+		}
+		}
+		return -result;
+	}
+
+	/**
+	 * Assumes we're in the endgame if we've played more than 35 moves or each person
+	 * has the same  or less amount of points as a rook, minor piece, and 4 pawns
+	 * @return
+	 */
+	private boolean inEndGame() {
+		int numMoves = controller.getModel().getMoveList().size();
+		
+		boolean white = true;
+		boolean black = false;
+		
+		int sumOfMaterial = findPieceList(white).sum() + findPieceList(black).sum();
+		
+		if (numMoves > Constants.getEndGameTotalMoveThreshhold() || sumOfMaterial < Constants.getEndGameTotalMaterialThreshhold())
+			return true;
+		else
+			return false;
+	}
+
+	/**
+	 * If a file has 1 pawn on it, it is penalized.  If a pawn as no pawns on it,
+	 * it is penalized twice as much.
+	 * @param col
+	 * @return
+	 */
+	private int computeOpenFilePenalty(int col) {
+		int result = 0;
+
+		if (col < 8 && col >= 0) {
+
+			int numPawns = 0;
+			for (int row = 0; row < 8; row++) {
+				Piece p = controller.getBoardController().getPieceByCoords(row,
+						col);
+				if (p != null && p.getType() == Constants.getPawnChar())
+					numPawns++;
+			}
+			
+			if (numPawns == 1)
+				result = Constants.getOpenFileNextToKingPenalty();
+			else if (numPawns == 0)
+				result = Constants.getOpenFileNextToKingPenalty() * 2;
+		}
+		return result;
+	}
+
+	
+	
+	private int computePawnShieldForCastledKingBonus(boolean isWhite) {
+		int result = 0;
+		boolean isCastled = isCastled(isWhite);
+		Piece king = findKing(isWhite);
+		int rowDirection = 1;
+
+		// For black kings, the shielding pawns are 1 row less than the kings
+		// position.
+		// For white kings they are 1 row greater than that of the king.
+		if (!isWhite)
+			rowDirection = -1;
+
+		if (isCastled) {
+			int pawnShieldSize = 0;
+			int col = king.getCol();
+			int row = king.getRow() + rowDirection;
+			Piece pawn = null;
+
+			// Check square in front of king
+			pawn = controller.getBoardController().getPieceByCoords(row, col);
+			if (pawn != null && pawn.getType() == Constants.getPawnChar())
+				pawnShieldSize++;
+
+			// Check square in front of king to the right
+			col--;
+			pawn = controller.getBoardController().getPieceByCoords(row, col);
+			if (col >= 0 && pawn != null
+					&& pawn.getType() == Constants.getPawnChar())
+				pawnShieldSize++;
+
+			// Check square in front of king to the left
+			col += 2;
+			pawn = controller.getBoardController().getPieceByCoords(row, col);
+			if (col <= 7 && pawn != null
+					&& pawn.getType() == Constants.getPawnChar())
+				pawnShieldSize++;
+
+			result = pawnShieldSize * Constants.getPawnShieldBonus();
+		}
+
+		return result;
+	}
+
+	/**
+	 * This method assumes that the king is castled if it is on the G or C cols,
+	 * has moved, and the rook associated with the side the king is on isn't on
+	 * it's home square
+	 * 
+	 * @param isWhite
+	 * @return
+	 */
+	private boolean isCastled(boolean isWhite) {
+
+		Piece king = findKing(isWhite);
+		PieceArray pieces = findPieceList(isWhite);
+
+		// Has it moved?
+		boolean kingHasMoved = king.isHasMoved();
+
+		// Is it on a castling column?
+		boolean isKingOnCastlingCol = true;
+		boolean isRookOnHomeCol = true;
+
+		if (king != null) {
+
+			if (king.getCol() == 6) {
+				Piece rook = pieces.getH_rook();
+				if (rook != null && rook.getCol() != 7)
+					isRookOnHomeCol = false;
+			} else if (king.getCol() == 2) {
+				Piece rook = pieces.getA_rook();
+				if (rook != null && rook.getCol() != 0)
+					isRookOnHomeCol = false;
+			} else
+				isKingOnCastlingCol = false;
+		}
+		return kingHasMoved && isKingOnCastlingCol && !isRookOnHomeCol;
+
+	}
+
+	/**
+	 * Adds a penalty for each knight on the edge of the board
+	 * 
+	 * @param isWhite
+	 * @return
+	 */
+	private int computeKnightsOnRimPenalty(boolean isWhite) {
+
+		int result = 0;
+
+		PieceArray pieces = findPieceList(isWhite);
+
+		// Get knights
+		Piece bKnight = pieces.getB_Knight();
+		Piece gKnight = pieces.getG_Knight();
+
+		// Check if on rim
+		result += computeKnightOnRimPenalty(bKnight);
+		result += computeKnightOnRimPenalty(gKnight);
+
+		return -result;
+	}
+
+	/**
+	 * Counts times that knight <code>p</code> is on edge of board. The piece
+	 * will be counted twice if it is in one of the 4 corners of the board.
+	 * 
+	 * @param p
+	 * @return
+	 */
+	private int computeKnightOnRimPenalty(Piece p) {
+		int numPenalties = 0;
+
+		if (p != null) {
+
+			if (isOnTopOrBottomRow(p))
+				numPenalties++;
+			if (isOnLeftOrRightMostCol(p))
+				numPenalties++;
+		}
+
+		return numPenalties * Constants.getKnightOnRimPenalty();
+	}
+
+	private boolean isOnTopOrBottomRow(Piece p) {
+		return p.getRow() == 0 || p.getRow() == 7;
+	}
+
+	private boolean isOnLeftOrRightMostCol(Piece p) {
+		return p.getCol() == 0 || p.getCol() == 7;
 	}
 
 	/**

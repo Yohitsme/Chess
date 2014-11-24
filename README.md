@@ -16,9 +16,10 @@ Evaluation considerations:
 * Castled king bonuses
 * Central pawns pushed bonuses
 * Early queen movement penalty
+* Connected rooks bonuses
+* King safety (half open, fully open files next to king, pawn shields)
 
 TODO:
 * Transposition tables
 * Bitboard representation
-* Connected rooks bonuses
 * Pawn structure evaluations
